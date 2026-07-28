@@ -307,16 +307,16 @@ a.mi{text-decoration:none;color:inherit}
 #sh-period .pkcta{display:flex;gap:9px;margin:14px 12px 0}
 #sh-period .pkcta button{flex:1;padding:14px 0;border-radius:12px;font:800 14px/1 var(--font);cursor:pointer;border:none;
   transition:transform .22s var(--spring),filter .12s ease,opacity .18s ease}
-#sh-period .pkcta .sec{background:var(--surface-3);color:var(--text)}
-[data-theme="dark"] #sh-period .pkcta .sec{background:color-mix(in srgb,var(--surface-3),#fff 3%)}
-#sh-period .pkcta .pri{color:#fff;
+#sh-period .pkcta .pk-sec{background:var(--surface-3);color:var(--text)}
+[data-theme="dark"] #sh-period .pkcta .pk-sec{background:color-mix(in srgb,var(--surface-3),#fff 3%)}
+#sh-period .pkcta .pk-pri{color:#fff;
   background:linear-gradient(180deg,color-mix(in srgb,#fff 16%,var(--accent)),var(--accent));
   box-shadow:0 3px 10px -3px color-mix(in srgb,var(--accent) 27%,transparent),0 1px 2px rgba(20,50,42,.14)}
-[data-theme="dark"] #sh-period .pkcta .pri{background:linear-gradient(180deg,hsl(163 55% 34%),hsl(163 55% 30%));
+[data-theme="dark"] #sh-period .pkcta .pk-pri{background:linear-gradient(180deg,hsl(163 55% 34%),hsl(163 55% 30%));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
 #sh-period .pkcta button.is-pressed{transform:scale(.96);transition-duration:.06s}
-#sh-period .pkcta .pri.off{opacity:.42;pointer-events:none}
-[data-theme="dark"] #sh-period .pkcta .pri.off{opacity:.30}   /* на OLED .42 ще читалось як активна */
+#sh-period .pkcta .pk-pri.off{opacity:.42;pointer-events:none}
+[data-theme="dark"] #sh-period .pkcta .pk-pri.off{opacity:.30}   /* на OLED .42 ще читалось як активна */
 
 /* ===== About sheet (A58) ===== */
 .about-hd{display:flex;align-items:center;gap:12px;padding:6px 20px 14px}
@@ -726,9 +726,9 @@ a.mi{text-decoration:none;color:inherit}
   :root:not([data-theme="light"]) #sh-period .vtag.now{background:color-mix(in srgb,var(--accent) 24%,var(--surface-3));border-color:color-mix(in srgb,var(--accent) 45%,transparent)}
   :root:not([data-theme="light"]) #sh-period .vrow.sel{background:color-mix(in srgb,var(--accent) 12%,transparent)}
   :root:not([data-theme="light"]) #sh-period .vrow.is-pressed{background:var(--surface-3)}
-  :root:not([data-theme="light"]) #sh-period .pkcta .sec{background:color-mix(in srgb,var(--surface-3),#fff 3%)}
-  :root:not([data-theme="light"]) #sh-period .pkcta .pri{background:linear-gradient(180deg,hsl(163 55% 34%),hsl(163 55% 30%));box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
-  :root:not([data-theme="light"]) #sh-period .pkcta .pri.off{opacity:.30}
+  :root:not([data-theme="light"]) #sh-period .pkcta .pk-sec{background:color-mix(in srgb,var(--surface-3),#fff 3%)}
+  :root:not([data-theme="light"]) #sh-period .pkcta .pk-pri{background:linear-gradient(180deg,hsl(163 55% 34%),hsl(163 55% 30%));box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+  :root:not([data-theme="light"]) #sh-period .pkcta .pk-pri.off{opacity:.30}
   :root:not([data-theme="light"]) .fld{background:color-mix(in srgb,var(--card),#000 calc(var(--dWellDip)*1%));
     box-shadow:inset 0 2px calc(var(--dWellInset)*1px) rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,var(--dWellLight));
     border:1px solid color-mix(in srgb,var(--border),#000 20%)}
@@ -1120,8 +1120,8 @@ a.mi{text-decoration:none;color:inherit}
   <div class="eb" id="pkVEb">Візити</div>
   <div class="gcard vlist" id="pkList"></div>
   <div class="pkcta">
-    <button class="sec pressable" id="pkReset">Скинути</button>
-    <button class="pri pressable" id="pkOk">Показати</button>
+    <button class="pk-sec pressable" id="pkReset">Скинути</button>
+    <button class="pk-pri pressable" id="pkOk">Показати</button>
   </div>
 </div>
 
@@ -2065,11 +2065,14 @@ function cmpStHeadHTML(wcls,word){
 /* b24 — пігулка стала входом у пікер. При пулі рівно з 2 візитів вибирати нема з чого:
    рендеримо <span class="dpill static"> без шеврона. Клікабельна кнопка, що відкриває
    шіт, у якому єдина можлива пара вже стоїть, — глухий кут (мертва кнопка, wsd 3.9).
-   ⚠ Поріг саме <3, не <2: у пулі рівно з 2 візитів пара вже єдина. Стенд v2_3 ніс тут
-   <2 — тобто ЛОК §1.4 («N=2 → пігулка статична») стендом не був реалізований і на
-   девайсі цей край не перевірявся. Порт іде за ЛОКом; спіймано runtime-матрицею b24. */
+   ⚠ b24_1 · РЕВЕРС ЛОКу §1.4 (device-арбітраж). Спершу поріг був <3 («N=2 → статична»).
+   Девайс показав інше: користувач ТЯГНЕТЬСЯ до пігулки саме щоб ПЕРЕВІРИТИ, які дати
+   взято — це запит на підтвердження, не на вибір. Мертва пігулка при першому ж вході
+   вчить «сюди не тиснути», і згодом, коли візитів стане більше, він туди не повернеться.
+   Ціна відкритого шіта при N=2 — нуль; ціна втраченої звички — увесь механізм.
+   Поріг <2 фактично недосяжний (openCmp не пускає при пулі <2) — гілка страхувальна. */
 function cmpDpillHTML(fromV,toV){
-  var st=CMP.pool.length<3, tag=st?'span':'button';   // ≤2 у пулі = єдина можлива пара
+  var st=CMP.pool.length<2, tag=st?'span':'button';   // <2 недосяжно (гейт openCmp) — гілка лишається як страхувальна
   var lbl=fmtDate(fromV.date)+' → '+fmtDate(toV.date);
   return '<'+tag+' class="dpill'+(st?' static':' pressable')+'"'
     +(st?'':' onclick="openPeriod()"')
@@ -2247,7 +2250,7 @@ function renderPk(){
   document.getElementById('pkVEb').textContent='Візити · '+pool.length;
 }
 function openPeriod(){
-  if(!CMP.pool||CMP.pool.length<3)return;   // ≤2 → вибирати нема з чого (див. cmpDpillHTML)
+  if(!CMP.pool||CMP.pool.length<2)return;
   PK={fi:CMP.fi,ti:CMP.ti,anchor:null};
   renderPk();
   openNamed('sh-period');
