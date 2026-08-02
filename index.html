@@ -1563,7 +1563,7 @@ function updBrandMoney(bk){
   setMoney(document.getElementById('bm-'+bk),'fb',brandMoney(bk,tierForBrand(bk,ph),curVals(curPx)));
 }
 
-const APP_BUILD = { ver:'v2.19.0', build:'stockcheck-pwa.b29_3', date:'02.08.2026' }; // wsd 10.6 — b29.1: вузол F2, крок 1 — МОДЕЛЬ. Додано addrExt/addrParts (драбина адреси З-1/З-3) + visitModel()/journalGroups() (R1). Адитивно: жоден існуючий виклик не змінено, візуал b28 не рухався. Було b28: експорт CSV→справжній .xlsx (бланк «АП» 1:1, Table TableStyleMedium7, формули N/O з кешем, deflate через CompressionStream). Було b27: (1) фікс блідості блоку «Обслуговування» (.mi.quiet b); (2) тост піднято над CTA-рядом + детерміновані 2 рядки; (3) нагорода моменту 📋 = handoff-sweep (кандидат C, bench v3, device✓)
+const APP_BUILD = { ver:'v2.20.0', build:'stockcheck-pwa.b29_4', date:'02.08.2026' }; // wsd 10.6 — b29.1: вузол F2, крок 1 — МОДЕЛЬ. Додано addrExt/addrParts (драбина адреси З-1/З-3) + visitModel()/journalGroups() (R1). Адитивно: жоден існуючий виклик не змінено, візуал b28 не рухався. Було b28: експорт CSV→справжній .xlsx (бланк «АП» 1:1, Table TableStyleMedium7, формули N/O з кешем, deflate через CompressionStream). Було b27: (1) фікс блідості блоку «Обслуговування» (.mi.quiet b); (2) тост піднято над CTA-рядом + детерміновані 2 рядки; (3) нагорода моменту 📋 = handoff-sweep (кандидат C, bench v3, device✓)
 const NETWORK = { name:'StockCheck', tagline:'інструмент залишків', tg:'t.me/Konst_Andre' };
 const ORDER_FORM_URL = 'https://rbcom-my.sharepoint.com/:x:/r/personal/yuliia_syniuhina_reckitt_com/_layouts/15/Doc.aspx?sourcedoc=%7B361AB6BF-2AE9-410C-A81F-2AA3502C4EAD%7D&file=%25u0424%25u0430%25u0440%25u043c%25u0430%25u0441%25u0442%25u043e%25u0440%20%25u0437%25u0430%25u043c%25u043e%25u0432%25u043b%25u0435%25u043d%25u043d%25u044f%20%25u0442%25u0442.xlsx&wdLOR=c06833412-A6C7-4B15-AE95-76BCF4AB9FD6&openShare=true&fromShare=true&action=default&mobileredirect=true';
 const MSL_BY_K={}; MSL.forEach(function(s){MSL_BY_K[s.k]=s;});
@@ -1683,11 +1683,10 @@ function closeSheets(){document.getElementById('scrim').classList.remove('on');
 function openAbout(){closeSheet();setTimeout(function(){
   document.getElementById('scrim').classList.add('on');document.getElementById('sh-about').classList.add('on');},120);}
 /* §4.4 CSV context-split: детект активного екрана → динам-лейбл */
+/* b29.4/R5 · підпис бере ТОЙ САМИЙ зріз, що й кнопка. Власного обходу тут більше
+   немає — інакше він знову розійдеться з дією при першій зміні умов (П-4). */
 function updateCsvLabel(){var sub=document.getElementById('csvSub');if(!sub)return;
-  var atFill=document.getElementById('s-fill').classList.contains('active');
-  if(atFill&&curPx){sub.textContent='Ця аптека';}
-  else{var n=Object.keys(ST.phs||{}).filter(function(px){var e=ST.phs[px];return e&&e.visits&&e.visits.length;}).length;
-    sub.textContent='Усі дані · '+n+' '+plApt(n);}}
+  sub.textContent=exportScope().label;}
 function updateClearLabel(){var lbl=document.getElementById('clearLbl'),sub=document.getElementById('clearSub');if(!lbl)return;
   var atFill=document.getElementById('s-fill').classList.contains('active');
   var mi=document.getElementById('miClear');
@@ -2430,27 +2429,6 @@ async function buildXlsx(rows,useTable){
   return await zipBuild(files);
 }
 
-/* ---- збірка рядків бланка ---- */
-function blankRows(list,MSL,useTable){ // list:[{ph,vals}]
-  var rows=[];
-  list.forEach(function(it){
-    var ph=it.ph, vals=it.vals||{};
-    MSL.forEach(function(s){
-      var tier = (s.c==='OTC')?ph.oTC:ph.iW;
-      var norm = s[tier]||0;
-      var rest = (vals[s.k]!==undefined)?vals[s.k]:'';
-      var n    = rows.length+2;
-      var fN   = useTable ? 'АП[[#This Row],[Кількіть MSL]]-АП[[#This Row],[Залишок]]' : ('L'+n+'-M'+n);
-      var fO   = useTable ? 'АП[[#This Row],[Замовлення]]*АП[[#This Row],[Custom.Price]]' : ('N'+n+'*K'+n);
-      var ordV = (rest==='')?norm:(norm-rest);
-      rows.push([ph.px, ph.area, ph.city, ph.addr, ph.net, ph.oTC, ph.iW,
-                 s.n, s.c, s.k, s.p, norm, rest,
-                 {f:fN,v:ordV}, {f:fO,v:Math.round(ordV*s.p*100)/100}]);
-    });
-  });
-  return rows;
-}
-
 /* ---- рядки бланка ---- */
 function blankRows(list){ // list:[{ph,vis}]
   var rows=[];
@@ -2469,21 +2447,68 @@ function blankRows(list){ // list:[{ph,vis}]
   return rows;
 }
 
-function exportXLSX(){
+/* ═══ F2/b29.4 · ЗРІЗ ЕКСПОРТУ (R5 · П-5) ═════════════════════════════════════
+   ЄДИНЕ джерело істини для ДІЇ (exportXLSX) і для ПІДПИСУ (updateCsvLabel).
+   До b29.4 кожен рахував сам: exportXLSX обходив увесь PH і брав останній візит
+   будь-коли, updateCsvLabel — Object.keys(ST.phs). Два незалежні обходи одного
+   наміру розходяться при першій зміні умов фільтрації (П-4) — тут вони розійшлись
+   із самим екраном: обране місто ігнорувалось обома. Тепер зріз рахується один раз
+   і споживається обома; розійтись їм більше нема як — вони читають одну функцію,
+   а не повторюють одну логіку.
+   Повертає {list,label,fname}: list уже у формі, яку приймає blankRows. */
+function plVis(n){var a=n%10,b=n%100;if(a===1&&b!==11)return'візит';if(a>=2&&a<=4&&(b<12||b>14))return'візити';return'візитів';}
+/* Ім'я файлу НЕ входить у формат — усередині ZIP його немає, його не читає ні
+   Excel-парсер, ні Power Query. Тому санітизація вільна: ріжемо лише те, що ламає
+   файлові системи й share-лист iOS. */
+function fsafe(s){return String(s||'').replace(/[\\\/:*?"<>|]+/g,' ').replace(/\s+/g,' ').trim().slice(0,48);}
+function scopeArea(){return S.city||S.area;}
+/* Одна аптека → в імені ЯДРО АДРЕСИ і дата ВІЗИТУ (не today(): у readonly екран
+   показує минулий візит, а файл називався сьогоднішнім числом — П-15).
+   Ядро — той самий addrParts, що device✓ у журналі: ≤34 симв., медіана 20. */
+function scopeName(list){
+  if(list.length===1){var it=list[0];
+    return 'Фармастор_'+fsafe(addrParts(it.ph.addr).core)+'_'+((it.vis&&it.vis.date)||today())+'.xlsx';}
+  return 'Фармастор_'+fsafe(scopeArea())+'_'+list.length+'апт_'+today()+'.xlsx';
+}
+function exportScope(){
   var atFill=document.getElementById('s-fill').classList.contains('active');
-  var list=[], name;
+  var list=[],label;
   if(atFill&&curPx){
     var ph=getPh(curPx);
     var vis=roVisit||todayVisit(curPx)||(function(){var e=ST.phs[curPx];return e&&e.visits&&e.visits.length?e.visits[e.visits.length-1]:null;})();
-    list=[{ph:ph,vis:vis}]; name='Фармастор_'+curPx+'_'+today()+'.xlsx';
+    if(ph&&vis)list=[{ph:ph,vis:vis}];
+    label='Ця аптека';
+  } else if(S.mode==='transferred'){
+    /* Журнал показує ВІЗИТИ, бланк описує АПТЕКИ. Дві дати однієї аптеки лягли б
+       двома нерозрізненними блоками по 83 рядки — колонки дати в бланку немає,
+       розширювати його заборонено (контракт §10). Тому дедуп до найновішого візиту
+       в зрізі. Реопен — коли файл навчиться штампу дати (О-10 / b29.5). */
+    var rows=visitModel().filter(function(r){return r.transferred;}).filter(topMatch);
+    var best={},order=[];
+    rows.forEach(function(r){var b=best[r.px];
+      if(!b){best[r.px]=r;order.push(r.px);}else if(r.date>b.date)best[r.px]=r;});
+    list=order.map(function(px){var r=best[px],e=ST.phs[px];
+      return{ph:getPh(px),vis:(e&&e.visits)?e.visits[r.idx]:null};})
+      .filter(function(it){return it.ph&&it.vis;});
+    label=scopeArea()+' · '+rows.length+' '+plVis(rows.length)
+      +(list.length!==rows.length?' → '+list.length+' '+plApt(list.length):'');
   } else {
-    PH.forEach(function(ph){var e=ST.phs[ph.px];
-      if(e&&e.visits&&e.visits.length) list.push({ph:ph,vis:e.visits[e.visits.length-1]});});
-    name='Фармастор_усі_'+today()+'.xlsx';
-    if(!list.length){closeSheets();toast('Немає даних для експорту');return;}
+    /* Дошка — сьогоднішній день. Аптеки без введених залишків не потрапляють:
+       83 порожні рядки на аптеку — нуль інформації для адресата (D-1/A).
+       Тому число тут може бути меншим за лічильник чіпа — і підпис це каже. */
+    var vis0=homeModel().filter(topMatch).filter(function(p){return p.state!=='transferred';});
+    vis0.forEach(function(p){var v=todayVisit(p.px);
+      if(v&&Object.keys(v.vals||{}).length)list.push({ph:getPh(p.px),vis:v});});
+    label=scopeArea()+' · '+list.length+' '+plApt(list.length)
+      +(list.length<vis0.length?' з даними':'');
   }
+  return{list:list,label:label,fname:scopeName(list)};
+}
+function exportXLSX(){
+  var sc=exportScope();
   closeSheets();
-  buildXlsx(blankRows(list),true).then(function(bytes){deliverXLSX(name,bytes);})
+  if(!sc.list.length){toast('Немає даних для експорту');return;}
+  buildXlsx(blankRows(sc.list),true).then(function(bytes){deliverXLSX(sc.fname,bytes);})
     .catch(function(){toast('Не вдалось експортувати');});
 }
 function deliverXLSX(name,bytes){
