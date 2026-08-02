@@ -274,6 +274,13 @@ a.mi{text-decoration:none;color:inherit}
        Копія переписана під 187px ≈ 34 симв. → ellipsis тут аварійна сітка (Д1). ─── */
 #sheet .mi{min-height:var(--miH)}
 #sheet .mi-tx b,#sheet .mi-tx span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* b29.4a · підпис експорту — єдиний рядок у шіті зі ЗМІННОЮ довжиною: він несе
+   область/місто + числа зрізу. Однорядний ellipsis різав саме хвіст із числами,
+   тобто те, заради чого підпис існує («Дніпропетровська · 2 аптеки з да…»).
+   Даємо ЙОМУ два рядки; решта пунктів лишаються однорядковими, бо їхні підписи
+   статичні. line-clamp, а не звичайний wrap: третій рядок ніколи не з'явиться,
+   тож висота шіта передбачувана. Специфічність 2id+1class перебиває правило вище. */
+#sheet .mi-tx #csvSub{white-space:normal;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-height:1.25;text-overflow:clip}
 .mi-act{flex:none;display:flex;align-items:center;justify-content:flex-end;min-width:var(--actW)}
 
 /* ─── стани рядка версії ─── */
@@ -1563,7 +1570,7 @@ function updBrandMoney(bk){
   setMoney(document.getElementById('bm-'+bk),'fb',brandMoney(bk,tierForBrand(bk,ph),curVals(curPx)));
 }
 
-const APP_BUILD = { ver:'v2.20.0', build:'stockcheck-pwa.b29_4', date:'02.08.2026' }; // wsd 10.6 — b29.1: вузол F2, крок 1 — МОДЕЛЬ. Додано addrExt/addrParts (драбина адреси З-1/З-3) + visitModel()/journalGroups() (R1). Адитивно: жоден існуючий виклик не змінено, візуал b28 не рухався. Було b28: експорт CSV→справжній .xlsx (бланк «АП» 1:1, Table TableStyleMedium7, формули N/O з кешем, deflate через CompressionStream). Було b27: (1) фікс блідості блоку «Обслуговування» (.mi.quiet b); (2) тост піднято над CTA-рядом + детерміновані 2 рядки; (3) нагорода моменту 📋 = handoff-sweep (кандидат C, bench v3, device✓)
+const APP_BUILD = { ver:'v2.21.0', build:'stockcheck-pwa.b29_5', date:'02.08.2026' }; // wsd 10.6 — b29.5: 16-та колонка «Дата візиту» ВСЕРЕДИНІ таблиці АП (серійна дата + numFmt 164 dd.mm.yyyy, БЕЗ dataDxfId — dxfs у пакеті немає); дедуп D-2/B знято (кожен візит = свій блок); ім'я файлу 3візити/3аптеки повними словами, «аптеки» від УНІКАЛЬНИХ Proxima. Було b29.1: вузол F2, крок 1 — МОДЕЛЬ. Додано addrExt/addrParts (драбина адреси З-1/З-3) + visitModel()/journalGroups() (R1). Адитивно: жоден існуючий виклик не змінено, візуал b28 не рухався. Було b28: експорт CSV→справжній .xlsx (бланк «АП» 1:1, Table TableStyleMedium7, формули N/O з кешем, deflate через CompressionStream). Було b27: (1) фікс блідості блоку «Обслуговування» (.mi.quiet b); (2) тост піднято над CTA-рядом + детерміновані 2 рядки; (3) нагорода моменту 📋 = handoff-sweep (кандидат C, bench v3, device✓)
 const NETWORK = { name:'StockCheck', tagline:'інструмент залишків', tg:'t.me/Konst_Andre' };
 const ORDER_FORM_URL = 'https://rbcom-my.sharepoint.com/:x:/r/personal/yuliia_syniuhina_reckitt_com/_layouts/15/Doc.aspx?sourcedoc=%7B361AB6BF-2AE9-410C-A81F-2AA3502C4EAD%7D&file=%25u0424%25u0430%25u0440%25u043c%25u0430%25u0441%25u0442%25u043e%25u0440%20%25u0437%25u0430%25u043c%25u043e%25u0432%25u043b%25u0435%25u043d%25u043d%25u044f%20%25u0442%25u0442.xlsx&wdLOR=c06833412-A6C7-4B15-AE95-76BCF4AB9FD6&openShare=true&fromShare=true&action=default&mobileredirect=true';
 const MSL_BY_K={}; MSL.forEach(function(s){MSL_BY_K[s.k]=s;});
@@ -2326,15 +2333,28 @@ async function zipBuild(files){ // files:[{name,data:Uint8Array}]
 function xe(s){return (''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function colName(n){var s='';while(n>0){var m=(n-1)%26;s=String.fromCharCode(65+m)+s;n=(n-m-1)/26;}return s;}
 function u8(str){return new TextEncoder().encode(str);}
+/* b29.5 · ISO 'YYYY-MM-DD' → серійне число Excel (епоха 1900, база 1899-12-30).
+   Дата пишеться ЧИСЛОМ, не текстом: текстова дата не потрапляє в календарний
+   фільтр Excel і сортується правильно лише в ISO — тобто виглядом, який ми
+   адресатові не обіцяли. Серійна дата дає і сортування як дату, і фільтр
+   «за місяць/день», і вигляд, який задаємо МИ через numFmt, а не локаль КАМа. */
+function dserial(iso){var p=String(iso||'').split('-');
+  if(p.length!==3)return '';
+  var n=(Date.UTC(+p[0],+p[1]-1,+p[2])-Date.UTC(1899,11,30))/864e5;
+  return isFinite(n)?n:'';}
 
 var HEAD=['Proxima Pharmacy ID','Area','City','Outlet Address','Network','Category OTC',
           'Category IW','Custom.SKY','Custom.Category','Custom.Kode','Custom.Price',
-          'Кількіть MSL','Залишок','Замовлення','Column1'];
-var WIDTH=[13,18,14,44,11,9,9,44,11,12,10,11,10,12,12];
+          'Кількіть MSL','Залишок','Замовлення','Column1','Дата візиту'];
+var WIDTH=[13,18,14,44,11,9,9,44,11,12,10,11,10,12,12,12];
+/* b29.5 · Остання колонка рахується з HEAD, а не зашита літералом 'O' у трьох
+   місцях. Літерал і масив розходяться мовчки: масив виріс, ref лишився старим —
+   Excel побачив би таблицю вужчу за дані й пішов на ремонт. Тепер джерело одне. */
+var LASTCOL=colName(HEAD.length);
 
 /* ---- аркуш ---- */
 function sheetXml(rows,useTable){
-  var last=rows.length+1, ref='A1:O'+last, x=[];
+  var last=rows.length+1, ref='A1:'+LASTCOL+last, x=[];
   x.push('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>');
   x.push('<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">');
   x.push('<dimension ref="'+ref+'"/>');
@@ -2355,7 +2375,9 @@ function sheetXml(rows,useTable){
   rows.forEach(function(r,ri){
     var n=ri+2; x.push('<row r="'+n+'">');
     r.forEach(function(v,ci){
-      var cr=colName(ci+1)+n, st=(ci===10||ci===14)?' s="2"':'';
+      /* s="2" — гроші (numFmt 2); s="3" — дата візиту (numFmt 164). Порожня дата
+         теж отримує стиль: клітинка без значення, але з форматом колонки. */
+      var cr=colName(ci+1)+n, st=(ci===10||ci===14)?' s="2"':(ci===15?' s="3"':'');
       if(v===null||v===undefined||v===''){ if(st)x.push('<c r="'+cr+'"'+st+'/>'); return; }
       if(v&&v.f!==undefined){
         x.push('<c r="'+cr+'"'+st+'><f>'+xe(v.f)+'</f>'+(v.v===''?'':'<v>'+v.v+'</v>')+'</c>');
@@ -2375,10 +2397,14 @@ function sheetXml(rows,useTable){
 }
 
 function tableXml(rowCount){
-  var ref='A1:O'+(rowCount+1), x=[];
+  var ref='A1:'+LASTCOL+(rowCount+1), x=[];
   x.push('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>');
   x.push('<table xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" id="1" name="АП" displayName="АП" ref="'+ref+'" totalsRowShown="0">');
-  x.push('<autoFilter ref="'+ref+'"/><tableColumns count="15">');
+  x.push('<autoFilter ref="'+ref+'"/><tableColumns count="'+HEAD.length+'">');
+  /* ⚠ b29.5 · НЕ додавати dataDxfId у жодну tableColumn. У нашому styles.xml блоку
+     <dxfs> немає (dxfs=0), тож будь-який dataDxfId — посилання в нікуди: ПК-Excel
+     іде на ремонт table1.xml, мобільний просто відмовляється відкрити файл.
+     Прецедент — демо-прев'ю b29.5 v1 (самері F2.5 §2D, дефект Д-1). */
   HEAD.forEach(function(h,i){
     var id=i+1;
     if(id===14) x.push('<tableColumn id="14" name="'+xe(h)+'"><calculatedColumnFormula>АП[[#This Row],[Кількіть MSL]]-АП[[#This Row],[Залишок]]</calculatedColumnFormula></tableColumn>');
@@ -2391,6 +2417,11 @@ function tableXml(rowCount){
 
 var STYLES='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 +'<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">'
+/* b29.5 · numFmts ПЕРШИМ елементом: порядок дітей styleSheet заданий схемою
+   (numFmts · fonts · fills · borders · cellStyleXfs · cellXfs · cellStyles) і
+   читається позиційно — звірено на файлі, який пише сумісний писар. Крапку у
+   formatCode екрануємо: без бекслеша вона трактується як десятковий роздільник. */
++'<numFmts count="1"><numFmt numFmtId="164" formatCode="dd\\.mm\\.yyyy"/></numFmts>'
 +'<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font>'
 +'<font><b/><sz val="11"/><name val="Calibri"/></font></fonts>'
 +'<fills count="3"><fill><patternFill patternType="none"/></fill>'
@@ -2398,10 +2429,11 @@ var STYLES='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'
 +'<fill><patternFill patternType="solid"><fgColor rgb="FFDCE6F1"/><bgColor indexed="64"/></patternFill></fill></fills>'
 +'<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>'
 +'<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>'
-+'<cellXfs count="3">'
++'<cellXfs count="4">'
 +'<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>'
 +'<xf numFmtId="0" fontId="1" fillId="2" borderId="0" xfId="0" applyFont="1" applyFill="1"/>'
 +'<xf numFmtId="2" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
++'<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>'
 +'</cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>'
 +'</styleSheet>';
 
@@ -2441,7 +2473,8 @@ function blankRows(list){ // list:[{ph,vis}]
       var ordV=(rest==='')?norm:(norm-rest);
       rows.push([ph.px, ph.area, ph.city, ph.addr, ph.net, tOtc, tIw,
                  s.n, s.c, s.k, s.p, norm, rest,
-                 {f:FN,v:ordV}, {f:FO,v:Math.round(ordV*s.p*100)/100}]);
+                 {f:FN,v:ordV}, {f:FO,v:Math.round(ordV*s.p*100)/100},
+                 (vis&&vis.date)?dserial(vis.date):'']);
     });
   });
   return rows;
@@ -2457,6 +2490,7 @@ function blankRows(list){ // list:[{ph,vis}]
    а не повторюють одну логіку.
    Повертає {list,label,fname}: list уже у формі, яку приймає blankRows. */
 function plVis(n){var a=n%10,b=n%100;if(a===1&&b!==11)return'візит';if(a>=2&&a<=4&&(b<12||b>14))return'візити';return'візитів';}
+function plBlk(n){var a=n%10,b=n%100;if(a===1&&b!==11)return'блок';if(a>=2&&a<=4&&(b<12||b>14))return'блоки';return'блоків';}
 /* Ім'я файлу НЕ входить у формат — усередині ZIP його немає, його не читає ні
    Excel-парсер, ні Power Query. Тому санітизація вільна: ріжемо лише те, що ламає
    файлові системи й share-лист iOS. */
@@ -2468,7 +2502,23 @@ function scopeArea(){return S.city||S.area;}
 function scopeName(list){
   if(list.length===1){var it=list[0];
     return 'Фармастор_'+fsafe(addrParts(it.ph.addr).core)+'_'+((it.vis&&it.vis.date)||today())+'.xlsx';}
-  return 'Фармастор_'+fsafe(scopeArea())+'_'+list.length+'апт_'+today()+'.xlsx';
+  /* b29.5 · Кількість аптек рахується від УНІКАЛЬНИХ Proxima, а не від довжини
+     списку: після зняття дедупу list.length — це число БЛОКІВ. Зріз «2 аптеки ×
+     2 дати» назвався б «4аптеки» — неправда в імені, яке читає КАМ, а не парсер. */
+  var seen={},nph=0;
+  list.forEach(function(it){if(!seen[it.ph.px]){seen[it.ph.px]=1;nph++;}});
+  if(nph===1){
+    /* Одна аптека, кілька дат: ядро адреси + кількість візитів + НАЙНОВІША дата.
+       Найновіша, а не діапазон: «05.07..02.08» читається як безперервний період,
+       тоді як у файлі лежать дискретні зрізи. У теці вкладень кінцева найновіша
+       дата ще й групує файли за свіжістю — початкова найстаріша пливе. */
+    var last=''; list.forEach(function(it){var d=(it.vis&&it.vis.date)||''; if(d>last)last=d;});
+    return 'Фармастор_'+fsafe(addrParts(list[0].ph.addr).core)+'_'
+      +list.length+plVis(list.length)+'_'+(last||today())+'.xlsx';
+  }
+  /* Повні слова замість «3апт»: ім'я бачить людина. Асиметрія «3апт» ⟂ «4візити»
+     в одному контракті — правиться тут, а не лишається на потім (О-13). */
+  return 'Фармастор_'+fsafe(scopeArea())+'_'+nph+plApt(nph)+'_'+today()+'.xlsx';
 }
 function exportScope(){
   var atFill=document.getElementById('s-fill').classList.contains('active');
@@ -2479,19 +2529,32 @@ function exportScope(){
     if(ph&&vis)list=[{ph:ph,vis:vis}];
     label='Ця аптека';
   } else if(S.mode==='transferred'){
-    /* Журнал показує ВІЗИТИ, бланк описує АПТЕКИ. Дві дати однієї аптеки лягли б
-       двома нерозрізненними блоками по 83 рядки — колонки дати в бланку немає,
-       розширювати його заборонено (контракт §10). Тому дедуп до найновішого візиту
-       в зрізі. Реопен — коли файл навчиться штампу дати (О-10 / b29.5). */
+    /* b29.5 · ДЕДУП D-2/B ЗНЯТО — це і є закриття О-10.
+       Він існував рівно з однієї причини: бланк не вмів сказати дату, тож дві дати
+       однієї аптеки лягали двома нерозрізненними блоками по 83 рядки, і адресат не
+       мав жодного способу зрозуміти, який із них який. 16-та колонка «Дата візиту»
+       цю нерозрізненність знімає — блоки тепер самопідписані, і кожен візит іде у
+       файл своїм блоком.
+       Порядок: аптека (у порядку PH, як його бачить visitModel) → дата ЗА
+       ЗРОСТАННЯМ. Це НЕ порядок екрана: journalGroups сортує дати спадно, бо око
+       шукає свіже зверху. У файлі навпаки — чотири візити однієї аптеки читаються
+       як динаміка зліва направо, а не як купа. Розхід свідомий. */
     var rows=visitModel().filter(function(r){return r.transferred;}).filter(topMatch);
-    var best={},order=[];
-    rows.forEach(function(r){var b=best[r.px];
-      if(!b){best[r.px]=r;order.push(r.px);}else if(r.date>b.date)best[r.px]=r;});
-    list=order.map(function(px){var r=best[px],e=ST.phs[px];
-      return{ph:getPh(px),vis:(e&&e.visits)?e.visits[r.idx]:null};})
-      .filter(function(it){return it.ph&&it.vis;});
+    var byPx={},order=[];
+    rows.forEach(function(r){if(!byPx[r.px]){byPx[r.px]=[];order.push(r.px);}byPx[r.px].push(r);});
+    list=[];
+    order.forEach(function(px){
+      var e=ST.phs[px], ph=getPh(px);
+      byPx[px].sort(function(a,b){return a.date<b.date?-1:(a.date>b.date?1:0);});
+      byPx[px].forEach(function(r){
+        var v=(e&&e.visits)?e.visits[r.idx]:null;
+        if(ph&&v)list.push({ph:ph,vis:v});});
+    });
+    /* Стрілка лишається, хоча після зняття дедупу числа зазвичай рівні: list
+       фільтрується на живий ph/vis, тож при битому запису вони РОЗІЙДУТЬСЯ — і
+       підпис це покаже. Підпис зобов'язаний повторювати те, що реально у файлі. */
     label=scopeArea()+' · '+rows.length+' '+plVis(rows.length)
-      +(list.length!==rows.length?' → '+list.length+' '+plApt(list.length):'');
+      +' → '+list.length+' '+plBlk(list.length);
   } else {
     /* Дошка — сьогоднішній день. Аптеки без введених залишків не потрапляють:
        83 порожні рядки на аптеку — нуль інформації для адресата (D-1/A).
@@ -2803,7 +2866,10 @@ function cmpApply(fi,ti){
 
 var PK={fi:0,ti:1,anchor:null};                      // чернетка шіта, окремо від CMP
 function plPos(n){var a=n%10,b=n%100;if(a===1&&b!==11)return'позиція';if(a>=2&&a<=4&&(b<12||b>14))return'позиції';return'позицій';}
-function plVis(n){var a=n%10,b=n%100;if(a===1&&b!==11)return'візит';if(a>=2&&a<=4&&(b<12||b>14))return'візити';return'візитів';}
+/* b29.5 · Другий, байт-у-байт ідентичний екземпляр plVis знято: обидва жили в
+   одному скоупі, тож працював лише hoisted-переможець. Виклик нижче (підказка
+   шіта) резолвиться вгору до оголошення в блоці експорту. Той самий клас, що
+   мертвий дубль blankRows у b29.4 (R6). */
 /* автосвоп = СОРТУВАННЯ пари, а не перевірка "чи не навпаки": інверсію набрати неможливо */
 function pkSetPair(a,b){PK.fi=Math.min(a,b);PK.ti=Math.max(a,b);}
 function pkTap(i){
