@@ -95,9 +95,10 @@ input,select{font-family:inherit;font-size:16px}
 .plate{width:var(--plate);height:var(--plate);border-radius:var(--rad);
   background:var(--plateBg,#FFFFFF);display:grid;place-items:center;overflow:hidden;flex:none;
   border:var(--plBdW,0px) solid var(--plBd,transparent);
-  position:relative;z-index:1;
+  position:relative;z-index:var(--plateZ,1);
   padding:calc(var(--plate) * var(--sgPad) / 100)}
-.ncard.ro-1 .plate{z-index:auto}
+.ncard.is-sel{--kThis:var(--kSel,1)}
+.mini{--kThis:var(--kSel,1)}
 .plate img{width:100%;height:100%;object-fit:contain;display:block;
   transform:scale(calc(var(--kMark) * var(--kThis,1)));transform-origin:center}
 /* Д-17 (b4): гліф не читав --kThis — kNet мовчки нічого не робив на Фармасторі,
@@ -122,14 +123,21 @@ input,select{font-family:inherit;font-size:16px}
    значеннями й різними підписами: «A рамка» ніколи не показувала режим A.
    Гілкування перенесене сюди — apply() пише всі варіанти, клас обирає.
    Наслідок: liftA більше не має гілки `mode==="b"?100:…` (Д-13). */
-.ncard.is-act{background:var(--tileBg);border-color:var(--bdAcc);border-width:var(--ringW);
-  padding:calc(var(--pad) - var(--ringW) + 1px)}
-.ncard.is-act.m-b{background:var(--actBgB);border-color:var(--bdNeu)}
-.ncard.is-act.m-c::before{content:"";position:absolute;top:-5px;right:-5px;width:17px;height:17px;
+/* b5 · КАНАЛИ АКТИВУ. Чотири зашиті режими були чотирма ставками автора:
+   п'яту комбінацію оператор не міг зібрати в принципі. Тепер кожен канал
+   незалежний, а «режим» = іменований набір каналів, який зберігається в слот.
+   Гібрид «тон+підйом» тут не нова конструкція, а дві ручки, підняті разом. */
+.ncard.is-act{background:var(--actBg);border-color:var(--actBd);border-width:var(--ringW);
+  padding:calc(var(--pad) - var(--ringW) + 1px);
+  transform:translateY(calc(var(--actLift) * -1px)) scale(var(--actScale))}
+.ncard.is-act .plate{box-shadow:0 0 0 var(--plRingW) var(--plRing)}
+.ncard.is-act .nlbl{color:var(--actLbl)}
+.ncard.is-act::before{content:"";position:absolute;top:-5px;right:-5px;width:17px;height:17px;
+  opacity:var(--actChk,0);pointer-events:none;
   border-radius:50%;background:var(--accent);z-index:2;
   background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12l5 5L20 6'/></svg>");
   background-size:11px;background-repeat:no-repeat;background-position:center}
-.ncard.is-act.m-d{transform:translateY(-2px)}
+/* b5: правила .m-c / .m-d видалені — їхня робота перейшла в канали chk і lift. */
 
 /* ── S2 ізольована ─────────────────────────────────────────────────── */
 .iso{display:flex;flex-direction:column;align-items:center;gap:18px;padding-top:8px}
@@ -154,6 +162,9 @@ input,select{font-family:inherit;font-size:16px}
 .actrow{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
 .actcell{display:flex;flex-direction:column;align-items:center;gap:6px}
 .actcap{font-size:10px;font-weight:800;color:var(--muted);letter-spacing:.4px}
+.slotempty{display:grid;place-items:center;text-align:center;font-size:9.5px;font-weight:800;
+  color:var(--muted);border:1px dashed var(--border);border-radius:12px;
+  min-height:calc(var(--plate) + var(--pad)*2 + var(--lblSz)*2.36 + 22px);opacity:.6}
 
 /* ── S4 діагностика ────────────────────────────────────────────────── */
 .diag{background:var(--diagBg);border-radius:14px;padding:12px;
@@ -196,6 +207,11 @@ input,select{font-family:inherit;font-size:16px}
 .lv.off{opacity:.42}
 .lv.off b{color:#8b9aa6}
 .lv .scope{font-size:8.5px;font-weight:800;color:#e0a94a;letter-spacing:.3px;flex:none}
+/* маніфест п.10: чуже/розрахункове число стоїть СІРИМ референсом біля важеля,
+   а не мовчазним дефолтом — інакше оператор судить чужу ставку як свою */
+.lv .ref{font-size:8.5px;font-weight:800;color:#6d7c88;flex:none}
+.lv.ink #inkOut{flex:1;font-size:9.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.ink-ok{color:#7fd4b0}.ink-warn{color:#e0a94a}.ink-bad{color:#e08b6a}
 .pbtn{font-size:11px;font-weight:800;padding:6px 10px;border-radius:7px;background:#1e242b;color:#cfe0d8}
 .pbtn.acc{background:#2f6d5a;color:#eaf5f0}
 #copyOut{width:100%;margin-top:6px;font-size:10px;padding:5px 7px;border-radius:7px;
@@ -233,7 +249,7 @@ input,select{font-family:inherit;font-size:16px}
 
 <div id="panel">
   <div class="prow">
-    <span class="ver" id="verLine">NETPICK STAGEBENCH v3.0 · b4</span>
+    <span class="ver" id="verLine">NETPICK STAGEBENCH v3.0 · b5</span>
     <span class="zbadge" id="zBadge">FIT</span>
     <button class="pbtn" id="btnHide">сховати ⌄</button>
   </div>
@@ -323,42 +339,67 @@ var FARMASTOR_INK="#0A8336";   /* реєстр §5 — гліф своїм ко�
 
 var FR={xs:{w:375,h:812,sb:44,sa:34,notch:"xs"},p15:{w:393,h:852,sb:59,sa:34,notch:"p15"}};
 
+/* ── ТАБЛИЦЯ ЧОРНИЛА ─────────────────────────────────────────────────
+   [fill, k на ціль]. fill = частка непрозорих не-білих пікселів у боксі 224²,
+   тобто РЕАЛЬНА площа чорнила, а не розмір бокса. Саме її око читає як вагу.
+   ПРОВЕНАНС: заміряно з nets_assets_v2.js 07.08.2026 (PIL, поріг яскравості 246,
+   альфа 24). К-5: числа машинні, живуть у стенді копією — при заміні будь-якого
+   ассета таблиця ПЕРЕЗАМІРЮЄТЬСЯ, а не правиться рукою.
+   `k на ціль` — половинна нормалізація до медіани (0.245): k=(med/fill)^0.25.
+   Повна дала б АНЦ 0.675 — він став би дрібнішим за всіх, і це читалось би вже
+   не як рівна вага, а як менша важливість. Стеля 1.10: вище йде апскейл 224px
+   і зріз об край плити. Гліф Фармастора у таблиці відсутній — він вектор. */
+var FILL={
+ A911:[0.402,0.88], ANC:[0.537,0.82], APTEKA_NC:[0.250,1.00], BAZHAEMO:[0.307,0.95],
+ CENTRALNA:[0.215,1.03], FAKULTET:[0.245,1.00], LIKY_POLTAVSHCHYNY:[0.475,0.85],
+ LINDA_FARM:[0.230,1.02], MED_SERVIS:[0.288,0.96], MOYA_APTEKA:[0.150,1.10],
+ NARODNA:[0.215,1.03], PODOROZHNYK:[0.166,1.10], TRIOL:[0.374,0.90],
+ UAH:[0.205,1.05], ZAITSEVA:[0.181,1.08]
+};
+var FILL_MED=0.245;
+
+function emptyK(){var o={};NETS.forEach(function(n){o[n.slug]=1.00;});return o;}
+
 /* ── P0 — контрольний пресет. Числа грепнуті з b31, не з пам'яті (Д-В) ── */
 var P0={
   cols:4, plate:64, rad:14, gX:10, gY:14, pad:8, lblSz:11, cntSz:10,
-  kMark:1.00, kNet:1.00, sgPad:8,
-  act:{ light:{mode:"a", ringW:2, ringA:100, liftA:0},
-        dark: {mode:"a", ringW:2, ringA:100, liftA:0} },
+  kMark:1.00, sgPad:8, kNets:emptyK(),
+  /* b5: канали замість режиму. bd: acc|neu|off */
+  act:{ light:{bd:"acc", ringW:2, ringA:100, tone:0, chk:0, lift:0, scale:100, plR:0, lbl:0},
+        dark: {bd:"acc", ringW:2, ringA:100, tone:0, chk:0, lift:0, scale:100, plR:0, lbl:0} },
   /* Д-21 (b4): прибрані фантоми mat.light.ridge і mat.dark.sh — поля жили в пресеті,
      не мали ані важеля, ані читання. Пресет обіцяв значення, якого не існує. */
   mat:{ light:{bg:0,  bd:100, sh:12, plM:0, plB:0, ro:0},
         dark: {bg:26, bd:100, ridge:6, plM:0, plB:0, ro:0} },
-  diagBg:8
+  slots:null, diagBg:8
 };
-/* P1 — device-тюн оператора 06.08.2026, рядок 📋 з b2. Стенд стартує З НЬОГО,
+/* P1 — device-тюн оператора 07.08.2026, рядок 📋 з b4. Стенд стартує З НЬОГО,
    бо судження продовжується з досягнутої точки, а не з нуля. P0 лишається
-   контролем під кнопкою утримання. */
+   контролем під кнопкою утримання.
+   ПЕРЕКЛАД b4→b5: режим `b` = нейтральний бордюр + тон, тобто bd:"neu" + tone.
+   ringA 82 і tone 84/73 — саме твої числа, не заокруглені. */
 var P1={
   cols:3, plate:73, rad:16, gX:10, gY:14, pad:9, lblSz:12, cntSz:10,
-  kMark:1.00, kNet:1.00, sgPad:4,
-  /* Д-13 (b4) · МІГРАЦІЯ, НЕ ЗМІНА ТЮНУ. У b3 гілка `mode==="b" ? 100 : A.liftA`
-     ігнорувала важіль у режимі b — а обрано було саме b, в обох темах. Тобто
-     рядок 📋 казав `l0`, а на екрані стояло 100. Тут записано те, що оператор
-     БАЧИВ. Піксель при P1 не змінюється; змінюється чесність запису. */
-  act:{ light:{mode:"b", ringW:2, ringA:100, liftA:100},
-        dark: {mode:"b", ringW:2, ringA:100, liftA:100} },
-  mat:{ light:{bg:0,  bd:100, sh:12, plM:0, plB:0, ro:0},
-        dark: {bg:37, bd:100, ridge:18, plM:0, plB:0, ro:0} },
-  diagBg:8
+  kMark:1.00, sgPad:3, kNets:emptyK(),
+  act:{ light:{bd:"neu", ringW:2, ringA:82, tone:84, chk:0, lift:0, scale:100, plR:0, lbl:0},
+        dark: {bd:"neu", ringW:2, ringA:82, tone:73, chk:0, lift:0, scale:100, plR:0, lbl:0} },
+  mat:{ light:{bg:28, bd:82, sh:12, plM:0, plB:64, ro:0},
+        dark: {bg:37, bd:72, ridge:20, plM:0, plB:46, ro:1} },
+  slots:null, diagBg:8
 };
 var ST=JSON.parse(JSON.stringify(P1));
+/* b5 · СЛОТИ S3. Три збережені набори каналів на тему + поточний = чотири
+   комірки поруч. Це і є заміна «чотирьох режимів»: комбінації тепер твої. */
+var SLOTS={light:[null,null,null],dark:[null,null,null]};
 var scene=1, theme="light", dev="xs", famOn="geo";
 var zMode="fit", zVal=1, holdSnap=null, isoIdx=0;
 
 /* ── ВАЖЕЛІ ─────────────────────────────────────────────────────────── */
 var LV={
  geo:[
-  ["cols","cols",3,5,1,"колонок у сітці"],
+  /* К-6 (b5): min був 3, і оператор обрав 3 — тобто значення стояло на межі
+     шкали й більше не судило. Нижня стеля опущена до 2, щоб «3» стало вибором. */
+  ["cols","cols",2,5,1,"колонок у сітці"],
   ["plate","plate",44,96,1,"сторона білої плити, px"],
   ["rad","rad",6,24,1,"радіус плити, px"],
   ["gX","gapX",4,24,1,"проміжок по X"],
@@ -373,14 +414,17 @@ var LV={
  ],
  diag:[["diagBg","diagBg",0,26,1,"яскравість діагностичної плити"]]
 };
-/* Д-19 (b4): ringW min був 1 — рамка малювалась у ВСІХ режимах завжди, і «B тон»
-   судився як тон+рамка. Тону окремо не бачив ніхто. Нуль дозволений.
+/* b5 · КАНАЛИ. Кожен незалежний, кожен має свій рядок у 📋 (К-9).
+   Д-19 (b4): ringW min 0 — рамку можна вимкнути й судити тон окремо.
    Геометрія не їде: неактивна картка має border 1px, тож padding
    calc(pad − ringW + 1px) при ringW=0 дає рівно ту саму коробку. */
 var LV_ACT=[
   ["ringW","ringW",0,4,1,"товщина рамки (0 = вимкнена)"],
   ["ringA","ringA",0,100,1,"насиченість рамки, %"],
-  ["liftA","liftA",0,100,1,"сила тону — ДІЄ ТІЛЬКИ В РЕЖИМІ B"]
+  ["tone","тон",0,100,1,"заливка accent-soft під карткою"],
+  ["lift","підйом",0,4,1,"зсув угору, px — на темній без тіні майже не читається"],
+  ["scale","масштаб",100,106,1,"збільшення картки, %"],
+  ["plR","кільце плити",0,4,1,"акцентне кільце по краю БІЛОЇ плити, px"]
 ];
 /* Д-11 (b3): стелі підняті — оператор уперся в ridge=18/18 і fillLift=37/50.
    Важіль, що впирається в стелю, перестає судити: він більше не каже «отут добре»,
@@ -421,9 +465,18 @@ function buildPanel(){
     function(){return ST.kMark;},function(x){ST.kMark=x;},"wide cost"));
   s.appendChild(mk("sgPad","signPad",0,20,.5,"повітря плити у %, чистий CSS",
     function(){return ST.sgPad;},function(x){ST.sgPad=x;},"wide"));
-  s.appendChild(mk("kNet","kNet ⟨обрана⟩",.70,1.40,.01,
-    "K тільки для обраної мережі — замір потреби в пер-мережевій колонці k (О-36)",
-    function(){return ST.kNet;},function(x){ST.kNet=x;},"wide cost"));
+  /* b5 · kNet ПЕР-МЕРЕЖЕВИЙ. Скаляр на весь стенд робив замір 15 мереж неможливим:
+     перемкнув мережу — важіль показував значення від попередньої. Тепер повзунок
+     читає й пише k ОБРАНОЇ мережі, решта тримають свої. */
+  var slug=NETS[isoIdx].slug, tgt=FILL[slug];
+  var kr=mk("kNet","kNet ⟨"+NETS[isoIdx].label+"⟩",.70,1.20,.01,
+    "K тільки для обраної мережі (О-36). >1.10 = апскейл 224px + зріз об край плити",
+    function(){return ST.kNets[slug]!=null?ST.kNets[slug]:1;},
+    function(x){ST.kNets[slug]=x;},"wide");
+  if(tgt){var rf=el("span","ref","ціль "+tgt[1].toFixed(2));
+          kr.insertBefore(rf,kr.querySelector(".val"));}
+  s.appendChild(kr);
+  s.appendChild(el("div","lv wide ink",'<b>чорнило</b><span id="inkOut">—</span>'));
   var lock=el("div","lv wide lock");
   lock.innerHTML='<b>PLATE_BG</b><span style="flex:1;font-size:9.5px">#FFFFFF в обох темах — П-25, не важіль</span><span class="val">🔒</span>';
   s.appendChild(lock);
@@ -431,31 +484,66 @@ function buildPanel(){
     function(){return ST.diagBg;},function(x){ST.diagBg=x;},"wide"));
 
   var a=document.getElementById("fam-act");a.innerHTML="";
-  var mrow=el("div","lv wide");
-  mrow.innerHTML='<b>режим</b>';
-  var sg=el("div","sg");
-  [["a","A рамка"],["b","B тон"],["c","C рамка+✓"],["d","D підйом"]].forEach(function(p){
-    var b=document.createElement("button");b.textContent=p[1];b.dataset.v=p[0];
-    if(ST.act[theme].mode===p[0])b.className="on";
-    b.onclick=function(){ST.act[theme].mode=p[0];buildPanel();apply();};
-    sg.appendChild(b);
-  });
-  mrow.appendChild(sg);a.appendChild(mrow);
   a.appendChild(el("div","lv wide",'<b style="color:#e0a94a">тема</b>'
-    +'<span style="flex:1;font-size:9.5px">важелі АКТИВ і МАТЕРІАЛ — <b style="color:#7fd4b0">'
+    +'<span style="flex:1;font-size:9.5px">канали АКТИВ і МАТЕРІАЛ — <b style="color:#7fd4b0">'
     +(theme==="light"?"СВІТЛА":"ТЕМНА")+'</b>, набори незалежні (A39)</span>'));
+
+  /* канал «рамка» — не число, тому сегмент, а не повзунок */
+  var brow=el("div","lv wide"); brow.innerHTML='<b>рамка</b>';
+  var bsg=el("div","sg");
+  [["acc","акцент"],["neu","нейтр"],["off","нема"]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[1];b.dataset.v=p[0];
+    if(ST.act[theme].bd===p[0])b.className="on";
+    b.onclick=function(){ST.act[theme].bd=p[0];buildPanel();apply();};
+    bsg.appendChild(b);
+  });
+  brow.appendChild(bsg);a.appendChild(brow);
+
   LV_ACT.forEach(function(d){
     var row=mk(d[0],d[1],d[2],d[3],d[4],d[5],
       function(){return ST.act[theme][d[0]];},function(x){ST.act[theme][d[0]]=x;});
-    /* b4: область дії важеля оголошена в його власному рядку, а не в легенді.
-       liftA живить тільки .m-b; на S3 режим B видно завжди, тому там він не гаситься. */
-    if(d[0]==="liftA"){
-      var sc=el("span","scope","B");
-      row.insertBefore(sc,row.querySelector(".val"));
-      if(scene!==3 && ST.act[theme].mode!=="b") row.classList.add("off");
-    }
+    /* область дії оголошена в рядку важеля, а не в легенді: ringW/ringA нічого
+       не роблять при рамці «нема» — і це видно, а не вгадується. */
+    if((d[0]==="ringW"||d[0]==="ringA") && ST.act[theme].bd==="off") row.classList.add("off");
     a.appendChild(row);
   });
+
+  /* канали-прапорці */
+  var frow=el("div","lv wide"); frow.innerHTML='<b>галочка</b>';
+  var fsg=el("div","sg");
+  [["0","нема"],["1","є"]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[1];b.dataset.v=p[0];
+    if(String(ST.act[theme].chk)===p[0])b.className="on";
+    b.onclick=function(){ST.act[theme].chk=+p[0];buildPanel();apply();};
+    fsg.appendChild(b);
+  });
+  frow.appendChild(fsg);a.appendChild(frow);
+
+  var lrow=el("div","lv wide"); lrow.innerHTML='<b>підпис</b>';
+  var lsg=el("div","sg");
+  [["0","звичайний"],["1","акцентний"]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[1];b.dataset.v=p[0];
+    if(String(ST.act[theme].lbl)===p[0])b.className="on";
+    b.onclick=function(){ST.act[theme].lbl=+p[0];buildPanel();apply();};
+    lsg.appendChild(b);
+  });
+  lrow.appendChild(lsg);a.appendChild(lrow);
+
+  /* СЛОТИ — заміна чотирьох зашитих режимів. Зберігаєш свій набір у комірку,
+     S3 показує всі три поруч із поточним. Тап по комірці на S3 завантажує набір. */
+  var srow=el("div","lv wide"); srow.innerHTML='<b>слоти</b>';
+  var ssg=el("div","sg");
+  ["A","Б","В"].forEach(function(nm,i){
+    var b=document.createElement("button");
+    b.textContent="⤓"+nm+(SLOTS[theme][i]?" ✓":"");
+    b.onclick=function(){SLOTS[theme][i]=JSON.parse(JSON.stringify(ST.act[theme]));
+      buildPanel();rebuild();};
+    ssg.appendChild(b);
+  });
+  var bx=document.createElement("button");bx.textContent="✕";
+  bx.onclick=function(){SLOTS[theme]=[null,null,null];buildPanel();rebuild();};
+  ssg.appendChild(bx);
+  srow.appendChild(ssg);a.appendChild(srow);
 
   var m=document.getElementById("fam-mat");m.innerHTML="";
   m.appendChild(el("div","lv wide",'<b style="color:#e0a94a">тема</b>'
@@ -499,12 +587,13 @@ function plateHTML(net,sz){
   return '<span class="plate"><img alt="" src="'+markSrc(net.slug)+'"></span>';
 }
 function lblHTML(net){return net.ln.map(function(l){return '<span>'+l+'</span>';}).join("");}
+/* b5: жодного інлайн-стилю і жодного класу режиму. Клас `is-sel` тримає kNet
+   через --kSel, `is-act` вмикає канали, `chk` — галочку. Наслідок: зміна
+   будь-якого важеля більше не потребує перебудови 16 base64-картинок. */
 function cardHTML(net,act,idx){
-  var mode=ST.act[theme].mode,
-      k=(idx!=null&&idx===isoIdx)?ST.kNet:1;
-  return '<div class="ncard ro-'+ST.mat[theme].ro+(act?" is-act m-"+mode:"")+'"'
-    +(idx!=null?' data-i="'+idx+'"':'')
-    +(k!==1?' style="--kThis:'+k+'"':'')+'>'+plateHTML(net,ST.plate)
+  return '<div class="ncard'+(idx!=null&&idx===isoIdx?" is-sel":"")
+    +(act?" is-act":"")+'"'
+    +(idx!=null?' data-i="'+idx+'"':'')+'>'+plateHTML(net,ST.plate)
     +'<div class="nlbl">'+lblHTML(net)+'</div><div class="ncnt">'+net.n+'</div></div>';
 }
 /* Д-8: авто-фіт ПЕР-КАРТКОВИЙ. Зменшення шрифту в одній плитці фізично не може
@@ -523,16 +612,17 @@ function fitLabels(){
 }
 function render(){
   var sc=document.getElementById("scene"),h="";
+  var kSel=ST.kNets[NETS[isoIdx].slug]||1;
   if(scene===1){
     h='<div class="sc-h">Мережа · 16 · 965 аптек</div><div id="grid">';
     NETS.forEach(function(n,i){h+=cardHTML(n,i===isoIdx,i);});
     h+='</div>';
   }else if(scene===2){
     var n=NETS[isoIdx];
-    h='<div class="sc-h">ізольована · '+n.label+(ST.kNet!==1?' · kNet '+ST.kNet.toFixed(2):'')+'</div><div class="iso">'
+    h='<div class="sc-h">ізольована · '+n.label+(kSel!==1?' · kNet '+kSel.toFixed(2):'')+'</div><div class="iso">'
       +'<div class="iso-row">'
       +'<div>'+cardHTML(n,false,isoIdx)+'<div class="iso-cap">mark 224² @ '+ST.plate+'px</div></div>'
-      +'<div><span class="mini"'+(ST.kNet!==1?' style="--kThis:'+ST.kNet+'"':'')+'>'+(n.glyph
+      +'<div><span class="mini">'+(n.glyph
           ?'<span class="ntile"><span class="bscale">'+GLYPH.replace(/CLR/g,"var(--ntile-gl)")+'</span></span>'
           :'<img alt="" src="'+miniSrc(n.slug)+'">')+'</span>'
       +'<div class="iso-cap">mini 112² @ 35px</div></div>'
@@ -543,12 +633,18 @@ function render(){
       +'<div>'+cardHTML(n,true,isoIdx)+'<div class="iso-cap">той самий, активний</div></div>'
       +'</div>';
   }else if(scene===3){
-    var n3=NETS[isoIdx],saved=ST.act[theme].mode,cells="";
-    [["a","A рамка"],["b","B тон"],["c","C рамка+✓"],["d","D підйом"]].forEach(function(p){
-      ST.act[theme].mode=p[0];
-      cells+='<div class="actcell">'+cardHTML(n3,true,isoIdx)+'<div class="actcap">'+p[1]+'</div></div>';
+    /* b5 · S3 = поточний набір каналів + три ТВОЇ слоти. Кожна комірка несе
+       власний скоуп змінних (data-slot), тому чотири набори живуть одночасно —
+       це те, чого не могла зробити конструкція b4 з одним значенням на кадр. */
+    var n3=NETS[isoIdx],cells="";
+    cells+='<div class="actcell" data-slot="cur">'+cardHTML(n3,true,isoIdx)
+          +'<div class="actcap">поточний</div></div>';
+    ["A","Б","В"].forEach(function(nm,i){
+      var sl=SLOTS[theme][i];
+      cells+='<div class="actcell'+(sl?"":" empty")+'" data-slot="'+i+'">'
+        +(sl?cardHTML(n3,true,isoIdx):'<div class="slotempty">порожньо<br>⤓'+nm+'</div>')
+        +'<div class="actcap">'+nm+'</div></div>';
     });
-    ST.act[theme].mode=saved;
     h='<div class="sc-h">актив · '+n3.label+' · П-24</div>'
       +'<div class="actrow">'+cells+'</div>'
       +'<div style="margin-top:14px" class="actcell">'+cardHTML(n3,false,isoIdx)
@@ -561,16 +657,48 @@ function render(){
     h+='</div>';
   }
   sc.innerHTML=h;
-  fitLabels();
-  /* Д-9 (b3): тап по плитці обирає мережу. Досі isoIdx був прибитий до 0 —
-     S2 і S3 вічно показували АНЦ, тобто активний стан судився на 1 картці з 16. */
-  sc.addEventListener("click",function(e){
-    var c=e.target.closest(".ncard[data-i]"); if(!c)return;
-    isoIdx=+c.dataset.i; apply();
+  applyVars();
+}
+
+/* Д-23 (b5) · КОРІНЬ ЗАВИСАННЯ. У b4 цей слухач стояв УСЕРЕДИНІ render(), а
+   render() кликався з apply(). #scene — той самий елемент завжди, innerHTML
+   міняє лише дітей. Отже кожен рендер навішував ЩЕ ОДИН слухач, жоден не
+   знімався, і кількість подвоювалась на кожен тап: 10 тапів = 1024 повні
+   перебудови сітки з 16 base64-картинок по 224². Звідси затримка, зависання
+   і вбитa вкладка. Тут слухач заводиться РІВНО ОДИН РАЗ, поза рендером. */
+document.getElementById("scene").addEventListener("click",function(e){
+  var cell=e.target.closest(".actcell[data-slot]");
+  if(cell && scene===3){
+    var sv=cell.dataset.slot;
+    if(sv!=="cur" && SLOTS[theme][+sv]){
+      ST.act[theme]=JSON.parse(JSON.stringify(SLOTS[theme][+sv]));
+      buildPanel(); rebuild(); return;
+    }
+  }
+  var c=e.target.closest(".ncard[data-i]"); if(!c)return;
+  isoIdx=+c.dataset.i;
+  buildPanel();                    // kNet належить обраній мережі — рядок оновлюється
+  if(scene===1){ syncSel(); applyVars(); }   // на сітці міняється лише клас
+  else rebuild();                            // S2/S3 показують інший знак — контент інший
+});
+
+/* b5: перемикання вибору БЕЗ перебудови DOM. Саме тут гине друга половина
+   гальм: клас на двох елементах замість 16 нових <img> з data:-URL. */
+function syncSel(){
+  [].forEach.call(document.querySelectorAll("#grid .ncard"),function(c){
+    var sel=+c.dataset.i===isoIdx;
+    c.classList.toggle("is-sel",sel);
+    c.classList.toggle("is-act",sel);
   });
 }
 
-function apply(){
+/* b5 · РОЗЧЕПЛЕННЯ. applyVars() чіпає ЛИШЕ CSS-змінні — жодного innerHTML.
+   rebuild() перебудовує сцену і кличеться тільки там, де змінився КОНТЕНТ.
+   Правило п.9 harness-шаблону: input ≠ rebuild. Ім'я apply() збережене, бо
+   на нього зав'язані всі повзунки; тепер воно означає «оновити змінні». */
+function rebuild(){ render(); }
+function apply(){ applyVars(); }
+function applyVars(){
   var f=FR[dev],sb=document.getElementById("sbox"),fr=document.getElementById("frame");
   document.documentElement.setAttribute("data-theme",theme);
   sb.style.width=f.w+"px"; sb.style.height=f.h+"px";
@@ -588,6 +716,9 @@ function apply(){
   r.setProperty("--cntSz",ST.cntSz+"px");
   r.setProperty("--kMark",ST.kMark);
   r.setProperty("--kThis",1);
+  /* kNet обраної мережі — через змінну, а не інлайн: змінна не вимагає рендера */
+  r.setProperty("--kSel", ST.kNets[NETS[isoIdx].slug]||1);
+  r.setProperty("--plateZ", M.ro?"auto":"1");
   /* Д-10: плита — біла при plM=0 (П-25 дотримано), інакше тягнеться до кольору картки */
   r.setProperty("--plateBg", M.plM===0 ? "#FFFFFF"
     : "color-mix(in srgb,var(--tileBg) "+M.plM+"%,#FFFFFF)");
@@ -611,16 +742,49 @@ function apply(){
     r.setProperty("--tileSh","none");   /* A45: на OLED drop-shadow невидима — глибина робиться тоном+гребенем */
   }
   /* активний — нейтральні: акцент продукту, НЕ колір мережі (П-24).
-     Д-22 (b4): жодного `mode===` тут більше немає. Пишемо ОБИДВА бордюри й тон;
-     який із них візьме картка — вирішує її власний клас m-*. Тільки так сцена,
-     що показує чотири режими одночасно, показує саме чотири режими. */
-  r.setProperty("--bdAcc", "color-mix(in srgb,var(--accent) "+A.ringA+"%,transparent)");
-  r.setProperty("--bdNeu", "color-mix(in srgb,var(--border) "+A.ringA+"%,transparent)");
-  r.setProperty("--actBgB", A.liftA>0
-      ? "color-mix(in srgb,var(--accent-soft) "+A.liftA+"%,var(--tileBg))"
-      : "var(--tileBg)");
+     b5: канали пишуться незалежно. Жодного гілкування «режиму» — режим більше
+     не існує як сутність, є набір каналів. */
+  actVars(r,A);
+  /* S3 · три слоти отримують ВЛАСНІ набори змінних у власному скоупі —
+     тому чотири комбінації живуть на екрані одночасно й чесно. */
+  if(scene===3){
+    [0,1,2].forEach(function(i){
+      var cell=document.querySelector('.actcell[data-slot="'+i+'"]');
+      if(cell&&SLOTS[theme][i]) actVars(cell.style,SLOTS[theme][i]);
+    });
+  }
 
-  render(); fitFrame(); syncCopy();
+  fitLabels(); syncSel(); inkOut(); fitFrame(); syncCopy();
+}
+
+/* канали → змінні. Одна функція на всі скоупи: кадр, комірка слота. */
+function actVars(r,A){
+  r.setProperty("--ringW", (A.bd==="off"?0:A.ringW)+"px");
+  r.setProperty("--actBd", A.bd==="off" ? "transparent"
+    : A.bd==="neu" ? "color-mix(in srgb,var(--border) "+A.ringA+"%,transparent)"
+                   : "color-mix(in srgb,var(--accent) "+A.ringA+"%,transparent)");
+  r.setProperty("--actBg", A.tone>0
+    ? "color-mix(in srgb,var(--accent-soft) "+A.tone+"%,var(--tileBg))"
+    : "var(--tileBg)");
+  r.setProperty("--actLift", A.lift);
+  r.setProperty("--actScale", (A.scale/100).toFixed(3));
+  r.setProperty("--plRingW", A.plR+"px");
+  r.setProperty("--plRing", A.plR?"var(--accent)":"transparent");
+  r.setProperty("--actLbl", A.lbl?"var(--accent)":"var(--text)");
+  r.setProperty("--actChk", A.chk?1:0);
+}
+
+/* П-25: інструмент заміру друкує число в UI, бо на телефоні консолі немає.
+   Ефективне чорнило = fill × k², бо площа росте квадратом масштабу. */
+function inkOut(){
+  var o=document.getElementById("inkOut"); if(!o)return;
+  var slug=NETS[isoIdx].slug, t=FILL[slug];
+  if(!t){o.textContent="гліф — вектор, площа не міряється";o.className="";return;}
+  var k=(ST.kNets[slug]||1)*ST.kMark, eff=t[0]*k*k, d=(eff/FILL_MED-1)*100;
+  var cls=Math.abs(d)<=20?"ink-ok":Math.abs(d)<=40?"ink-warn":"ink-bad";
+  o.textContent=eff.toFixed(3)+" · медіана "+FILL_MED.toFixed(3)+" · "
+    +(d>0?"+":"")+d.toFixed(0)+"%";
+  o.className=cls;
 }
 
 /* ── МАСШТАБ ────────────────────────────────────────────────────────── */
@@ -646,8 +810,9 @@ function seg(id,fn){
   });
 }
 function segOn(box,b){[].forEach.call(box.children,function(c){c.classList.remove("on");});b.classList.add("on");}
-seg("sgScene",function(v,b,box){segOn(box,b);scene=+v;buildPanel();apply();});
-seg("sgTheme",function(v,b,box){segOn(box,b);theme=v;buildPanel();apply();});
+seg("sgScene",function(v,b,box){segOn(box,b);scene=+v;buildPanel();rebuild();});
+/* тема міняє вміст S3: слоти зберігаються окремо на кожну тему (A39) */
+seg("sgTheme",function(v,b,box){segOn(box,b);theme=v;buildPanel();rebuild();});
 seg("sgDev",  function(v,b,box){segOn(box,b);dev=v;apply();});
 seg("sgZoom", function(v,b,box){
   if(v==="fit"){zMode="fit";segOn(box,b);}
@@ -690,17 +855,33 @@ document.getElementById("btnReset").onclick=function(){
 document.getElementById("btnP1").onclick=function(){
   ST=JSON.parse(JSON.stringify(P1));buildPanel();apply();};
 
+/* К-9 (b5) · РЯДОК 📋 — ЦЕ КОНТРАКТ ЗІ СТАНОМ, А НЕ ТЕКСТ.
+   Кожен лист ST мусить бути тут. Важіль, якого немає в копії, працює на екрані
+   ідеально й гине рівно в момент передачі результату — тобто помилка невидима
+   саме там, де вона дорого коштує. Матриця перевіряє це машинно: тягне ключі
+   з літерала P0 і вимагає кожен у тілі цієї функції. */
+function actStr(A){
+  return A.bd+"/w"+A.ringW+"/a"+A.ringA+"/t"+A.tone
+        +"/chk"+A.chk+"/lift"+A.lift+"/sc"+A.scale+"/plR"+A.plR+"/lbl"+A.lbl;
+}
 function copyStr(){
   var A=ST.act,M=ST.mat;
-  return "NETPICK v3.0 b4 | "+dev+" | cols="+ST.cols+" plate="+ST.plate+" rad="+ST.rad
+  var kn=Object.keys(ST.kNets).filter(function(k){return ST.kNets[k]!==1;})
+          .map(function(k){return k+":"+ST.kNets[k].toFixed(2);});
+  var sl=["A","Б","В"].map(function(nm,i){
+    var L=SLOTS.light[i],D=SLOTS.dark[i];
+    return (L||D) ? nm+"{L="+(L?actStr(L):"—")+" D="+(D?actStr(D):"—")+"}" : "";
+  }).filter(Boolean);
+  return "NETPICK v3.0 b5 | "+dev+" | cols="+ST.cols+" plate="+ST.plate+" rad="+ST.rad
    +" gX="+ST.gX+" gY="+ST.gY+" pad="+ST.pad+" lbl="+ST.lblSz+" cnt="+ST.cntSz
    +" || K_MARK="+ST.kMark.toFixed(2)+" signPad="+ST.sgPad
-   +" kNet["+NETS[isoIdx].slug+"]="+ST.kNet.toFixed(2)
-   +" || ACT.L="+A.light.mode+"/w"+A.light.ringW+"/a"+A.light.ringA+"/l"+A.light.liftA
-   +" ACT.D="+A.dark.mode+"/w"+A.dark.ringW+"/a"+A.dark.ringA+"/l"+A.dark.liftA
-   +" || MAT.L=bg"+M.light.bg+"/bd"+M.light.bd+"/sh"+M.light.sh+"/plM"+M.light.plM+"/plB"+M.light.plB
-   +" MAT.D=bg"+M.dark.bg+"/bd"+M.dark.bd+"/ridge"+M.dark.ridge+"/plM"+M.dark.plM+"/plB"+M.dark.plB
-   +"/ro"+M.dark.ro
+   +" kNets["+(kn.length?kn.join(" "):"усі 1.00")+"]"
+   +" || ACT.L="+actStr(A.light)+" ACT.D="+actStr(A.dark)
+   +" || MAT.L=bg"+M.light.bg+"/bd"+M.light.bd+"/sh"+M.light.sh
+      +"/plM"+M.light.plM+"/plB"+M.light.plB+"/ro"+M.light.ro
+   +" MAT.D=bg"+M.dark.bg+"/bd"+M.dark.bd+"/ridge"+M.dark.ridge
+      +"/plM"+M.dark.plM+"/plB"+M.dark.plB+"/ro"+M.dark.ro
+   +(sl.length?" || slots "+sl.join(" "):"")
    +" || diagBg="+ST.diagBg;
 }
 function syncCopy(){document.getElementById("copyOut").value=copyStr();}
@@ -736,7 +917,11 @@ document.getElementById("legend").innerHTML=
  +'одним тілом. У світлій темі гребеня немає взагалі (A45), тому перемикач погашений.<br>'
  +'<code>liftA</code> помічений <b>B</b> — це сила тону режиму B і більше нічого. '
  +'Поза режимом B рядок гаситься; на S3 не гаситься ніколи, бо там режим B видно завжди.<br>'
- +'<code>ringW=0</code> — рамку можна вимкнути й подивитись на тон окремо (до b4 було неможливо).<br>'
+ +'<b>Канали активу (b5).</b> Режимів більше немає — є незалежні канали: рамка (акцент/нейтр/нема) · тон · підйом · масштаб · кільце плити · галочка · підпис. «Гібрид» тепер не нова конструкція, а дві ручки, підняті разом.<br>'
+ +'<code>слоти ⤓A ⤓Б ⤓В</code> — зберігають ТВІЙ набір каналів. S3 показує три слоти поруч із поточним; тап по комірці завантажує її набір. Слоти окремі на кожну тему (A39).<br>'
+ +'<code>чорнило</code> — заміряна площа знака × k². Медіана 0.245 (Факультет-Фарм). Зелений ±20% · бурштин до 40% · червоний далі. Це і є мішень: судиш число, не «наче краще».<br>'
+ +'<code>kNet</code> тепер ПЕР-МЕРЕЖЕВИЙ і весь набір іде в 📋. Сірим біля повзунка — розрахована ціль. Зменшення безкоштовне завжди; понад 1.10 — апскейл 224px і зріз об край плити.<br>'
+ +'<code>ringW=0</code> — рамку можна вимкнути й подивитись на тон окремо.<br>'
  +'<code>ACT/MAT</code> — окремі набори на світлу й темну (A39). Світла = тінь+бордюр, '
  +'темна = тон-ліфт+гребінь+бордюр (A45: на OLED тінь невидима).<br>'
  +'<code>P0 ⇱</code> — утримуй: показує контрольний пресет у тому ж пікселі, відпустив — '
@@ -744,7 +929,7 @@ document.getElementById("legend").innerHTML=
  +'<b>Масштаб.</b> Бейдж жовтий = менше 100%. При &lt;100% судити РОЗМІР не можна — '
  +'лише композицію, пропорцію й колір. Для розміру: сховати панель → 1:1.';
 
-buildPanel(); apply();
+buildPanel(); rebuild();
 </script>
 </body>
 </html>
