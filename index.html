@@ -493,6 +493,10 @@ a.mi{text-decoration:none;color:inherit}
   --statusH:160; --statusS:58; --statusL:37;
   --hcOtcH:160; --hcOtcS:55; --hcOtcL:40; --hcIwH:210; --hcIwS:48; --hcIwL:44;
   --dimMix:16; --dimSat:70; --dimOp:60;
+  /* b32.1 · control spec v3.7 — EB on1 / rep=all. Один вузол токенів
+     годує картку дошки й рядок журналу, без inline-дублювання. */
+  --ebSzC:12px; --ebWC:700; --ebTrC:.42px; --ebGapC:2px; --ebCsC:uppercase; --ebInkC:100%;
+  --ebSzJ:12px; --ebWJ:600; --ebTrJ:.42px; --ebGapJ:2px; --ebCsJ:uppercase; --ebInkJ:100%;
 }
 .app{--cardBg:color-mix(in srgb,var(--bg) calc(var(--groupBg)*1%),var(--card));
   --haloCol:color-mix(in srgb,var(--accent-soft) 55%,var(--cardBg))}
@@ -507,6 +511,13 @@ a.mi{text-decoration:none;color:inherit}
 [data-theme="dark"] .card{background:linear-gradient(180deg,#1a251f,#161f1b);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 -1px 0 rgba(0,0,0,.22)}
 .idcol{grid-area:id;min-width:0}
+/* ══ b32.1 · Network eyebrow / ярус (Stagebench v3.7, Р-46) ══════════════
+   Дві різні боксові моделі: .eb-card — блок у картці, .eb-jr — flex-item у
+   .jr-txt. rep=all забезпечує JS, а тут лише locked typography/spacing. */
+.eb-card{font:var(--ebWC) var(--ebSzC)/1.15 var(--font);color:color-mix(in srgb,var(--muted) var(--ebInkC),transparent);
+  text-transform:var(--ebCsC);letter-spacing:var(--ebTrC);margin-bottom:var(--ebGapC)}
+.eb-jr{font:var(--ebWJ) var(--ebSzJ)/1.15 var(--font);color:color-mix(in srgb,var(--muted) var(--ebInkJ),transparent);
+  text-transform:var(--ebCsJ);letter-spacing:var(--ebTrJ);margin-bottom:var(--ebGapJ)}
 .addr{font-size:var(--addrSize);font-weight:var(--addrWeight);color:var(--text);line-height:1.22;
   display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .city{font-size:var(--citySize);color:var(--muted);margin-top:2px}
@@ -1207,27 +1218,31 @@ a.mi{text-decoration:none;color:inherit}
 #sh-network .np-all-ic{width:28px;height:28px;border-radius:9px;display:grid;place-items:center;flex:none;color:var(--accent-ink);background:#fff;border:1px solid color-mix(in srgb,var(--border) 72%,transparent)}
 #sh-network .np-all b{display:block;font:800 13px/1.15 var(--font)}
 #sh-network .np-all span:last-child{display:block;margin-top:2px;font:600 11px/1.2 var(--font);color:var(--muted)}
-#sh-network .np-well{position:relative;max-height:var(--npWellH,339px);overflow:auto;-webkit-overflow-scrolling:touch;
-  margin:0 14px;background:var(--npWellBg,var(--bg));border-radius:20px;padding:10px}
-#sh-network .np-well::after{content:"";position:sticky;display:block;bottom:-10px;height:24px;margin:0 -10px -10px;pointer-events:none;
+#sh-network{--npCols:3;--npPlate:82px;--npRad:16px;--npGX:10px;--npGY:14px;--npPad:9px;--npLbl:12px;--npCnt:10px;
+  --npKMark:1;--npSignPad:3%;--npPeek:16px;--npWellRad:20px;--npWellPad:10px;--npFade:24px}
+#sh-network .np-well{position:relative;max-height:var(--npWellH,374px);overflow:auto;-webkit-overflow-scrolling:touch;
+  margin:0 14px;background:var(--npWellBg,var(--bg));border-radius:var(--npWellRad);padding:var(--npWellPad)}
+#sh-network .np-well::after{content:"";position:sticky;display:block;bottom:calc(var(--npWellPad) * -1);height:var(--npFade);margin:0 calc(var(--npWellPad) * -1) calc(var(--npWellPad) * -1);pointer-events:none;
   background:linear-gradient(transparent,var(--npWellBg,var(--bg)))}
-#sh-network .np-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px;align-items:stretch}
-#sh-network .np-card{appearance:none;padding:9px;min-width:0;min-height:144px;border-radius:25px;border:1px solid color-mix(in srgb,var(--border) 82%,transparent);
+#sh-network .np-grid{display:grid;grid-template-columns:repeat(var(--npCols),minmax(0,1fr));gap:var(--npGY) var(--npGX);align-items:stretch}
+#sh-network .np-card{appearance:none;padding:var(--npPad);min-width:0;min-height:162px;border-radius:calc(var(--npRad) + var(--npPad));border:1px solid color-mix(in srgb,var(--border) 82%,transparent);
   background:color-mix(in srgb,var(--card) 70%,var(--bg));color:var(--text);display:flex;flex-direction:column;align-items:center;gap:5px;position:relative;cursor:pointer;
-  box-shadow:0 2px 5px rgba(20,50,42,.08);transition:transform .12s ease,background .16s,border-color .16s,box-shadow .16s}
+  box-shadow:0 2.7px 7.3px rgba(20,50,42,.145);transition:transform .12s ease,background .16s,border-color .16s,box-shadow .16s}
 #sh-network .np-card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.16),transparent 42%)}
 #sh-network .np-card.is-sel{border-color:color-mix(in srgb,var(--accent) 42%,transparent);background:color-mix(in srgb,var(--accent-soft) 44%,var(--card));box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 38%,transparent);transform:translateY(-4px) scale(1.05)}
-#sh-network .np-card.is-sel::before{content:"";position:absolute;top:-5px;right:-5px;width:17px;height:17px;border-radius:50%;z-index:2;background:var(--accent) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'><path d='M4 12l5 5L20 6'/></svg>") center/11px no-repeat}
-#sh-network .np-plate{width:73px;height:73px;padding:calc(73px * .03);display:grid;place-items:center;overflow:hidden;flex:none;border-radius:16px;background:#fff;position:relative;z-index:1}
-#sh-network .np-plate img{width:100%;height:100%;object-fit:contain;display:block;transform:scale(var(--npScale,1));transform-origin:center}
-#sh-network .np-glyph{width:100%;height:100%;display:grid;place-items:center;transform:scale(var(--npScale,1))}
-#sh-network .np-label{width:100%;min-height:calc(12px * 2.36);font:650 12px/1.18 var(--font);color:var(--text);text-align:center;overflow:hidden;position:relative;z-index:1}
+#sh-network .np-plate{width:var(--npPlate);height:var(--npPlate);padding:calc(var(--npPlate) * var(--npSignPad));display:grid;place-items:center;overflow:hidden;flex:none;border-radius:var(--npRad);background:#fff;border:1px solid color-mix(in srgb,var(--border) 73%,transparent);position:relative;z-index:1}
+#sh-network .np-plate img{width:100%;height:100%;object-fit:contain;display:block;transform:scale(calc(var(--npKMark) * var(--npScale,1)));transform-origin:center}
+#sh-network .np-glyph{width:100%;height:100%;display:grid;place-items:center;transform:scale(calc(var(--npKMark) * var(--npScale,1)))}
+#sh-network .np-label{width:100%;min-height:calc(var(--npLbl) * 2.36);font:650 var(--npLbl)/1.18 var(--font);color:var(--text);text-align:center;overflow:hidden;position:relative;z-index:1}
 #sh-network .np-label span{display:block;white-space:nowrap}
-#sh-network .np-count{font:700 10px/1 var(--font);font-variant-numeric:tabular-nums;color:var(--muted);position:relative;z-index:1}
-[data-theme="dark"] #sh-network .np-well{--npWellBg:color-mix(in srgb,#000 20%,var(--bg))}
-[data-theme="dark"] #sh-network .np-card{background:color-mix(in srgb,#fff 3.7%,var(--bg));border-color:color-mix(in srgb,var(--border) 72%,transparent);box-shadow:none}
-[data-theme="dark"] #sh-network .np-card.is-sel{background:color-mix(in srgb,var(--accent-soft) 50%,var(--bg))}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #sh-network .np-well{--npWellBg:color-mix(in srgb,#000 20%,var(--bg))}:root:not([data-theme="light"]) #sh-network .np-card{background:color-mix(in srgb,#fff 3.7%,var(--bg));border-color:color-mix(in srgb,var(--border) 72%,transparent);box-shadow:none}:root:not([data-theme="light"]) #sh-network .np-card.is-sel{background:color-mix(in srgb,var(--accent-soft) 50%,var(--bg))}}
+#sh-network .np-count{font:700 var(--npCnt)/1 var(--font);font-variant-numeric:tabular-nums;color:var(--muted);position:relative;z-index:1}
+[data-theme="dark"] #sh-network .np-card{background:color-mix(in srgb,#fff 3.7%,var(--bg));border-color:color-mix(in srgb,var(--border) 73%,transparent);box-shadow:none}
+[data-theme="dark"] #sh-network .np-card::after{z-index:2;background:linear-gradient(180deg,rgba(255,255,255,.20),transparent 42%)}
+[data-theme="dark"] #sh-network .np-plate{border-color:color-mix(in srgb,var(--border) 50%,transparent)}
+[data-theme="dark"] #sh-network .np-card.is-sel{border-color:color-mix(in srgb,var(--accent) 73%,transparent);background:color-mix(in srgb,var(--accent-soft) 38%,var(--bg))}
+[data-theme="dark"] #sh-network .np-card.is-sel .np-plate{box-shadow:0 0 0 1px var(--accent);border-color:color-mix(in srgb,var(--border) 50%,transparent)}
+[data-theme="dark"] #sh-network .np-card.is-sel .np-label{color:var(--accent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) #sh-network .np-card{background:color-mix(in srgb,#fff 3.7%,var(--bg));border-color:color-mix(in srgb,var(--border) 73%,transparent);box-shadow:none}:root:not([data-theme="light"]) #sh-network .np-card::after{z-index:2;background:linear-gradient(180deg,rgba(255,255,255,.20),transparent 42%)}:root:not([data-theme="light"]) #sh-network .np-plate{border-color:color-mix(in srgb,var(--border) 50%,transparent)}:root:not([data-theme="light"]) #sh-network .np-card.is-sel{border-color:color-mix(in srgb,var(--accent) 73%,transparent);background:color-mix(in srgb,var(--accent-soft) 38%,var(--bg))}:root:not([data-theme="light"]) #sh-network .np-card.is-sel .np-plate{box-shadow:0 0 0 1px var(--accent)}:root:not([data-theme="light"]) #sh-network .np-card.is-sel .np-label{color:var(--accent)}}
 @media (max-width:359px){#sh-network .np-card{padding:7px;min-height:134px;border-radius:23px}#sh-network .np-plate{width:64px;height:64px}}
 @media (prefers-reduced-motion:reduce){#sh-network,#sh-network .np-card,#sh-network .np-all{transition-duration:.01ms!important}}
 </style>
@@ -2788,9 +2803,11 @@ function networkCard(net){var selected=S.net===net.net,lines=networkLabelLines(n
   return '<button type="button" class="np-card pressable'+(selected?' is-sel':'')+'" data-net="'+esc(net.net)+'" aria-pressed="'+(selected?'true':'false')+'">'
     +networkPlate(net)+'<span class="np-label">'+lines.map(function(line){return '<span>'+esc(line)+'</span>';}).join('')+'</span>'
     +'<span class="np-count">'+networkTotal(net.net)+' '+plApt(networkTotal(net.net))+'</span></button>';}
-function measureNetworkWell(){var well=document.getElementById('npWell'),card=document.querySelector('#npGrid .np-card');if(!well||!card)return;
-  /* Р-48: 2·live-card + row-gap 14 + peek 16 + 2·pad 10; max-height лишається safety cap. */
-  well.style.setProperty('--npWellH',(2*card.getBoundingClientRect().height+14+16+20).toFixed(1)+'px');}
+function measureNetworkWell(){var well=document.getElementById('npWell'),grid=document.getElementById('npGrid'),card=document.querySelector('#npGrid .np-card'),sheet=document.getElementById('sh-network');if(!well||!grid||!card||!sheet)return;
+  /* Р-48: формула читає живу картку та живі LOCK-токени, а не дублює числа в JS.
+     Так cardH=162 / gY=14 / peek=16 / pad=10 дають wellH=374 на XS. */
+  var cs=getComputedStyle(sheet),gs=getComputedStyle(grid),peek=parseFloat(cs.getPropertyValue('--npPeek'))||0,pad=parseFloat(cs.getPropertyValue('--npWellPad'))||0,gap=parseFloat(gs.rowGap)||0;
+  well.style.setProperty('--npWellH',(2*card.offsetHeight+gap+peek+2*pad).toFixed(1)+'px');}
 function renderNetworkPicker(){var grid=document.getElementById('npGrid'),all=document.getElementById('npAll'),sub=document.getElementById('npSub');if(!grid||!all||!sub)return;
   var visible=homeModel().filter(topMatch).length,allSelected=!S.net;
   sub.textContent=(S.net?netLabel(S.net):'Всі мережі')+' · '+visible+' '+plApt(visible);
@@ -2983,7 +3000,7 @@ function jrDate(iso){var p=(iso||'').split('-');if(p.length!==3)return iso||'';
 function jrRow(r){
   var mtxt=(r.note?r.note+' · ':'')+r.city;
   return '<button class="jr-row pressable" data-px="'+esc(r.px)+'" data-date="'+esc(r.date)+'">'
-    +'<span class="jr-txt"><span class="jr-name">'+esc(r.core)+'</span>'
+    +'<span class="jr-txt">'+ebJr(r.net)+'<span class="jr-name">'+esc(r.core)+'</span>'
       +'<span class="jr-meta"><span class="jr-mt">'+esc(mtxt)+'</span>'
       +'<span class="jr-mtier"><span class="jr-dot">·</span>'
       +'<span class="jr-tg jr-otc">'+esc(r.otc)+'</span><span class="jr-dot">/</span>'
@@ -3065,6 +3082,11 @@ function heroHTML(p){
     '<div class="amid"><span class="fig">'+p.filled+'</span><span class="den">/'+TOTAL+'</span></div>'+
     '<span class="arcword">'+hPct(p.filled)+'%</span></div></div>';
 }
+/* Р-46 / control spec: EB on1 + rep=all. Дані походять з PH[].net, а display
+   name — з канонічного NETS[]; fallback зберігає видимість майбутньої мережі. */
+function ebName(net){return netLabel(net)||net||'';}
+function ebCard(net){var name=ebName(net);return name?'<div class="eb-card">'+esc(name)+'</div>':'';}
+function ebJr(net){var name=ebName(net);return name?'<span class="eb-jr">'+esc(name)+'</span>':'';}
 /* ---- Бейдж «Історія · N» (§5.2) : icon=clock · cap 7 · disabled N≤1 · вхід §5.1 ---- */
 var HIST_CAP=7;
 var HIST_CLOCK='<span class="h-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg></span>';
@@ -3084,7 +3106,7 @@ function footHTML(p){
 function hCard(p){
   var cls='card pressable'+(p.state==='transferred'?' tr':'');
   return '<div class="'+cls+'" data-px="'+esc(p.px)+'">'+
-    '<div class="idcol"><div class="addr">'+esc(p.addr)+'</div>'+
+    '<div class="idcol">'+ebCard(p.net)+'<div class="addr">'+esc(p.addr)+'</div>'+
     (S.city?'':'<div class="city">'+esc(p.city)+'</div>')+
     '<div class="tier"><span class="otc">OTC '+esc(p.otc)+'</span><span class="dot">·</span><span class="iw">IW '+esc(p.iw)+'</span></div></div>'+
     heroHTML(p)+footHTML(p)+'</div>';
