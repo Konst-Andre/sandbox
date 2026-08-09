@@ -3,9 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
-<title>StockCheck · NETPICK STAGEBENCH v3</title>
+<title>StockCheck · NETMARK STAGEBENCH v3</title>
 <!--
-  живе доки: вузол B не закрито (K_MARK судиться, О-32 закривається, актив обирається)
+  живе доки: О-20 не закрито (форма мітки мережі судиться на дошці/журналі/експорті)
+  Крок 4 (H5.5): ВАЖЕЛІ ЯРУСУ. П'ята вкладка панелі; літерали Кроку 2 стали
+     CSS-змінними, які пише applyVars. Спліт (рішення оператора, мікроскоп п.1):
+     геометрія й типографіка — на дві РОДИНИ (картка ⟂ журнал), чорнило — на
+     родину × ТЕМУ (A39). Кегль по темах не розщеплено свідомо: у стенді geo
+     ніколи не був темозалежним, а нерівний кегль між темами ніхто не судить.
+     Чорнило зроблено ЗМІННОЮ, а не новим правилом теми: правило дало б дві нові
+     ✗ по A69 і зламало б очікуване число гейта. Семпли журналу 3 → 6 у ДВОХ
+     групах дат (4+2): без другої групи режим «перший у групі» вироджувався в
+     «лише рядок 1». Заміри друкуються в UI (П-25) і нормалізовані на зум (Д-29).
+     Гейт незмінний: ✓9 · ⚠1 · ✗3.
+  Крок 2 (H5.4): eyebrow мережі — ДВА класи .eb-card ⟂ .eb-jr (Р-44). Один клас
+     на два каскади заборонено: різниця контейнерів у боксовій моделі, не в числах.
+     Числа 12/600/muted/uppercase/.42px — з Р-44; margin 3px — ставка до Кроку 4.
+     Гейт незмінний: ✓9 · ⚠1 · ✗3 (нових dark-правил і голих класів немає).
+  Крок 1 (H5.4): додано сцену 5 «список» — картка дошки + рядок журналу з b32.0,
+     перенесені ЦІЛІСНИМ вузлом (Д-Е). База сцен 1-4 недоторкана: сітка, NETS,
+     P1L, applyVars і cardHTML звірені md5 — байт-в-байт із Кроком 0.
+     Гейт: ✓9 · ⚠1 · ✗3 (було ✗1). Дві нові ✗ — .jr-grp і .jr-row::after,
+     успадкований борг A69 самого b32.0, не регрес стенда. НЕ лікуються тут.
+  Крок 0 (H5.3): фундамент = копія netpick_stagebench_v3_b6 (device✓); старт піднято
+  на P1L = розшифровка локу H3.9 §1. Далі — кроки 1..5 §4 H5_2, кожен на девайс окремо.
+  БАЗА (недоторкана): вузол B netpick — K_MARK судиться, О-32, актив обирається.
   дім: Project (живий стенд) · сесія H3.7 · 06.08.2026
   b3 (06.08.2026): Д-8 авторські переноси+авто-фіт · Д-9 тап обирає мережу
      · Д-10 plMerge/plBord · Д-11 стелі · Д-12 kNet (О-36)
@@ -25,12 +47,32 @@
   --text:#182c28; --text-2:#3c574f; --muted:#6b8c84; --border:#d4e5df; --border-subtle:#e1ebe7;
   --ok:#1f9d57; --crit:#c0392b; --warn:#c8811b;
   --accent:hsl(162 82% 27%); --accent-soft:hsl(162 64% 88%); --accent-ink:hsl(162 82% 16%);
+  /* ── Крок 1 (H5.4) · ТОКЕНИ ДОНОРА, світла. Дослівно з b32.0 р.37/43 і р.488-495.
+     Д-Ж: перенесений CSS звіряється за списком var(--…) — 64 знайдено, 12 уже було,
+     52 принесено. --Lbase/--Dbase у списку немає навмисно: вони оголошені всередині
+     самого правила .hist і приходять разом із ним, не з блока токенів. ── */
+  --font:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --hcRadius:20px; --hcPad:12px; --hcGap:9px;
+  --ringSize:62px; --ringStroke:5; --numSize:23px; --numWeight:800; --statusSize:11px;
+  --addrSize:15px; --addrWeight:650; --citySize:12.5px; --anchorMut:46; --statusY:1px;
+  --ringTrack:#dbe8e2; --cardShadow:0 1px 3px rgba(20,50,42,.08),0 4px 14px rgba(20,50,42,.05);
+  --fillFullH:150; --fillFullS:55; --fillFullL:46; --fillPartH:175; --fillPartS:60; --fillPartL:46;
+  --statusH:160; --statusS:58; --statusL:37;
+  --hcOtcH:160; --hcOtcS:55; --hcOtcL:40; --hcIwH:210; --hcIwS:48; --hcIwL:44;
+  --dimMix:16; --dimSat:70; --dimOp:60;
 }
 [data-theme="dark"]{
   --bg:#0d1512; --bg-soft:#151e1a; --card:#18221e; --surface-2:#1c2723; --surface-3:#212d28;
   --text:#e8f0ec; --text-2:#a7c0b8; --muted:#7c968d; --border:#2a3833; --border-subtle:#222e29;
   --ok:#33c06f; --crit:#e0685c; --warn:#e0a94a;
   --accent:hsl(163 46% 46%); --accent-soft:hsl(163 37% 17%); --accent-ink:hsl(163 46% 68%);
+  /* Крок 1 · ті самі токени в темних значеннях — b32.0 р.90-94 дослівно. */
+  --statusY:0px; --ringTrack:#2a3833; --cardShadow:none;
+  --fillFullH:155; --fillFullS:55; --fillFullL:50; --fillPartH:168; --fillPartS:55; --fillPartL:50;
+  --statusH:163; --statusS:55; --statusL:55;
+  --hcOtcH:162; --hcOtcS:46; --hcOtcL:55; --hcIwH:210; --hcIwS:48; --hcIwL:60;
+  --dimMix:30; --dimSat:60; --dimOp:50;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%}
@@ -97,8 +139,14 @@ input,select{font-family:inherit;font-size:16px}
   border:var(--plBdW,0px) solid var(--plBd,transparent);
   position:relative;z-index:var(--plateZ,1);
   padding:calc(var(--plate) * var(--sgPad) / 100)}
-.ncard.is-sel{--kThis:var(--kSel,1)}
-.mini{--kThis:var(--kSel,1)}
+/* Д-24 (b6) · KNET БУВ ПРИЛАДОМ НА ОДНУ ШКАЛУ З ШІСТНАДЦЯТИ.
+   Було: `.ncard.is-sel{--kThis:var(--kSel)}` — змінна --kSel одна на кадр і несла k
+   ОБРАНОЇ мережі, а селектор чіпляв лише обрану картку. Наслідок: оператор крутив
+   kNet, бачив реакцію однієї плитки, решта 15 стояли на k=1 — і весь блок kNets §1
+   самері H3.8 заміряний під цим дефектом.
+   Стало: applyVars() пише 16 змінних `--k-<SLUG>` на :root кадру, cardHTML дає картці
+   СТАТИЧНИЙ інлайн `--kThis:var(--k-SLUG)`. Інлайн статичний → рух повзунка міняє
+   змінну, DOM не перебудовується (К-10 не порушено). Одне джерело замість двох. */
 .plate img{width:100%;height:100%;object-fit:contain;display:block;
   transform:scale(calc(var(--kMark) * var(--kThis,1)));transform-origin:center}
 /* Д-17 (b4): гліф не читав --kThis — kNet мовчки нічого не робив на Фармасторі,
@@ -157,6 +205,13 @@ input,select{font-family:inherit;font-size:16px}
 .ntile{--ntile-gl:#ffffff}
 [data-theme="dark"] .ntile{--ntile-gl:rgb(233,241,235)}
 .bscale{display:grid;place-items:center;transform:scale(1.55)}
+/* b6 · межа kNet на гліфі. `.mini` — це mini-ассет Фармастора, тобто ПРЕДМЕТ тюну:
+   він мусить їхати за kNet нарівні з mini-растрами решти 15 мереж, інакше на стенді
+   підіймеш Фармастор і не побачиш, що станеться з кнопкою в продукті.
+   `.netbtn` НЕ чіпаємо свідомо: його підпис каже «живий b31», тобто це КОНТРОЛЬ —
+   поточний стан продукту, з яким порівнюєш. Якби він їхав разом, база порівняння
+   зникла б, а підпис став би брехнею (К-8: область дії оголошена в ярлику). */
+.mini .bscale{transform:scale(calc(1.55 * var(--kThis,1)))}
 
 /* ── S3 актив ──────────────────────────────────────────────────────── */
 .actrow{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
@@ -188,7 +243,7 @@ input,select{font-family:inherit;font-size:16px}
 .zbadge{font-size:10px;font-weight:800;padding:4px 7px;border-radius:6px;background:#1e242b;color:#7fd4b0}
 .zbadge.warn{background:#3a2c14;color:#e0a94a}
 .tabs{display:flex;gap:3px;margin:4px 0 7px}
-.tabs button{flex:1;font-size:10.5px;font-weight:800;padding:6px 2px;border-radius:7px;
+.tabs button{flex:1 1 0;min-width:0;font-size:10px;font-weight:800;padding:6px 2px;border-radius:7px;
   background:#1e242b;color:#8b9aa6;letter-spacing:.3px}
 .tabs button.on{background:#2f6d5a;color:#eaf5f0}
 .fam{display:none;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:5px 9px}
@@ -210,7 +265,7 @@ input,select{font-family:inherit;font-size:16px}
 /* маніфест п.10: чуже/розрахункове число стоїть СІРИМ референсом біля важеля,
    а не мовчазним дефолтом — інакше оператор судить чужу ставку як свою */
 .lv .ref{font-size:8.5px;font-weight:800;color:#6d7c88;flex:none}
-.lv.ink #inkOut{flex:1;font-size:9.5px;font-weight:800;font-variant-numeric:tabular-nums}
+.lv.ink #inkOut,.lv.ink #ebRowOut,.lv.ink #ebWOut{flex:1;font-size:9.5px;font-weight:800;font-variant-numeric:tabular-nums}
 .ink-ok{color:#7fd4b0}.ink-warn{color:#e0a94a}.ink-bad{color:#e08b6a}
 .pbtn{font-size:11px;font-weight:800;padding:6px 10px;border-radius:7px;background:#1e242b;color:#cfe0d8}
 .pbtn.acc{background:#2f6d5a;color:#eaf5f0}
@@ -224,6 +279,268 @@ input,select{font-family:inherit;font-size:16px}
   z-index:50;background:#2f6d5a;color:#eaf5f0;font-size:12px;font-weight:800;
   padding:11px 15px;border-radius:22px;box-shadow:0 6px 18px rgba(0,0,0,.5)}
 #showPanel.on{display:block}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   КРОК 1 (H5.4) · ВУЗОЛ «СПИСОК» — перенесено з StockCheck_port_b32_0.html
+   ЦІЛІСНИМ вузлом (метод Д-Е): розмітка + CSS + токени + @media-близнюки.
+   Зрізи донора: р.501-575 (картка) · р.589-604 (dim + .card.tr + близнюки)
+                 р.747-796 (журнал).
+   НЕ взято: р.576-588 (.ro-flag / #s-fill.ro) — це екран заповнення, у списку
+   такого стану не існує.
+   ЄДИНА правка донора: .list втратив margin:0 14px. Число: .scene стенда вже
+   несе padding:10px 14px (р.72) → донор дав би 28. Еталон «14…14» заміряний
+   лінійкою 03.08 і названий у шапці CSS журналу b32.0.
+   ГЕЙТ: два ✗ H3 (.jr-grp, .jr-row::after) — успадкований борг A69 САМОГО b32.0,
+   не регрес стенда. Свідомо НЕ лікуються тут: стенд мусить бути копією того,
+   що судиться, а не чистішим за нього. Очікуваний підсумок ✓9 · ⚠1 · ✗3.
+   ══════════════════════════════════════════════════════════════════════════ */
+/* Крок 1: бічні поля знято — їх дає .scene стенда (14). Вертикальні теж:
+   сцена сама тримає padding-bottom із safe-area. gap лишається донорським. */
+.list{display:flex;flex-direction:column;gap:var(--hcGap)}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--hcRadius);
+  padding:var(--hcPad);box-shadow:var(--cardShadow);position:relative;overflow:hidden;cursor:pointer;
+  display:grid;grid-template-columns:1fr auto;grid-template-areas:"id rt" "foot foot";
+  column-gap:12px;row-gap:10px;align-items:start;transition:transform .12s ease}
+.card.is-pressed{transform:scale(.985)}
+[data-theme="dark"] .card{background:linear-gradient(180deg,#1a251f,#161f1b);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 -1px 0 rgba(0,0,0,.22)}
+.idcol{grid-area:id;min-width:0}
+.addr{font-size:var(--addrSize);font-weight:var(--addrWeight);color:var(--text);line-height:1.22;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.city{font-size:var(--citySize);color:var(--muted);margin-top:2px}
+.tier{margin-top:7px;display:flex;gap:8px;align-items:center;font-size:12px;font-weight:600}
+.tier .dot{color:var(--muted);font-weight:400}
+.tier .otc{color:hsl(var(--hcOtcH) calc(var(--hcOtcS)*1%) calc(var(--hcOtcL)*1%))}
+.tier .iw{color:hsl(var(--hcIwH) calc(var(--hcIwS)*1%) calc(var(--hcIwL)*1%))}
+.rt{grid-area:rt;display:flex;flex-direction:column;align-items:center;gap:3px}
+.ring{position:relative;width:var(--ringSize);height:var(--ringSize);flex:0 0 auto}
+.ring svg{display:block}
+.ring circle{fill:none}
+@keyframes pulseF{0%{transform:scale(1)}40%{transform:scale(1.07)}100%{transform:scale(1)}}
+.ring.pulsing{animation:pulseF 460ms cubic-bezier(.34,1.56,.64,1)}
+.amid{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;line-height:1}
+.ring.arcm .amid{justify-content:center;padding-bottom:calc(var(--ringSize)*.15)}
+.fig{font-size:var(--numSize);font-weight:var(--numWeight);color:var(--text);line-height:.95;font-variant-numeric:tabular-nums}
+.den{font-size:calc(var(--numSize)*.42);color:var(--muted);font-weight:600;line-height:1}
+.arcword{position:absolute;left:0;right:0;bottom:calc(var(--ringSize)*.02);text-align:center;
+  font-size:calc(var(--statusSize)*.92);font-weight:700;letter-spacing:.2px;white-space:nowrap;
+  color:hsl(var(--statusH) calc(var(--statusS)*1%) calc(var(--statusL)*1%));transform:translate(0,var(--statusY))}
+.arcword.chk{color:var(--accent-ink)}
+[data-theme="dark"] .arcword.chk{color:var(--accent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .arcword.chk{color:var(--accent)}}
+.newmark{font-size:calc(var(--numSize)*1.1);font-weight:300;color:var(--muted);line-height:1}
+.foot{grid-area:foot;display:flex;align-items:center;justify-content:space-between;gap:8px;
+  border-top:1px solid var(--border-subtle);padding-top:9px}
+.anchor,.date{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* ===== BADGE «Історія · N» (§5.2 порт · valuesLOCK device✓ b14) — тихий soft-fill chip, L/D split ===== */
+:root{
+  --bH:30px; --bPadX:10px; --bRad:10px; --bGap:5px; --bIcon:14px; --bChev:13px; --bFont:12px;
+  --Lfill:37; --Lbord:20; --Lshadow:18; --Lgrad:14; --LvalL:70;
+  --Dfill:44; --Dridge:18; --Dbord:55; --DvalL:70;
+  --LaccAmt:0; --DaccAmt:10; --accS:20; --accL:42;
+  --bDisOp:46; --bPress:.88;}
+.hist{display:inline-flex;align-items:center;gap:var(--bGap);height:var(--bH);padding:0 var(--bPadX);
+  border-radius:var(--bRad);font:800 var(--bFont)/1 var(--font);border:1px solid;background:transparent;
+  cursor:pointer;flex:0 0 auto;-webkit-appearance:none;white-space:nowrap;transition:transform 280ms var(--spring)}
+/* ☀ LIGHT (default) — нейтр-fill + lift(повний) + sheen + border + txt-L (+accent overlay=0) */
+.hist{
+  --Lbase:color-mix(in srgb, var(--bg-soft) calc(var(--Lfill)*1%), var(--card));
+  background:
+    linear-gradient(180deg, rgba(255,255,255, calc(var(--Lgrad)*.01)), rgba(255,255,255,0)),
+    color-mix(in srgb, hsl(162 calc(var(--accS)*1%) calc(var(--accL)*1%)) calc(var(--LaccAmt)*1%), var(--Lbase));
+  border-color:color-mix(in srgb, hsl(162 calc(var(--accS)*1%) calc(var(--accL)*1%)) calc(var(--LaccAmt)*1%),
+     color-mix(in srgb, var(--muted) calc(var(--Lbord)*1%), var(--border)));
+  color:color-mix(in srgb, var(--accent-ink) calc(var(--LaccAmt)*1%),
+     color-mix(in srgb, var(--text) calc(var(--LvalL)*1%), var(--muted)));
+  box-shadow:0 calc(var(--Lshadow)*0.04px) calc(var(--Lshadow)*0.2px) rgba(20,50,42, calc(var(--Lshadow)*0.004));}
+/* ☾ DARK — tone-lift + ridge + border + txt-L (+accent overlay=шепіт teal) */
+[data-theme="dark"] .hist, :root:not([data-theme="light"]) .hist{
+  --Dbase:color-mix(in srgb, var(--surface-3) calc(var(--Dfill)*1%), var(--card));
+  background:color-mix(in srgb, hsl(163 calc(var(--accS)*1%) calc(var(--accL)*1%)) calc(var(--DaccAmt)*1%), var(--Dbase));
+  border-color:color-mix(in srgb, hsl(163 calc(var(--accS)*1%) calc(var(--accL)*1%)) calc(var(--DaccAmt)*1%),
+     color-mix(in srgb, var(--border) calc(var(--Dbord)*1%), var(--border-subtle)));
+  color:color-mix(in srgb, var(--accent-ink) calc(var(--DaccAmt)*1%),
+     color-mix(in srgb, var(--text) calc(var(--DvalL)*1%), var(--muted)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255, calc(var(--Dridge)*.01));}
+.hist .h-ico{display:inline-flex;width:var(--bIcon);height:var(--bIcon);flex:0 0 auto}
+.hist .h-ico svg{width:100%;height:100%;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hist .h-sep{margin:0 3px;opacity:.5;font-weight:600}
+.hist .h-n{font-weight:800;font-variant-numeric:tabular-nums}
+.hist .h-chev{display:inline-flex;width:var(--bChev);height:var(--bChev);opacity:.55;margin-left:1px;flex:0 0 auto}
+.hist .h-chev svg{width:100%;height:100%;stroke:currentColor;stroke-width:2.2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.hist.dis{opacity:calc(var(--bDisOp)*.01);pointer-events:none;cursor:default}
+.hist.pressing{transform:scale(var(--bPress));transition-duration:80ms}
+@media (prefers-reduced-motion:reduce){.hist{transition-duration:.01ms!important}}
+/* §5.2 перенесена: dim БЕЗ whole-card opacity → ринг тримається на arcLift, текст-привид на dimOp */
+:root{--arcLift:.82}
+.card.tr{filter:saturate(calc(var(--dimSat)*1%));
+  background:color-mix(in srgb,var(--card) calc(100% - var(--dimMix)*1%),var(--bg))}
+[data-theme="dark"] .card.tr{background:color-mix(in srgb,#18221e calc(100% - var(--dimMix)*1%),var(--bg))}
+.card.tr .idcol,.card.tr .foot{opacity:calc(var(--dimOp)*1%)}
+.card.tr .rt{opacity:var(--arcLift)}
+.trbadge{display:inline-flex;align-items:center;gap:4px;font:700 10px/1 var(--font);color:var(--muted);white-space:nowrap}
+.trbadge .ck{color:var(--accent-ink);font-weight:800;font-size:11px}
+[data-theme="dark"] .trbadge .ck{color:var(--accent)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .trbadge .ck{color:var(--accent)}}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]) .card{background:linear-gradient(180deg,#1a251f,#161f1b);
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05),inset 0 -1px 0 rgba(0,0,0,.22)}
+  :root:not([data-theme="light"]) .card.tr{background:color-mix(in srgb,#18221e calc(100% - var(--dimMix)*1%),var(--bg))}
+}
+
+/* ── журнал: b32.0 р.747-796 без правок ── */
+.jr{padding:0 0 8px;margin:0}
+/* b29.6 · ЕТАЛОН — картка ДОШКИ, не острів. Замір лінійкою (03.08.2026, XS/375):
+   .list 14…14 · .card 14…14 · .isl 12…12 → Δ картка−острів = 2/2. Саме ця
+   вкладеність у 2px і читається як «плавний перехід». Журнал рівнявся на 12,
+   тобто на рівність з островом — стан, якого на Home ніколи не було.
+   Знято обидва бічні поля: .jr більше не компенсує контейнер (від'ємний margin
+   на flex-item тут ефекту не давав — заміряно, jr показував 14…14), .jr-grp
+   більше не додає свої 12. Група успадковує 14 від .list = піксель-у-піксель
+   як .card. Мертве правило margin:0 -14px знято НАВМИСНО: одного дня воно
+   могло б ожити й тихо поїхати на 0…0. */
+.jr-grp{margin:0 0 12px;border-radius:16px;overflow:hidden;
+  background:var(--card);border:1px solid var(--border-subtle)}
+[data-theme="dark"] .jr-grp{border-color:var(--border)}
+.jr-hdr{display:flex;align-items:baseline;gap:8px;margin:10px 0 7px;padding:3px 14px;
+  font:800 11px/1.1 var(--font);color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+.jr-hdr .n{margin-left:auto;font:700 10.5px/1 var(--font);letter-spacing:0;text-transform:none;
+  color:color-mix(in srgb,var(--muted) 78%,var(--bg));font-variant-numeric:tabular-nums}
+.jr-row{display:flex;align-items:center;gap:11px;width:100%;min-height:44px;
+  padding:10px 14px;background:transparent;border:none;position:relative;
+  font-family:var(--font);text-align:left;cursor:pointer}
+/* divL/divR розщеплені (П-10) — але обидва якорі заміряні й дали 14:
+   ліва сторона стоїть на початку тексту (padding-left рядка, дуга праворуч),
+   права — на паддінгу картки. Було 16/18 — асиметрія без якоря. */
+.jr-row::after{content:"";position:absolute;left:14px;right:14px;bottom:0;height:1px;
+  background:color-mix(in srgb,var(--border) 73%,transparent)}
+[data-theme="dark"] .jr-row::after{background:color-mix(in srgb,var(--border) 82%,transparent)}
+.jr-grp .jr-row:last-child::after{display:none}
+.jr-row.is-pressed{background:color-mix(in srgb,var(--accent) 9%,transparent)}
+/* ringSide=right через flex order — DOM стабільний, рядок не перебудовується */
+.jr-ring{flex:0 0 auto;position:relative;width:28px;height:28px;display:grid;place-items:center;order:5}
+.jr-ring svg{display:block;position:absolute;inset:0}
+.jr-ring .rn{position:relative;font:800 9.24px/1 var(--font);color:var(--text-2);
+  font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.jr-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;justify-content:center;order:2}
+/* nameFit=повністю — еліпсиса НЕМА свідомо: обрізане ядро гірше за перенесене (анти-правило QR B59) */
+.jr-name{font:700 14px/1.28 var(--font);white-space:normal;color:var(--text)}
+/* D-7: overflow:hidden потрібен еліпсису орієнтира і він же різав inline-бокс тира.
+   Розщеплення: .jr-mt несе текст+еліпсис, .jr-mtier — сусідній flex:none бокс. */
+.jr-meta{font:600 11.5px/1.3 var(--font);display:flex;align-items:center;gap:5px;min-width:0;
+  color:color-mix(in srgb,var(--muted) 90%,var(--bg))}
+.jr-mt{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.jr-mtier{flex:0 0 auto;display:flex;align-items:center;gap:5px}
+/* З-7: тир успадковує представлення активної картки — ті самі --hcOtc*/--hcIw*, що .tier */
+.jr-tg{font:700 11px/1.2 var(--font);white-space:nowrap;letter-spacing:.1px}
+.jr-otc{color:hsl(var(--hcOtcH) calc(var(--hcOtcS)*1%) calc(var(--hcOtcL)*1%))}
+.jr-iw{color:hsl(var(--hcIwH) calc(var(--hcIwS)*1%) calc(var(--hcIwL)*1%))}
+.jr-dot{color:color-mix(in srgb,var(--muted) 90%,var(--bg));font-weight:400;opacity:.75}
+/* шеврон нейтральний за задумом: колір у рядку вже семантичний канал (OTC/IW/дуга) */
+.jr-chev{width:15px;height:15px;flex:none;opacity:.44;color:var(--muted);order:9}
+.jr-empty{padding:26px 16px;text-align:center;color:var(--muted);font-size:13px}
+/* ══ КРОК 2 (H5.4) · NETWORK EYEBROW — Р-44 (H5_1 §1, чинне рішення оператора) ══
+   ДВА КЛАСИ, НЕ ОДИН. Це не дубль і не косметика: контейнери мають різну боксову
+   модель, і саме на цьому впав v2 (§1.3 H5_2).
+     .idcol — звичайний блок: усі сусіди (.addr/.city/.tier) блокові, відступ між
+              ярусами робить margin, бо margin між блоками — єдиний канал, який
+              тут працює.
+     .jr-txt — flex-колонка з gap:2px: інлайновий вузол усередині неї СТАЄ
+              flex-item, тобто вже поводиться як блок. Задавати йому блоковість
+              не треба, а margin-bottom склався б із gap і подвоїв би відступ.
+     ⚠ теги в цьому коментарі названі словами навмисно: цитата розмітки в
+       коментарі ламає лічильник балансу H2 (wsd 3.11).
+   У v2 спліт зробили по ЗМІННИХ (--ebSz/--ebSzJ) — числа були різні, а бокс той
+   самий, тому яруси злиплись у рядок. Розщеплювати треба було модель, не число.
+   ЧИСЛА: 12px/600/muted/uppercase — Р-44 §1.1 дослівно. letter-spacing .42px
+   = .035em, середина вилки .03–.04em.
+   ⚠ margin-bottom:3px — СТАВКА, не замір (сусіди в .idcol дають 2 і 7, узято між).
+     У канон без заміру не піде; важіль ebGapB — Крок 4. */
+/* Крок 4 · числа Кроку 2 стали важелями. Фолбеки в var() навмисні: шорткат font
+   з невизначеною змінною валиться цілком, і ярус лишився б без кегля взагалі.
+   Чорнило — тільки muted із прозорістю (Р-44 п.4), через color-mix, а не opacity:
+   opacity зробила б окремий шар композиції на елементі, який ми ж і судимо.
+   Відступ журналу ДОДАЄТЬСЯ до gap батька (2px): важіль 3 = ефективні 5. */
+.eb-card{font:var(--ebWC,600) var(--ebSzC,12px)/1.15 var(--font);
+  color:color-mix(in srgb,var(--muted) var(--ebInkC,100%),transparent);
+  text-transform:var(--ebCsC,uppercase);letter-spacing:var(--ebTrC,.42px);
+  margin-bottom:var(--ebGapC,3px)}
+.eb-jr{font:var(--ebWJ,600) var(--ebSzJ,12px)/1.15 var(--font);
+  color:color-mix(in srgb,var(--muted) var(--ebInkJ,100%),transparent);
+  text-transform:var(--ebCsJ,uppercase);letter-spacing:var(--ebTrJ,.42px);
+  margin-bottom:var(--ebGapJ,0px)}
+/* ══ КРОК 3 (H5.5) · КОНТЕЙНЕР О-47 ═══════════════════════════════════════
+   Донори з b32.0, перенесені ЦІЛІСНИМ вузлом (Д-Е): .isl р.609-631 (обидві форми
+   теми) · .sheet/.sheet-scrim/.grip р.216-224 + @media-близнюки р.942-943.
+   ДВІ адаптації, обидві вимушені й названі:
+     1) position:fixed → absolute. У продукті шіт кріпиться до вьюпорта; у стенді
+        вьюпорт — не телефон, а вікно браузера, і fixed виїхав би за рамку. Якорем
+        стає скрінбокс, який уже position:relative.
+     2) env(safe-area-inset-top) → var(--sbH). У продукті верхнє поле дає OS; тут
+        статус-бар — намальований елемент відомої висоти. Намір той самий: скло
+        починається під годинником.
+   Дропдаун донора НЕ має — у b32.0 його не існує. Він будується тут і навмисно
+   бере ТІ САМІ токени, що шіт: інакше кандидат програвав би за матеріал, а не
+   за форму (мікроскоп п.1). Тем-залежних правил у нього немає — лише токени,
+   тому й нових ✗ по A69 він не додає.
+   Свайпу немає: у b32.0 touchstart/sh-grip = 0, і вносити жест сюди означало б
+   судити те, чого в продукті нема. Грип лишається як візуальний афорданс. */
+#ov{position:absolute;inset:0;z-index:2;pointer-events:none}
+/* ⚠ ДЕФЕКТ (device-зловлено): тут стояло правило на дітей шару через #ov.
+   Селектор з id має вагу 1,0,0 і перебивав донорське правило скрима (0,1,0) —
+   тобто НЕВИДИМИЙ закритий скрим отримував pointer-events:auto, лежав поверх
+   острівця й ковтав кожен тап. Кнопка була жива, до неї просто ніщо не доходило.
+   Урок: зручне «увімкнути події всім дітям» через id глушить точкові правила
+   донора, і жоден детектор цього не бачить — jsdom клікає елемент напряму, повз hit-testing.
+   Тепер події вмикаються поіменно. */
+.isl{pointer-events:auto}
+.sheet{pointer-events:auto}
+.scene.lock{overflow:hidden}
+.isl{position:absolute;top:0;left:12px;right:12px;border-radius:0 0 24px 24px;overflow:hidden;
+  padding-top:calc(var(--sbH) + 10px);
+  background:rgba(245,249,247,.82);
+  -webkit-backdrop-filter:blur(12px) saturate(170%);backdrop-filter:blur(12px) saturate(170%);
+  border:1px solid rgba(20,50,42,.137);border-top-color:transparent;
+  box-shadow:0 5px 16px -6px rgba(20,50,42,.18),0 2px 6px rgba(20,50,42,.08)}
+[data-theme="dark"] .isl{background:rgba(38,51,46,.82);border-color:rgba(255,255,255,.091);
+  border-top-color:transparent;box-shadow:0 6px 18px -8px rgba(0,0,0,.40)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .isl{background:rgba(38,51,46,.82);border-color:rgba(255,255,255,.091);border-top-color:transparent;box-shadow:0 6px 18px -8px rgba(0,0,0,.40)}}
+.isl-brand{display:flex;align-items:center;gap:9px;padding:0 12px 10px;overflow:hidden;min-height:0}
+.sc-brand{display:flex;align-items:center;gap:4px;min-width:0;flex:1}
+.sc-wm{font:800 24px/1 var(--font);letter-spacing:-1.2px;white-space:nowrap}
+.sc-wm .s1{color:var(--text)} .sc-wm .s2{color:var(--accent)}
+.isl-actions{display:flex;align-items:center;gap:8px;flex:none}
+/* Кебаб — донор р.653-658, у стенді МЕРТВИЙ (без обробника). Він тут не заради
+   краси: без нього кнопка мереж стоїть на 52px правіше, ніж у продукті, а до неї
+   прив'язаний дропдаун. Тригер мусить стояти там, де він стоїть у білді. */
+.isl-menu{width:44px;height:44px;border-radius:12px;flex:none;display:grid;place-items:center;
+  background:var(--surface-2);border:1px solid var(--border)}
+.isl-menu svg{width:19px;height:19px;display:block;color:var(--text-2)}
+.isl-spacer{flex:none;height:64px}
+/* шіт — донор */
+.sheet-scrim{position:absolute;inset:0;background:rgba(0,0,0,calc(var(--o47Scrim,42) / 100));
+  opacity:0;pointer-events:none;transition:opacity .22s ease}
+.sheet-scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);
+  border-radius:var(--o47Rad,20px) var(--o47Rad,20px) 0 0;
+  padding:8px 0 calc(10px + var(--saB));transform:translateY(100%);
+  max-height:var(--o47H,72%);display:flex;flex-direction:column;
+  transition:transform var(--o47Dur,260ms) cubic-bezier(.32,.72,0,1)}
+[data-theme="dark"] .sheet{background:var(--card)}
+.sheet.on{transform:translateY(0);box-shadow:0 -8px 30px rgba(0,0,0,.18)}
+[data-theme="dark"] .sheet.on{box-shadow:0 -8px 30px rgba(0,0,0,.5)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sheet{background:var(--card)}}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .sheet.on{box-shadow:0 -8px 30px rgba(0,0,0,.5)}}
+.grip{width:38px;height:4px;border-radius:4px;background:var(--border);margin:6px auto 8px}
+.sh-body{overflow:auto;-webkit-overflow-scrolling:touch;padding:0 14px}
+/* дропдаун — новий кандидат на тих самих токенах */
+.ddown{position:absolute;right:12px;top:var(--o47DdTop,64px);width:var(--o47DdW,86%);
+  background:var(--card);border:1px solid var(--border);border-radius:var(--o47DdRad,16px);
+  box-shadow:0 12px 32px -8px rgba(20,50,42,.28);
+  max-height:var(--o47H,72%);overflow:auto;-webkit-overflow-scrolling:touch;padding:10px 12px;
+  transform-origin:top right;transform:scale(.94);opacity:0;pointer-events:none;
+  transition:transform var(--o47Dur,260ms) cubic-bezier(.32,.72,0,1),opacity var(--o47Dur,260ms) ease}
+.ddown.on{transform:scale(1);opacity:1;pointer-events:auto}
 </style>
 </head>
 <body>
@@ -239,6 +556,9 @@ input,select{font-family:inherit;font-size:16px}
           <span class="batt"><i></i></span>
         </span></div>
         <div class="scene" id="scene"></div>
+        <!-- Крок 3: шар накладок. Живе В скрінбоксі, тому z-index статус-бара (3)
+             лишається вищим — як і на пристрої, де годинник малює OS поверх шіта. -->
+        <div id="ov"></div>
         <div class="hind"></div>
       </div>
     </div>
@@ -249,7 +569,7 @@ input,select{font-family:inherit;font-size:16px}
 
 <div id="panel">
   <div class="prow">
-    <span class="ver" id="verLine">NETPICK STAGEBENCH v3.0 · b5</span>
+    <span class="ver" id="verLine">NETMARK STAGEBENCH v3.3 · ЯРУС</span>
     <span class="zbadge" id="zBadge">FIT</span>
     <button class="pbtn" id="btnHide">сховати ⌄</button>
   </div>
@@ -260,7 +580,10 @@ input,select{font-family:inherit;font-size:16px}
       <button data-v="2">S2 плитка</button>
       <button data-v="3">S3 актив</button>
       <button data-v="4">S4 темна</button>
+      <button data-v="5">S5 список</button>
+      <button data-v="6">S6 острів</button>
     </div>
+    <div class="sg" id="sgEb"><button data-v="0">eb нема</button><button data-v="1" class="on">eb є</button></div>
   </div>
 
   <div class="prow">
@@ -277,12 +600,16 @@ input,select{font-family:inherit;font-size:16px}
     <button data-f="sign">ЗНАК</button>
     <button data-f="act">АКТИВ</button>
     <button data-f="mat">МАТЕРІАЛ</button>
+    <button data-f="eb">ЯРУС</button>
+    <button data-f="o47">О-47</button>
   </div>
 
   <div class="fam on" id="fam-geo"></div>
   <div class="fam" id="fam-sign"></div>
   <div class="fam" id="fam-act"></div>
   <div class="fam" id="fam-mat"></div>
+  <div class="fam" id="fam-eb"></div>
+  <div class="fam" id="fam-o47"></div>
 
   <div class="prow" style="margin-top:7px">
     <button class="pbtn acc" id="btnCopy">📋 копія значень</button>
@@ -360,6 +687,25 @@ var FILL_MED=0.245;
 
 function emptyK(){var o={};NETS.forEach(function(n){o[n.slug]=1.00;});return o;}
 
+/* Крок 4 · ЯРУС у ВСІХ трьох пресетах однаковий і дорівнює числам Кроку 2 (Р-44).
+   Локу в ярусу ще немає, тому P0 тут не «контроль без ярусу»: контролем по самій
+   присутності лишається перемикач «eb нема/є», а P0 ⇱ судить решту стенда.
+   Фабрика, а не спільний літерал: спільний об'єкт був би ОДНИМ на три пресети,
+   і правка через важіль тихо переписала б і контроль теж. */
+/* Крок 3 · О-47. kind — не «тема оформлення», а ДВА різні кандидати: шіт
+   донорський і device✓, дропдаун — чернетка цієї сесії. Рівними їх робить
+   спільний набір токенів, а не спільний набір повзунків.
+   dur спільна на обидва: рух — предмет О-44, і мішати його з формою не можна. */
+function o47Defaults(){return {
+  kind:"sheet", h:72, rad:20, scrim:42, dur:260,
+  ddW:86, ddGap:10, ddRad:16
+};}
+function ebDefaults(){return {
+  on:1, rep:"all",
+  card:{sz:12, w:600, tr:.42, cs:"up", gap:3},
+  jr:  {sz:12, w:600, tr:.42, cs:"up", gap:0},
+  ink: {light:{c:100, j:100}, dark:{c:100, j:100}}
+};}
 /* ── P0 — контрольний пресет. Числа грепнуті з b31, не з пам'яті (Д-В) ── */
 var P0={
   cols:4, plate:64, rad:14, gX:10, gY:14, pad:8, lblSz:11, cntSz:10,
@@ -371,7 +717,7 @@ var P0={
      не мали ані важеля, ані читання. Пресет обіцяв значення, якого не існує. */
   mat:{ light:{bg:0,  bd:100, sh:12, plM:0, plB:0, ro:0},
         dark: {bg:26, bd:100, ridge:6, plM:0, plB:0, ro:0} },
-  slots:null, diagBg:8
+  slots:null, diagBg:8, eb:ebDefaults(), o47:o47Defaults()
 };
 /* P1 — device-тюн оператора 07.08.2026, рядок 📋 з b4. Стенд стартує З НЬОГО,
    бо судження продовжується з досягнутої точки, а не з нуля. P0 лишається
@@ -385,13 +731,30 @@ var P1={
         dark: {bd:"neu", ringW:2, ringA:82, tone:73, chk:0, lift:0, scale:100, plR:0, lbl:0} },
   mat:{ light:{bg:28, bd:82, sh:12, plM:0, plB:64, ro:0},
         dark: {bg:37, bd:72, ridge:20, plM:0, plB:46, ro:1} },
-  slots:null, diagBg:8
+  slots:null, diagBg:8, eb:ebDefaults(), o47:o47Defaults()
 };
-var ST=JSON.parse(JSON.stringify(P1));
+/* P1L — DEVICE-LOCK 08.08.2026, розшифровка рядка 📋 §1 H3.9. Стенд стартує З НЬОГО.
+   P1 вище лишається як референс тюну 07.08 (neu/w2/a82/t84), у файл лок не був
+   повернутий (див. §2 H5_2). Дельта P1→P1L: act 07.08→лок + 16 виміряних kNets;
+   геометрія і mat ідентичні. Кожне поле звірене з рядком локу посимвольно (Д-В). */
+var P1L={
+  cols:3, plate:73, rad:16, gX:10, gY:14, pad:9, lblSz:12, cntSz:10,
+  kMark:1.00, sgPad:3,
+  kNets:{ANC:1.12, A911:1.12, PODOROZHNYK:1.28, BAZHAEMO:1.11, MED_SERVIS:1.05,
+         FARMASTOR:1.35, UAH:1.28, NARODNA:1.10, FAKULTET:1.25, ZAITSEVA:1.29,
+         TRIOL:1.10, MOYA_APTEKA:1.15, LIKY_POLTAVSHCHYNY:1.12, LINDA_FARM:1.02,
+         CENTRALNA:1.19, APTEKA_NC:1.03},
+  act:{ light:{bd:"acc", ringW:1, ringA:42, tone:44, chk:0, lift:4, scale:105, plR:0, lbl:0},
+        dark: {bd:"acc", ringW:1, ringA:72, tone:38, chk:0, lift:4, scale:105, plR:1, lbl:1} },
+  mat:{ light:{bg:28, bd:82, sh:12, plM:0, plB:64, ro:0},
+        dark: {bg:37, bd:72, ridge:20, plM:0, plB:46, ro:1} },
+  slots:null, diagBg:8, eb:ebDefaults(), o47:o47Defaults()
+};
+var ST=JSON.parse(JSON.stringify(P1L));
 /* b5 · СЛОТИ S3. Три збережені набори каналів на тему + поточний = чотири
    комірки поруч. Це і є заміна «чотирьох режимів»: комбінації тепер твої. */
 var SLOTS={light:[null,null,null],dark:[null,null,null]};
-var scene=1, theme="light", dev="xs", famOn="geo";
+var scene=1, theme="light", dev="xs", famOn="geo", ebFam="card";
 var zMode="fit", zVal=1, holdSnap=null, isoIdx=0;
 
 /* ── ВАЖЕЛІ ─────────────────────────────────────────────────────────── */
@@ -418,6 +781,28 @@ var LV={
    Д-19 (b4): ringW min 0 — рамку можна вимкнути й судити тон окремо.
    Геометрія не їде: неактивна картка має border 1px, тож padding
    calc(pad − ringW + 1px) при ringW=0 дає рівно ту саму коробку. */
+/* Крок 4 · ВАЖЕЛІ ЯРУСУ. Один набір на дві родини: значення живуть у ST.eb.card
+   і ST.eb.jr, а видно завжди рівно один — таб-селектор родини (маніфест §3-п.11).
+   Два набори одночасно означали б удвічі більше повзунків на компер при тому
+   самому питанні.
+   Стелі: sz до 16 (12 — старт Р-44, тобто не край шкали, К-6), tr до 1.2px —
+   .42px це .035em при 12px, вилка Р-44 .03–.04em лежить усередині ходу.
+   gap 0…12: для картки це весь відступ, для журналу — ДОДАТОК до gap 2px батька. */
+var LV_O47=[
+  ["h","висота",40,92,1,"стеля контейнера, % висоти екрана"],
+  ["rad","радіус",8,28,1,"радіус верхніх кутів, px"],
+  ["scrim","scrim",0,70,1,"затемнення тла, %"],
+  ["dur","поява",120,420,10,"тривалість, мс — НЕЙТРАЛЬНА, спільна на обидва (О-44 окремо)"],
+  ["ddW","dd ширина",50,96,1,"ширина дропдауна, % екрана"],
+  ["ddGap","dd зазор",2,24,1,"відступ від кнопки, px"],
+  ["ddRad","dd радіус",8,24,1,"радіус дропдауна, px"]
+];
+var LV_EB=[
+  ["sz","ebSize",9,16,.5,"кегль ярусу, px"],
+  ["w","ebWeight",400,800,100,"вага ярусу"],
+  ["tr","ebTrack",0,1.2,.02,"letter-spacing, px · .42 = .035em при 12px"],
+  ["gap","ebGapB",0,12,1,"відступ ярус → адреса, px"]
+];
 var LV_ACT=[
   ["ringW","ringW",0,4,1,"товщина рамки (0 = вимкнена)"],
   ["ringA","ringA",0,100,1,"насиченість рамки, %"],
@@ -469,14 +854,26 @@ function buildPanel(){
      перемкнув мережу — важіль показував значення від попередньої. Тепер повзунок
      читає й пише k ОБРАНОЇ мережі, решта тримають свої. */
   var slug=NETS[isoIdx].slug, tgt=FILL[slug];
-  var kr=mk("kNet","kNet ⟨"+NETS[isoIdx].label+"⟩",.70,1.20,.01,
-    "K тільки для обраної мережі (О-36). >1.10 = апскейл 224px + зріз об край плити",
+  /* О-39 (b6) · СТЕЛЯ 1.20 БУЛА ЛІТЕРАЛОМ, І ВІН ПРОТУХ.
+     Число 1.10, яким стенд лякав оператора, — не властивість ассета, а наслідок
+     геометрії: k_max = 224 / ((plate − 2·signPad%) × DPR). При plate=73 воно дає 1.11
+     (звідки й узялось), при plate=82 — вже ~0.98. Оператор змінив plate у b5, і стеля
+     поїхала, а напис лишився. Гірше: для гліфа Фармастора стеля не існує в принципі —
+     вектор не має нативного розміру, ділити нема на що, а важіль його однаково стриг.
+     Тепер хід відкритий до 1.60, а межа рахується на кадр і ДРУКУЄТЬСЯ (К-12). */
+  var kr=mk("kNet","kNet ⟨"+NETS[isoIdx].label+"⟩",.70,1.60,.01,
+    "K тільки для обраної мережі (О-36). Стеля не літерал — див. рядок «нативно»",
     function(){return ST.kNets[slug]!=null?ST.kNets[slug]:1;},
     function(x){ST.kNets[slug]=x;},"wide");
-  if(tgt){var rf=el("span","ref","ціль "+tgt[1].toFixed(2));
+  /* О-40 · маркер називає СВІЙ критерій. Було «ціль» — інструмент видавав одну ставку
+     («рівна площа фарби = рівна сприйнята вага») за єдину можливу. Оператор обрав іншу
+     мішень — рівне заповнення плити. Обидві законні, тому число лишається як довідка,
+     але більше нікуди не «цілить» (К-11). */
+  if(tgt){var rf=el("span","ref","рівне чорнило: "+tgt[1].toFixed(2));
           kr.insertBefore(rf,kr.querySelector(".val"));}
   s.appendChild(kr);
-  s.appendChild(el("div","lv wide ink",'<b>чорнило</b><span id="inkOut">—</span>'));
+  s.appendChild(el("div","lv wide ink",'<b>нативно</b><span id="capOut">—</span>'));
+  s.appendChild(el("div","lv wide ink",'<b>розкид чорнила</b><span id="inkOut">—</span>'));
   var lock=el("div","lv wide lock");
   lock.innerHTML='<b>PLATE_BG</b><span style="flex:1;font-size:9.5px">#FFFFFF в обох темах — П-25, не важіль</span><span class="val">🔒</span>';
   s.appendChild(lock);
@@ -567,6 +964,106 @@ function buildPanel(){
   ro.appendChild(rsg);
   if(theme==="light")ro.appendChild(el("span","scope","—"));
   m.appendChild(ro);
+
+  /* ── ЯРУС (Крок 4) ── Область дії — сцена 5, поза нею вкладка гаситься за тим
+     самим правилом, що й важелі з обмеженою областю: повзунки лишаються рухомими,
+     але оператор бачить, що зараз їх ефекту на екрані немає. */
+  var e=document.getElementById("fam-eb");e.innerHTML="";
+  var off=(scene!==5?" off":""), isJ=(ebFam==="jr"), ik=(isJ?"j":"c");
+  e.appendChild(el("div","lv wide"+off,'<b style="color:#e0a94a">ярус</b>'
+    +'<span style="flex:1;font-size:9.5px">Р-44 · видно на сцені 5. Геометрія спільна на обидві теми, '
+    +'чорнило окреме — зараз <b style="color:#7fd4b0">'
+    +(theme==="light"?"СВІТЛА":"ТЕМНА")+'</b> (A39)</span>'));
+
+  var frow=el("div","lv wide"+off);frow.innerHTML='<b>родина</b>';
+  var fsg=el("div","sg");
+  [["card","картка"],["jr","журнал"]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[1];b.dataset.v=p[0];
+    if(ebFam===p[0])b.className="on";
+    b.onclick=function(){ebFam=p[0];buildPanel();};
+    fsg.appendChild(b);
+  });
+  frow.appendChild(fsg);
+  frow.appendChild(el("span","ref",isJ?".jr-txt · flex":".idcol · блок"));
+  e.appendChild(frow);
+
+  LV_EB.forEach(function(d){
+    var row=mk(d[0],d[1],d[2],d[3],d[4],d[5],
+      function(){return ST.eb[ebFam][d[0]];},
+      function(x){ST.eb[ebFam][d[0]]=x;},"wide"+off);
+    /* П-24: ціль називається виміряним числом. Для журналу нуль важеля — не нуль
+       відступу: батько дає 2px проміжку, і важіль лягає ЗВЕРХУ на них. Без цього
+       напису в 📋 поїхало б число, менше за фактичне рівно на два пікселі. */
+    if(d[0]==="gap"&&isJ)
+      row.insertBefore(el("span","ref","+ gap 2px"),row.querySelector(".val"));
+    e.appendChild(row);
+  });
+
+  var crow=el("div","lv wide"+off);crow.innerHTML='<b>ebCase</b>';
+  var csg=el("div","sg");
+  [["up","UPPERCASE"],["as","як є"]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[1];b.dataset.v=p[0];
+    if(ST.eb[ebFam].cs===p[0])b.className="on";
+    b.onclick=function(){ST.eb[ebFam].cs=p[0];buildPanel();apply();};
+    csg.appendChild(b);
+  });
+  crow.appendChild(csg);e.appendChild(crow);
+
+  e.appendChild(mk("ink","ebInk",30,100,1,
+    "muted × прозорість. Р-44 п.4: accent-ink і text-2 вилучені з важеля, а не «не обрані»",
+    function(){return ST.eb.ink[theme][ik];},
+    function(x){ST.eb.ink[theme][ik]=x;},"wide"+off));
+
+  /* ebRepeat міняє РОЗМІТКУ, тому rebuild(), а не apply(). На apply() важіль
+     виглядав би робочим і мовчки нічого не робив (розчеплення b5). */
+  var rrow=el("div","lv wide"+off);rrow.innerHTML='<b>ebRepeat</b>';
+  var rpsg=el("div","sg");
+  [["all","завжди"],["grp","1-й у групі"],["net","зміна мережі"]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[1];b.dataset.v=p[0];
+    if(ST.eb.rep===p[0])b.className="on";
+    b.onclick=function(){ST.eb.rep=p[0];buildPanel();rebuild();};
+    rpsg.appendChild(b);
+  });
+  rrow.appendChild(rpsg);rrow.appendChild(el("span","scope","ЖУРНАЛ"));
+  e.appendChild(rrow);
+
+  e.appendChild(el("div","lv wide ink",'<b>рядок</b><span id="ebRowOut">—</span>'));
+  e.appendChild(el("div","lv wide ink",'<b>ярус</b><span id="ebWOut">—</span>'));
+
+  /* ── О-47 ── */
+  var q=document.getElementById("fam-o47");q.innerHTML="";
+  var qoff=(scene!==6?" off":"");
+  q.appendChild(el("div","lv wide"+qoff,'<b style="color:#e0a94a">О-47</b>'
+    +'<span style="flex:1;font-size:9.5px">сцена 6. Тригер — кнопка мереж на острівці. '
+    +'Свайпу немає: у b32.0 його не існує</span>'));
+
+  var krow=el("div","lv wide"+qoff);krow.innerHTML='<b>контейнер</b>';
+  var ksg=el("div","sg");
+  [["sheet","шіт"],["dd","дропдаун"]].forEach(function(p){
+    var b=document.createElement("button");b.textContent=p[1];b.dataset.v=p[0];
+    if(ST.o47.kind===p[0])b.className="on";
+    b.onclick=function(){ST.o47.kind=p[0];buildPanel();rebuild();};
+    ksg.appendChild(b);
+  });
+  krow.appendChild(ksg);
+  krow.appendChild(el("span","ref",ST.o47.kind==="sheet"?"донор b32.0":"чернетка сесії"));
+  q.appendChild(krow);
+
+  var ob=el("div","lv wide"+qoff);
+  ob.innerHTML='<b>відкрити</b><span style="flex:1;font-size:9.5px">тап по кнопці мереж у кадрі; закриття — скрим або вибір</span>';
+  q.appendChild(ob);
+
+  LV_O47.forEach(function(d){
+    var dd=(d[0].indexOf("dd")===0);
+    /* важіль поза своєю областю дії гаситься, але лишається рухомим (b4) */
+    var lock=(dd && ST.o47.kind==="sheet") || (!dd && d[0]!=="h" && d[0]!=="scrim" && d[0]!=="dur" && ST.o47.kind==="dd");
+    var row=mk(d[0],d[1],d[2],d[3],d[4],d[5],
+      function(){return ST.o47[d[0]];},function(x){ST.o47[d[0]]=x;},
+      "wide"+qoff+(lock?" off":""));
+    q.appendChild(row);
+  });
+
+  q.appendChild(el("div","lv wide ink",'<b>сітка</b><span id="o47Out">—</span>'));
 }
 
 /* ── РЕНДЕР ─────────────────────────────────────────────────────────── */
@@ -591,8 +1088,13 @@ function lblHTML(net){return net.ln.map(function(l){return '<span>'+l+'</span>';
    через --kSel, `is-act` вмикає канали, `chk` — галочку. Наслідок: зміна
    будь-якого важеля більше не потребує перебудови 16 base64-картинок. */
 function cardHTML(net,act,idx){
+  /* Д-24: інлайн СТАТИЧНИЙ — він лише називає, з якої змінної картка читає свою k.
+     Саме значення живе в --k-<SLUG> на скоупі кадру, тож рух повзунка = зміна змінної,
+     а не новий HTML. Клас is-sel лишається (він тримає рамку вибору), але kNet більше
+     не залежить від нього. */
   return '<div class="ncard'+(idx!=null&&idx===isoIdx?" is-sel":"")
     +(act?" is-act":"")+'"'
+    +' style="--kThis:var(--k-'+net.slug+',1)"'
     +(idx!=null?' data-i="'+idx+'"':'')+'>'+plateHTML(net,ST.plate)
     +'<div class="nlbl">'+lblHTML(net)+'</div><div class="ncnt">'+net.n+'</div></div>';
 }
@@ -610,6 +1112,201 @@ function fitLabels(){
     }
   });
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   КРОК 1 (H5.4) · JS-ВУЗОЛ «СПИСОК» — з StockCheck_port_b32_0.html
+   Перенесено КОМПОНЕНТОМ, не рядками-функціями: кожна функція приїхала разом
+   зі своїм CSS (вище) і своїми токенами (:root / [data-theme=dark]). Саме
+   розрив цього ланцюга дав чорні диски замість кілець у стенді v2 (§1.2 H5_2).
+   НЕ перенесено свідомо:
+     · animRing / ARC / _homeSnap / arcDur / arcOff / reduceOn — моушн кільця.
+       Крок 1 статичний; моушн не судиться і тягнув би за собою другий предмет.
+     · homeModel / visitModel / journalGroups / journalHTML / __jrPreview —
+       моделі даних. Тут замість них хардкод-семпли (нижче), БЕЗ DEV_SEED.
+   ══════════════════════════════════════════════════════════════════════════ */
+function esc(s){return(''+s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+/* У продукті TOTAL = MSL.length. MSL — це 83 SKU з DATA-блока b31; у стенді
+   цього блока немає й бути не повинно, тому число стоїть константою. Воно
+   входить у кожен відсоток дуги, тож розходження з продуктом було б видиме. */
+var TOTAL=83;
+/* S.city у продукті ховає рядок міста (перемикач зрізу). У стенді стану S нема,
+   тому прапорець локальний і сцені 5 належить. false = місто показане. */
+var SC5={city:false};
+/* Крок 2 · присутність ярусу. Спосіб побачити ЦІНУ ярусу: Д-30 каже, що eyebrow
+   росте по вертикалі, і приріст видно лише перемиканням у тому ж пікселі.
+   Крок 4: прапорець переїхав у ST.eb.on — інакше він не потрапляв би в 📋 (К-9),
+   хоч і міняє все, що судиться. */
+function ebCard(n){return ST.eb.on&&n?'<div class="eb-card">'+esc(n)+'</div>':'';}
+/* show рахує ebRepeat і приходить ззовні: рядок сам не знає ані своєї групи,
+   ані попередника. Правило показу — властивість списку, не рядка. */
+function ebJr(n,show){return show&&n?'<span class="eb-jr">'+esc(n)+'</span>':'';}
+
+function hPct(f){return Math.round(f/TOTAL*100);}
+function hFill(f){var q=(f>=TOTAL)?'Full':'Part';
+  return 'hsl(var(--fill'+q+'H) calc(var(--fill'+q+'S)*1%) calc(var(--fill'+q+'L)*1%))';}
+/* ring/arc geometry LOCKED §6.4: ringSize 62 · stroke 5 · arc rotate135 gap90° · pathLength100 */
+function ringSVG(f){
+  var d=62,w=5,r=(d-w)/2,cx=d/2,style='transform:rotate(135deg);transform-origin:center',
+      target=(75-0.75*hPct(f)).toFixed(2);
+  var track='<circle cx="'+cx+'" cy="'+cx+'" r="'+r+'" pathLength="100" stroke="var(--ringTrack)" stroke-width="'+w+'" stroke-linecap="round" stroke-dasharray="75 100" style="'+style+'"/>';
+  var fill=f>0?'<circle class="arcfill" cx="'+cx+'" cy="'+cx+'" r="'+r+'" pathLength="100" stroke="'+hFill(f)+'" stroke-width="'+w+'" stroke-linecap="round" stroke-dasharray="75 100" stroke-dashoffset="'+target+'" style="'+style+'"/>':'';
+  return '<svg width="'+d+'" height="'+d+'">'+track+fill+'</svg>';
+}
+function heroHTML(p){
+  if(p.state==='transferred')
+    return '<div class="rt"><div class="ring arcm">'+ringSVG(p.filled)+
+      '<div class="amid"><span class="fig">'+p.filled+'</span><span class="den">/'+TOTAL+'</span></div>'+
+      '<span class="arcword chk">✓✓</span></div><span class="trbadge">перенесено</span></div>';
+  if(p.state==='new')
+    return '<div class="rt"><div class="ring arcm">'+ringSVG(0)+'<div class="amid"><span class="newmark">—</span></div></div></div>';
+  return '<div class="rt"><div class="ring arcm">'+ringSVG(p.filled)+
+    '<div class="amid"><span class="fig">'+p.filled+'</span><span class="den">/'+TOTAL+'</span></div>'+
+    '<span class="arcword">'+hPct(p.filled)+'%</span></div></div>';
+}
+var HIST_CAP=7;
+var HIST_CLOCK='<span class="h-ico"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 1.8"/></svg></span>';
+var HIST_CHEV='<span class="h-chev"><svg viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg></span>';
+function histBadge(p){
+  var dis=p.visits<=1;
+  var N=p.visits>HIST_CAP?(HIST_CAP+'+'):(''+p.visits);
+  return '<button class="hist'+(dis?' dis':'')+'" data-px="'+esc(p.px)+'"'+(dis?' disabled':'')+'>'
+    +HIST_CLOCK+'<span class="h-lbl">Історія</span><span class="h-sep">·</span><span class="h-n">'+N+'</span>'
+    +HIST_CHEV+'</button>';
+}
+function footHTML(p){
+  var anchor='<span class="anchor">M'+p.m+' · Proxima '+esc(p.px)+'</span>';
+  return '<div class="foot">'+anchor+histBadge(p)+'</div>';
+}
+function hCard(p){
+  var cls='card pressable'+(p.state==='transferred'?' tr':'');
+  return '<div class="'+cls+'" data-px="'+esc(p.px)+'">'+
+    '<div class="idcol">'+ebCard(p.net)+'<div class="addr">'+esc(p.addr)+'</div>'+
+    (SC5.city?'':'<div class="city">'+esc(p.city)+'</div>')+
+    '<div class="tier"><span class="otc">OTC '+esc(p.otc)+'</span><span class="dot">·</span><span class="iw">IW '+esc(p.iw)+'</span></div></div>'+
+    heroHTML(p)+footHTML(p)+'</div>';
+}
+/* jrRing — ОКРЕМА функція, не перевантаження ringSVG(f): та зашита під d=62/w=5
+   і заливку hFill(f) для картки Home. Спільне ім'я мовчки перебило б кільце дошки. */
+function jrRing(pct,sz){
+  var w=Math.max(2.4,sz*.115),r=(sz-w)/2,c=sz/2,
+      st='transform:rotate(135deg);transform-origin:center',
+      off=(75-0.75*pct).toFixed(2);
+  return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 '+sz+' '+sz+'">'
+    +'<circle cx="'+c+'" cy="'+c+'" r="'+r+'" pathLength="100" fill="none" stroke="var(--ringTrack)" stroke-width="'+w+'" stroke-linecap="round" stroke-dasharray="75 100" style="'+st+'"/>'
+    +(pct>0?'<circle cx="'+c+'" cy="'+c+'" r="'+r+'" pathLength="100" fill="none" stroke="var(--accent)" stroke-width="'+w+'" stroke-linecap="round" stroke-dasharray="75 100" stroke-dashoffset="'+off+'" style="'+st+'"/>':'')
+    +'</svg>';
+}
+var JR_CHEV='<svg class="jr-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><polyline points="9 6 15 12 9 18"/></svg>';
+function jrRow(r,show){
+  var mtxt=(r.note?r.note+' · ':'')+r.city;
+  return '<button class="jr-row pressable" data-px="'+esc(r.px)+'" data-date="'+esc(r.date)+'">'
+    +'<span class="jr-txt">'+ebJr(r.net,show)+'<span class="jr-name">'+esc(r.core)+'</span>'
+      +'<span class="jr-meta"><span class="jr-mt">'+esc(mtxt)+'</span>'
+      +'<span class="jr-mtier"><span class="jr-dot">·</span>'
+      +'<span class="jr-tg jr-otc">'+esc(r.otc)+'</span><span class="jr-dot">/</span>'
+      +'<span class="jr-tg jr-iw">'+esc(r.iw)+'</span></span></span></span>'
+    +'<span class="jr-ring">'+jrRing(hPct(r.filled),28)
+      +'<span class="rn">'+r.filled+'</span></span>'
+    +JR_CHEV+'</button>';
+}
+/* ── СЕМПЛИ · хардкод, БЕЗ DEV_SEED (wsd 3.6: тестові дані = whitelist source).
+   Усі чотири взяті з PH самого b32.0 (р.1489-1491, 1574), не вигадані:
+     395243 АНЦ · 29731 «9-1-1» · 78721 і 78723 Мед-сервіс.
+   addr картки вже пройшов displayAddr (зрізано «Україна, …обл., м.Дніпро, »),
+   core/note рядків — те, що дав би addrParts: 78721 → «…, 15» + «прим. 13»,
+   29731 → без хвоста (обидві форми .jr-meta мусять бути на екрані одночасно).
+   filled підібрані так, щоб дуга показала три різні стани: 47/83 · 83/83 · 61/83. ── */
+var SC5_CARD={px:'395243',net:'АНЦ',m:998,addr:'пров.Парусний, 10К',city:'Дніпро',
+  otc:'B',iw:'C',state:'ready',filled:47,visits:3};
+/* Крок 4 · ДВІ ГРУПИ ДАТ, 4+2. Три рядки Кроку 2 не давали чим судити ebRepeat:
+   з однією групою «перший у групі» показував рівно рядок 1 і не відрізнявся від
+   «при зміні мережі» ні на чому. Тепер у першій групі Мед-Сервіс тричі поспіль
+   (шум повтору) плюс зміна мережі на вході, у другій — дві різні мережі підряд.
+   Усі шість px реальні, з PH самого b32.0 (р.1489-1491, 1574-1575, 2249):
+   29731 · 78721 · 78723 · 78724 · 4145732 · 395244. Синтетики немає (wsd 3.6).
+   core/note — те, що дав би addrParts; filled підібрані під різні стани дуги. */
+var SC5_GRP=[
+ {date:'пт 7 сер', rows:[
+  {px:'29731',net:'Аптека 9-1-1',date:'2026-08-07',core:'просп.Науки, 99',note:'',city:'Дніпро',otc:'C',iw:'D',filled:83},
+  {px:'78721',net:'Мед-Сервіс',date:'2026-08-07',core:'вул.Королеви Єлизавети Другої, 15',note:'прим. 13',city:'Дніпро',otc:'C',iw:'C',filled:61},
+  {px:'78723',net:'Мед-Сервіс',date:'2026-08-07',core:'просп.Яворницького Дмитра, 20',note:'прим. 104А',city:'Дніпро',otc:'A',iw:'A',filled:47},
+  {px:'78724',net:'Мед-Сервіс',date:'2026-08-07',core:'просп.Хмельницького Богдана, 119',note:'',city:'Дніпро',otc:'B',iw:'D',filled:74}
+ ]},
+ {date:'чт 6 сер', rows:[
+  {px:'4145732',net:'Аптека НЦ',date:'2026-08-06',core:'просп.Поля Олександра, 10/12',note:'',city:'Дніпро',otc:'C',iw:'D',filled:29},
+  {px:'395244',net:'АНЦ',date:'2026-08-06',core:'вул.Робоча, 79А',note:'',city:'Дніпро',otc:'A',iw:'B',filled:52}
+ ]}
+];
+/* Правило показу ярусу в рядку. Перший рядок групи показує мітку ЗАВЖДИ в обох
+   економних режимах: без неї група починалась би з безіменної адреси. */
+function ebShow(rows,i){
+  if(!ST.eb.on) return false;
+  var m=ST.eb.rep;
+  if(m==="all") return true;
+  if(i===0) return true;
+  if(m==="grp") return false;
+  return rows[i].net!==rows[i-1].net;
+}
+
+/* Тіло списку винесене з render(), бо його тепер показують дві сцени. Копія
+   замість функції означала б, що правка ярусу застосується до однієї з них. */
+function sc5Body(){
+  return '<div class="sc-h">список · картка дошки</div>'
+      +'<div class="list">'+hCard(SC5_CARD)+'</div>'
+      +'<div class="sc-h" style="margin-top:18px">список · журнал</div>'
+      +'<div class="jr">'
+      +SC5_GRP.map(function(g){
+          return '<div class="jr-grp">'
+            +'<div class="jr-hdr">'+g.date+'<span class="n">'+g.rows.length+'</span></div>'
+            +g.rows.map(function(r,i){return jrRow(r,ebShow(g.rows,i));}).join('')
+            +'</div>';
+        }).join('')
+      +'</div>';
+}
+/* ── О-47 · накладки. Малюється РІВНО ОДИН кандидат: два контейнери одночасно
+   означали б два #grid на сторінці й порівняння «обидва одразу», якого на
+   пристрої не буває. */
+var o47Open=false;
+function gridHTML(){
+  var h='<div class="sc-h">Мережа · 16 · 965 аптек</div><div id="grid">';
+  NETS.forEach(function(n,i){h+=cardHTML(n,i===isoIdx,i);});
+  return h+'</div>';
+}
+function renderOv(){
+  var ov=document.getElementById("ov");
+  if(scene!==6){ ov.innerHTML=""; o47Open=false;
+    document.getElementById("scene").classList.remove("lock"); return; }
+  var K=ST.o47.kind;
+  ov.innerHTML=
+    '<div class="isl" id="isl"><div class="isl-brand">'
+     +'<div class="sc-brand"><span class="sc-wm"><span class="s1">Stock</span><span class="s2">Check</span></span></div>'
+     /* бренд-рядок спрощено до вордмарка: комета — фон, не предмет суду, а її
+        градієнт тягнув би за собою defs і два токени заради нуля інформації */
+     +'<div class="isl-actions"><button class="netbtn pressable" id="netBtn" aria-label="Мережа">'
+       +'<span class="ntile"><span class="bscale">'+GLYPH.replace(/CLR/g,"var(--ntile-gl)")+'</span></span>'
+     +'</button>'
+     +'<span class="isl-menu" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor">'
+       +'<circle cx="5" cy="12" r="1.95"/><circle cx="12" cy="12" r="1.95"/><circle cx="19" cy="12" r="1.95"/>'
+     +'</svg></span>'
+     +'</div></div></div>'
+    +'<div class="sheet-scrim" id="scrim"></div>'
+    +(K==="sheet"
+      ? '<div class="sheet" id="o47box"><div class="grip"></div><div class="sh-body">'+gridHTML()+'</div></div>'
+      : '<div class="ddown" id="o47box">'+gridHTML()+'</div>');
+  var sp=document.getElementById("islSpacer"), isl=document.getElementById("isl");
+  if(sp&&isl) sp.style.height=isl.offsetHeight+"px";
+  o47Open=false;
+}
+function o47Set(open){
+  var b=document.getElementById("o47box"), sc=document.getElementById("scrim");
+  if(!b||!sc)return;
+  o47Open=open;
+  b.classList.toggle("on",open); sc.classList.toggle("on",open);
+  /* Скрол-лок вішається на .scene — це і є прокручуваний контейнер стенда.
+     На body він був би перевіркою механізму, якого в цьому кадрі не існує. */
+  document.getElementById("scene").classList.toggle("lock",open);
+  o47Measure();
+}
 function render(){
   var sc=document.getElementById("scene"),h="";
   var kSel=ST.kNets[NETS[isoIdx].slug]||1;
@@ -622,7 +1319,7 @@ function render(){
     h='<div class="sc-h">ізольована · '+n.label+(kSel!==1?' · kNet '+kSel.toFixed(2):'')+'</div><div class="iso">'
       +'<div class="iso-row">'
       +'<div>'+cardHTML(n,false,isoIdx)+'<div class="iso-cap">mark 224² @ '+ST.plate+'px</div></div>'
-      +'<div><span class="mini">'+(n.glyph
+      +'<div><span class="mini" style="--kThis:var(--k-'+n.slug+',1)">'+(n.glyph
           ?'<span class="ntile"><span class="bscale">'+GLYPH.replace(/CLR/g,"var(--ntile-gl)")+'</span></span>'
           :'<img alt="" src="'+miniSrc(n.slug)+'">')+'</span>'
       +'<div class="iso-cap">mini 112² @ 35px</div></div>'
@@ -649,6 +1346,17 @@ function render(){
       +'<div class="actrow">'+cells+'</div>'
       +'<div style="margin-top:14px" class="actcell">'+cardHTML(n3,false,isoIdx)
       +'<div class="actcap">неактивний — контроль</div></div>';
+  }else if(scene===5){
+    /* Сцена 5 · СПИСОК. Порядок як у продукті: картка дошки, під нею група
+       журналу. Обидва контейнери НЕ несуть бічних полів — їх дає .scene (14),
+       рівно як .list дає їх у білді. Заголовок групи статичний: jrDate() не
+       переносився (дата тут — дані семпла, не обчислення). */
+    h=sc5Body();
+  }else if(scene===6){
+    /* Крок 3 · S6 = той самий контент, що S5, плюс острівець над ним. Нових даних
+       не вигадуємо: скло судиться тільки над реальним контентом (маніфест §2-п.6),
+       а реальний контент у цьому файлі вже є і вже device✓. */
+    h='<div class="isl-spacer" id="islSpacer"></div>'+sc5Body();
   }else{
     h='<div class="diagwarn">S4 · ДІАГНОСТИКА, НЕ ПРОДУКТ. У StockCheck плита під знаком '
       +'біла в обох темах (П-25). Темна плита існує лише щоб побачити білі залишки '
@@ -657,6 +1365,7 @@ function render(){
     h+='</div>';
   }
   sc.innerHTML=h;
+  renderOv();
   applyVars();
 }
 
@@ -666,6 +1375,14 @@ function render(){
    знімався, і кількість подвоювалась на кожен тап: 10 тапів = 1024 повні
    перебудови сітки з 16 base64-картинок по 224². Звідси затримка, зависання
    і вбитa вкладка. Тут слухач заводиться РІВНО ОДИН РАЗ, поза рендером. */
+/* Тригер РІВНО ОДИН — кнопка мереж. Жодного «ще й тап по сцені для зручності»:
+   саме на вигаданому тригері впав стенд v1. Закриття: скрим або вибір мережі. */
+document.getElementById("ov").addEventListener("click",function(e){
+  if(e.target.closest("#netBtn")){ o47Set(!o47Open); return; }
+  if(e.target.closest("#scrim")){ o47Set(false); return; }
+  var c=e.target.closest(".ncard[data-i]"); if(!c)return;
+  isoIdx=+c.dataset.i; buildPanel(); syncSel(); applyVars(); o47Set(false);
+});
 document.getElementById("scene").addEventListener("click",function(e){
   var cell=e.target.closest(".actcell[data-slot]");
   if(cell && scene===3){
@@ -715,9 +1432,38 @@ function applyVars(){
   r.setProperty("--lblSz",ST.lblSz+"px");
   r.setProperty("--cntSz",ST.cntSz+"px");
   r.setProperty("--kMark",ST.kMark);
-  r.setProperty("--kThis",1);
-  /* kNet обраної мережі — через змінну, а не інлайн: змінна не вимагає рендера */
-  r.setProperty("--kSel", ST.kNets[NETS[isoIdx].slug]||1);
+  r.setProperty("--kThis",1);   /* підлога для всього, що не картка й не mini */
+  /* Д-24 · шістнадцять шкал замість однієї. Один прохід на кадр, 16 записів змінних —
+     жодного innerHTML. --kSel більше не існує: два джерела однієї величини і були
+     коренем дефекту. */
+  NETS.forEach(function(n){ r.setProperty("--k-"+n.slug, ST.kNets[n.slug]||1); });
+  /* Крок 4 · ЯРУС. Геометрія спільна на обидві теми, чорнило береться з набору
+     ПОТОЧНОЇ теми (A39) — саме тому тут, а не окремим правилом [data-theme]:
+     нове темозалежне правило коштувало б двох ✗ по A69 (гейт H3). */
+  var E=ST.eb, EI=E.ink[theme];
+  r.setProperty("--ebSzC",E.card.sz+"px"); r.setProperty("--ebWC",E.card.w);
+  r.setProperty("--ebTrC",E.card.tr+"px"); r.setProperty("--ebGapC",E.card.gap+"px");
+  r.setProperty("--ebCsC",E.card.cs==="up"?"uppercase":"none");
+  r.setProperty("--ebInkC",EI.c+"%");
+  r.setProperty("--ebSzJ",E.jr.sz+"px");   r.setProperty("--ebWJ",E.jr.w);
+  r.setProperty("--ebTrJ",E.jr.tr+"px");   r.setProperty("--ebGapJ",E.jr.gap+"px");
+  r.setProperty("--ebCsJ",E.jr.cs==="up"?"uppercase":"none");
+  r.setProperty("--ebInkJ",EI.j+"%");
+  var O=ST.o47;
+  r.setProperty("--o47H",O.h+"%");
+  r.setProperty("--o47Rad",O.rad+"px");
+  r.setProperty("--o47Scrim",O.scrim);
+  r.setProperty("--o47Dur",O.dur+"ms");
+  r.setProperty("--o47DdW",O.ddW+"%");
+  r.setProperty("--o47DdRad",O.ddRad+"px");
+  /* Верх дропдауна не важіль, а ЗАМІР: він прив'язаний до фактичного низу кнопки,
+     інакше кандидат «прив'язаний до тригера» був би прив'язаний до числа з голови. */
+  var nb=document.getElementById("netBtn"), ovl=document.getElementById("ov");
+  if(nb&&ovl){
+    var s=curScale()||1;
+    var top=(nb.getBoundingClientRect().bottom-ovl.getBoundingClientRect().top)/s+O.ddGap;
+    r.setProperty("--o47DdTop",Math.round(top)+"px");
+  }
   r.setProperty("--plateZ", M.ro?"auto":"1");
   /* Д-10: плита — біла при plM=0 (П-25 дотримано), інакше тягнеться до кольору картки */
   r.setProperty("--plateBg", M.plM===0 ? "#FFFFFF"
@@ -754,7 +1500,9 @@ function applyVars(){
     });
   }
 
-  fitLabels(); syncSel(); inkOut(); fitFrame(); syncCopy();
+  /* ebMeasure ПІСЛЯ fitFrame: масштаб перераховується саме там, а замір на нього
+     ділиться — інакше перше число після зміни зуму було б від попереднього кадру. */
+  fitLabels(); syncSel(); inkOut(); capOut(); fitFrame(); ebMeasure(); o47Measure(); syncCopy();
 }
 
 /* канали → змінні. Одна функція на всі скоупи: кадр, комірка слота. */
@@ -774,6 +1522,29 @@ function actVars(r,A){
   r.setProperty("--actChk", A.chk?1:0);
 }
 
+/* b6 · К-12 — СТЕЛЯ, ЩО ЗАЛЕЖИТЬ ВІД ІНШИХ ВАЖЕЛІВ, РАХУЄТЬСЯ, А НЕ ПИШЕТЬСЯ ЧИСЛОМ.
+   Ассети нарізані в бокс 224². Скільки з них реально доїде до сітківки:
+     бокс_css = plate − 2·(plate·signPad/100)  → множимо на DPR екрана.
+   Понад 224 device-px браузер домальовує проміжні пікселі — краї м'якшають.
+   Це не заборона: 10–15% апскейлу оком не ловиться. Тому число подається як
+   ДІАГНОСТИКА («ось що зараз відбувається»), а не як стоп (К-11).
+   Гліф — вектор: інструкція «намалюй прямокутник», виконується під будь-який розмір
+   з нуля. Стелі для нього не існує, і рядок каже саме це, а не мовчить. */
+function kMaxNative(){
+  var box=ST.plate*(1-2*ST.sgPad/100);
+  var dpr=window.devicePixelRatio||1;
+  return {k:224/(box*dpr), box:box, dpr:dpr};
+}
+function capOut(){
+  var o=document.getElementById("capOut"); if(!o)return;
+  var n=NETS[isoIdx];
+  if(n.glyph){ o.textContent="вектор — стелі немає"; o.className=""; return; }
+  var m=kMaxNative(), k=(ST.kNets[n.slug]||1)*ST.kMark, up=k/m.k;
+  o.textContent="≤ "+m.k.toFixed(2)+" (plate "+ST.plate+"·dpr "+m.dpr+") · зараз "
+    +(up<=1 ? "запас "+Math.round((1-up)*100)+"%" : "апскейл +"+Math.round((up-1)*100)+"%");
+  o.className = up<=1 ? "ink-ok" : up<=1.30 ? "ink-warn" : "ink-bad";
+}
+
 /* П-25: інструмент заміру друкує число в UI, бо на телефоні консолі немає.
    Ефективне чорнило = fill × k², бо площа росте квадратом масштабу. */
 function inkOut(){
@@ -785,6 +1556,54 @@ function inkOut(){
   o.textContent=eff.toFixed(3)+" · медіана "+FILL_MED.toFixed(3)+" · "
     +(d>0?"+":"")+d.toFixed(0)+"%";
   o.className=cls;
+}
+
+/* Крок 4 · ЗАМІР ЯРУСУ (П-25 — число друкується в UI, бо консолі на телефоні немає).
+   Нормалізація Д-29: сире px ділиться на поточний масштаб кадру, інакше на FIT
+   інструмент брехав би рівно настільки, наскільки зменшено стейдж.
+   Ширина тексту міряється Range, а не боксом елемента: обидва яруси розтягнуті
+   на всю колонку (один блоковий, другий — flex-item із stretch), тож бокс дав би
+   ширину контейнера, а не мітки. Міняти для заміру геометрію судимого елемента
+   не можна — інструмент викривив би те, що міряє. */
+/* Захист: якщо середовище не вміє міряти Range (jsdom — не вміє, Safari — вміє),
+   замір мовчки віддає 0, а не валить applyVars разом із усім стендом. Прилад,
+   здатний зупинити те, що він міряє, — гірший за відсутній прилад. */
+function txtW(e,s){
+  if(!e||!document.createRange)return 0;
+  var r=document.createRange();r.selectNodeContents(e);
+  if(typeof r.getBoundingClientRect!=="function")return 0;
+  return r.getBoundingClientRect().width/s;}
+/* П-25 · чи ВЛАЗИТЬ сітка — це число, а не смак. 16 мереж у 3 колонки = 6 рядків;
+   якщо вони не вміщаються в стелю контейнера, кандидат відпадає механічно.
+   Д-1: висота береться з фактичного боксу, а не рахується з паддінгів у голові. */
+function o47Measure(){
+  var o=document.getElementById("o47Out"); if(!o)return;
+  var g=document.getElementById("grid"), box=document.getElementById("o47box");
+  if(!g||!box){o.textContent="сцена 6 не активна";o.className="";return;}
+  var s=curScale()||1, f=FR[dev];
+  var gh=g.getBoundingClientRect().height/s;
+  var bh=box.getBoundingClientRect().height/s;
+  var fits=gh<=bh-2;
+  o.textContent="сітка "+gh.toFixed(0)+"px · контейнер "+bh.toFixed(0)+"px ("
+    +Math.round(bh/f.h*100)+"% екрана) · "+(fits?"влазить":"скрол "+Math.round(gh-bh)+"px");
+  o.className=fits?"ink-ok":"ink-warn";
+}
+function ebMeasure(){
+  var o1=document.getElementById("ebRowOut"), o2=document.getElementById("ebWOut");
+  if(!o1||!o2)return;
+  var s=curScale()||1, f=FR[dev], row=document.querySelector(".jr-row");
+  if(!row){o1.textContent="сцена 5 не активна";o2.textContent="—";
+           o1.className="";o2.className="";return;}
+  var h=row.getBoundingClientRect().height/s, avail=f.h-f.sb-f.sa;
+  o1.textContent=h.toFixed(1)+"px · у "+avail+"px влазить "+Math.floor(avail/h);
+  o1.className = h<=48 ? "ink-ok" : h<=62 ? "ink-warn" : "ink-bad";
+  var wc=0,wj=0,box=0,e;
+  e=document.querySelector(".eb-card"); if(e) wc=txtW(e,s);
+  [].forEach.call(document.querySelectorAll(".eb-jr"),function(x){wj=Math.max(wj,txtW(x,s));});
+  e=row.querySelector(".jr-txt"); if(e) box=e.getBoundingClientRect().width/s;
+  o2.textContent=(wc?wc.toFixed(0):"—")+" · "+(wj?wj.toFixed(0):"—")+"px"
+    +(box&&wj?" = "+Math.round(wj/box*100)+"% ширини рядка":"");
+  o2.className="";
 }
 
 /* ── МАСШТАБ ────────────────────────────────────────────────────────── */
@@ -811,6 +1630,8 @@ function seg(id,fn){
 }
 function segOn(box,b){[].forEach.call(box.children,function(c){c.classList.remove("on");});b.classList.add("on");}
 seg("sgScene",function(v,b,box){segOn(box,b);scene=+v;buildPanel();rebuild();});
+/* eb міняє КОНТЕНТ (зʼявляється вузол), тому rebuild, а не apply — п.9 шаблону. */
+seg("sgEb",   function(v,b,box){segOn(box,b);ST.eb.on=+v;rebuild();});
 /* тема міняє вміст S3: слоти зберігаються окремо на кожну тему (A39) */
 seg("sgTheme",function(v,b,box){segOn(box,b);theme=v;buildPanel();rebuild();});
 seg("sgDev",  function(v,b,box){segOn(box,b);dev=v;apply();});
@@ -827,7 +1648,7 @@ function curScale(){var m=/scale\(([\d.]+)\)/.exec(document.getElementById("fram
 document.getElementById("tabs").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b)return;
   segOn(this,b); famOn=b.dataset.f;
-  ["geo","sign","act","mat"].forEach(function(f){
+  ["geo","sign","act","mat","eb","o47"].forEach(function(f){
     document.getElementById("fam-"+f).classList.toggle("on",f===famOn);});
 });
 
@@ -843,23 +1664,47 @@ document.getElementById("showPanel").onclick=function(){
 /* hold-to-compare — компенсація втрати дуал-фрейма (маніфест §4) */
 var hb=document.getElementById("btnHold");
 function holdOn(e){e.preventDefault();if(holdSnap)return;
-  holdSnap=JSON.parse(JSON.stringify(ST));ST=JSON.parse(JSON.stringify(P0));apply();}
+  holdSnap=JSON.parse(JSON.stringify(ST));ST=JSON.parse(JSON.stringify(P0));
+  /* Крок 4: утримання судить ЗНАЧЕННЯ, а не склад екрана. on і rep міняють
+     розмітку, а hold викликає лише apply() — тож вони переносяться з поточного
+     стану. Інакше контроль тихо не показував би те, що обіцяє. */
+  ST.eb.on=holdSnap.eb.on; ST.eb.rep=holdSnap.eb.rep;
+  apply();}
 function holdOff(){if(!holdSnap)return;ST=holdSnap;holdSnap=null;buildPanel();apply();}
 hb.addEventListener("touchstart",holdOn,{passive:false});
 hb.addEventListener("touchend",holdOff);hb.addEventListener("touchcancel",holdOff);
 hb.addEventListener("mousedown",holdOn);hb.addEventListener("mouseup",holdOff);
 hb.addEventListener("mouseleave",holdOff);
 
+/* Крок 4: rebuild(), а не apply() — пресет несе ще й on/rep, тобто склад
+   розмітки. З apply() кнопка міняла б числа й лишала старий склад рядків. */
 document.getElementById("btnReset").onclick=function(){
-  ST=JSON.parse(JSON.stringify(P0));buildPanel();apply();};
+  ST=JSON.parse(JSON.stringify(P0));buildPanel();rebuild();};
 document.getElementById("btnP1").onclick=function(){
-  ST=JSON.parse(JSON.stringify(P1));buildPanel();apply();};
+  ST=JSON.parse(JSON.stringify(P1));buildPanel();rebuild();};
 
 /* К-9 (b5) · РЯДОК 📋 — ЦЕ КОНТРАКТ ЗІ СТАНОМ, А НЕ ТЕКСТ.
    Кожен лист ST мусить бути тут. Важіль, якого немає в копії, працює на екрані
    ідеально й гине рівно в момент передачі результату — тобто помилка невидима
    саме там, де вона дорого коштує. Матриця перевіряє це машинно: тягне ключі
    з літерала P0 і вимагає кожен у тілі цієї функції. */
+/* Крок 4 · К-9 для ярусу. Родина пишеться одним токеном kегль/вага/трек/кейс/gap,
+   чорнило — окремо по темах, бо саме воно розщеплене (A39). ФАКТИЧНИЙ відступ
+   журналу = gap важеля + 2 (проміжок батька), тому в рядку стоїть «+2». */
+function o47Str(){
+  var O=ST.o47;
+  return (O.kind==="sheet"?"шіт":"дроп")+" h"+O.h+"% rad"+O.rad+" scrim"+O.scrim+" dur"+O.dur
+    +" | dd w"+O.ddW+"% gap"+O.ddGap+" rad"+O.ddRad;
+}
+function ebFamStr(f){return f.sz+"/"+f.w+"/"+f.tr+"/"+(f.cs==="up"?"UP":"as")+"/g"+f.gap;}
+function ebStr(){
+  var E=ST.eb;
+  return "on"+E.on+" rep="+E.rep
+    +" C="+ebFamStr(E.card)
+    +" J="+ebFamStr(E.jr)+"(+2)"
+    +" ink.L="+E.ink.light.c+"/"+E.ink.light.j
+    +" ink.D="+E.ink.dark.c+"/"+E.ink.dark.j;
+}
 function actStr(A){
   return A.bd+"/w"+A.ringW+"/a"+A.ringA+"/t"+A.tone
         +"/chk"+A.chk+"/lift"+A.lift+"/sc"+A.scale+"/plR"+A.plR+"/lbl"+A.lbl;
@@ -872,7 +1717,7 @@ function copyStr(){
     var L=SLOTS.light[i],D=SLOTS.dark[i];
     return (L||D) ? nm+"{L="+(L?actStr(L):"—")+" D="+(D?actStr(D):"—")+"}" : "";
   }).filter(Boolean);
-  return "NETPICK v3.0 b5 | "+dev+" | cols="+ST.cols+" plate="+ST.plate+" rad="+ST.rad
+  return "NETMARK v3.3 · Крок4 | "+dev+" | cols="+ST.cols+" plate="+ST.plate+" rad="+ST.rad
    +" gX="+ST.gX+" gY="+ST.gY+" pad="+ST.pad+" lbl="+ST.lblSz+" cnt="+ST.cntSz
    +" || K_MARK="+ST.kMark.toFixed(2)+" signPad="+ST.sgPad
    +" kNets["+(kn.length?kn.join(" "):"усі 1.00")+"]"
@@ -882,6 +1727,8 @@ function copyStr(){
    +" MAT.D=bg"+M.dark.bg+"/bd"+M.dark.bd+"/ridge"+M.dark.ridge
       +"/plM"+M.dark.plM+"/plB"+M.dark.plB+"/ro"+M.dark.ro
    +(sl.length?" || slots "+sl.join(" "):"")
+   +" || EB "+ebStr()
+   +" || O47 "+o47Str()
    +" || diagBg="+ST.diagBg;
 }
 function syncCopy(){document.getElementById("copyOut").value=copyStr();}
@@ -901,6 +1748,26 @@ document.getElementById("legend").innerHTML=
  +'<b>S2</b> — той самий знак сам по собі + його mini 35px + живий netBtn 44px із b31.<br>'
  +'<b>S3</b> — чотири нейтральні кандидати активного стану поруч + контроль.<br>'
  +'<b>S4</b> — темна ДІАГНОСТИЧНА плита. О-32: чи світиться овал під Ліндою.<br>'
+ +'<b>S5</b> — список: картка дошки + рядок журналу з b32.0, дані-семпли. '
+ +'<code>eb нема/є</code> — присутність ярусу мережі (Р-44). Перемикач показує ЦІНУ '
+ +'ярусу по вертикалі (Д-30). Сам тюн — вкладка ЯРУС.<br>'
+ +'<b>ЯРУС (Крок 4).</b> Родина обирається табом: значення картки й журналу живуть '
+ +'окремо, бо контейнери різні (блок ⟂ flex-колонка), а не бо числа різні. Кегль, вага, '
+ +'трек, кейс і відступ — спільні на обидві теми; <code>ebInk</code> окремий на кожну (A39). '
+ +'Інших чорнил, крім muted із прозорістю, важіль не пропонує — вони вилучені Р-44, а не '
+ +'«не обрані».<br>'
+ +'<code>ebGapB</code> у журналі ДОДАЄТЬСЯ до проміжку 2px, який дає батьківська колонка: '
+ +'важіль 3 = ефективні 5. Те саме число стоїть у 📋 з позначкою <code>(+2)</code>.<br>'
+ +'<code>ebRepeat</code> — єдиний важіль, що міняє склад рядків, а не їхній вигляд: '
+ +'<i>завжди</i> · <i>1-й у групі</i> · <i>зміна мережі</i>. Перший рядок групи мітку тримає '
+ +'завжди, інакше група починалась би з безіменної адреси. Семпли навмисно дають '
+ +'Мед-Сервіс тричі поспіль і дві різні мережі підряд — без цього режими нема на чому судити.<br>'
+ +'<code>рядок</code> і <code>ярус</code> — заміри, а не оцінки (П-25): висота рядка й '
+ +'скільки таких влазить у екран, ширина найширшої мітки й її частка від ширини рядка. '
+ +'Обидва числа поділені на поточний масштаб (Д-29), тож на FIT вони не брешуть.<br>'
+ +'<code>P0 ⇱</code> на ярусі судить ЗНАЧЕННЯ: присутність і режим повтору переносяться '
+ +'з поточного стану, бо це склад екрана, а не тюн.<br>'
+ +'Судиться одне: чи виглядають вони як у білді і чи є куди стати ярусу eyebrow (Крок 2).<br>'
  +'<b>Тап по плитці</b> обирає мережу для S2/S3 і для kNet.<br><br>'
  +'<b>Важелі</b><br>'
  +'<code>K_MARK</code> симулюється масштабом знака — реальне значення вимагає '
@@ -908,10 +1775,11 @@ document.getElementById("legend").innerHTML=
  +'<code>signPad</code> — повітря плити чистим CSS, безкоштовно, перерізання не потребує.<br>'
  +'<code>plMerge</code> тягне плиту до кольору картки: 0 = біла (П-25 дотримано), '
  +'100 = шва немає, капсула читається як одне ціле. Ненульове = КАНДИДАТ НА ВИНЯТОК.<br>'
- +'<code>kNet</code> — K лише для обраної мережі. Глобальний K_MARK зсуває всіх разом '
+ +'<code>kNet</code> — K обраної мережі. Глобальний K_MARK зсуває всіх разом '
  +'і різниці оптичної ваги не прибирає (коло АНЦ важче за листок Подорожника при однаковому боксі). '
- +'<b>Межа (b4):</b> діє на плиту й на mini-растр. НЕ діє на mini-гліф Фармастора — там '
- +'на екрані живий продуктовий netBtn b31, його розмір — константа коду, а не нарізка.<br>'
+ +'<b>Межа (b6):</b> діє на ВСІ 16 карток одночасно (Д-24) і на mini — включно з гліфом Фармастора. '
+ +'НЕ діє тільки на <i>netBtn 44px</i>: його підпис каже «живий b31», тобто це КОНТРОЛЬ, '
+ +'база порівняння. Якби він їхав разом, порівнювати не було б із чим.<br>'
  +'<code>ridgeOver</code> — порядок гребеня й плити. <i>під плитою</i>: плита лишається '
  +'чисто білою (П-25). <i>поверх усього</i>: світло йде і по знаку, капсула читається '
  +'одним тілом. У світлій темі гребеня немає взагалі (A45), тому перемикач погашений.<br>'
@@ -919,8 +1787,9 @@ document.getElementById("legend").innerHTML=
  +'Поза режимом B рядок гаситься; на S3 не гаситься ніколи, бо там режим B видно завжди.<br>'
  +'<b>Канали активу (b5).</b> Режимів більше немає — є незалежні канали: рамка (акцент/нейтр/нема) · тон · підйом · масштаб · кільце плити · галочка · підпис. «Гібрид» тепер не нова конструкція, а дві ручки, підняті разом.<br>'
  +'<code>слоти ⤓A ⤓Б ⤓В</code> — зберігають ТВІЙ набір каналів. S3 показує три слоти поруч із поточним; тап по комірці завантажує її набір. Слоти окремі на кожну тему (A39).<br>'
- +'<code>чорнило</code> — заміряна площа знака × k². Медіана 0.245 (Факультет-Фарм). Зелений ±20% · бурштин до 40% · червоний далі. Це і є мішень: судиш число, не «наче краще».<br>'
- +'<code>kNet</code> тепер ПЕР-МЕРЕЖЕВИЙ і весь набір іде в 📋. Сірим біля повзунка — розрахована ціль. Зменшення безкоштовне завжди; понад 1.10 — апскейл 224px і зріз об край плити.<br>'
+ +'<code>розкид чорнила</code> — заміряна площа знака × k². Медіана 0.245 (Факультет-Фарм). Це <b>діагностика</b>, а не наказ (К-11): вона рахує ставку «рівна площа фарби = рівна вага». Ти обрав іншу мішень — рівне заповнення плити. Обидві законні, тому число показує, ЩО відбувається, і нікуди не цілить.<br>'
+ +'<code>kNet</code> ПЕР-МЕРЕЖЕВИЙ, діє на всі картки, весь набір іде в 📋. Сірим біля повзунка — довідка «рівне чорнило», тобто k для першої мішені.<br>'
+ +'<code>нативно</code> (b6) — жива стеля: <i>224 / ((plate − 2·signPad%) × DPR)</i>. Зменшення безкоштовне завжди; понад стелю браузер домальовує проміжні пікселі й краї м’якшають. До ~+15% оком не ловиться, тому це бурштин, а не стоп. Гліф — вектор, стелі не має взагалі.<br>'
  +'<code>ringW=0</code> — рамку можна вимкнути й подивитись на тон окремо.<br>'
  +'<code>ACT/MAT</code> — окремі набори на світлу й темну (A39). Світла = тінь+бордюр, '
  +'темна = тон-ліфт+гребінь+бордюр (A45: на OLED тінь невидима).<br>'
