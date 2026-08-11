@@ -1,599 +1,644 @@
-<!-- живе доки: до device-підтвердження і перенесення в реальний білд QR Lens (wsd 1.8) -->
-<!-- QRLens SR-Picker Stage-Bench — Крок 1: СТРУКТУРА (без каскаду/settle-glow — це Крок 2)
-     Побудовано за Lens_stagebench_manifest.md, варіант phone-single-frame (§4-варіанти).
-     Обидві теми мають НЕЗАЛЕЖНІ важелі (light ≠ dark за суттю, не спільний повзунок). -->
 <!doctype html>
+<!-- QRLens_areachip_stagebench_v2_1.html
+     живе доки: доки модель + числа Area-чіпа не залочені на девайсі (XS+15Pro, обидві теми)
+                і не портовані в QR_Lens_preview_batch59.html; тоді → archive/stands/
+     v2.3 (крок 4-5): повний реєстр важелів-повзунків + ЛОК + copy-bet + pan при зумі.
+     Пресети (модель/OFF/навіс/таця) лишились — вони тепер ПИШУТЬ у важелі, а не окремий CSS.
+     Кожен матеріальний параметр — ЧИСЛО. Поверхні складені з шарів dk/lt поверх базового
+     токена → тон керується однаково у світлій і темній (фікс паритету, device-фідбек 11.08).
+-->
 <html lang="uk">
 <head>
-<meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
-<title>SR-Picker Stage-Bench v1</title>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Area-chip stage-bench v2.3</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-/* ══════════════════════════════════════════════════════════
-   BENCH CHROME — нейтральний темний "стенд", НЕ токени продукту.
-   Токени продукту живуть лише всередині .phone-screen[data-theme].
-   ══════════════════════════════════════════════════════════ */
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;background:#121418}
-body{font-family:'Manrope',sans-serif;color:#e7ebee;font-size:13px;-webkit-font-smoothing:antialiased}
-button{font-family:inherit;border:none;cursor:pointer;background:none;color:inherit}
-input{font-family:inherit}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:'Manrope',system-ui,sans-serif;background:#14161a;color:#e8eaed;
+  display:flex;flex-direction:column;height:100dvh;overflow:hidden;-webkit-font-smoothing:antialiased}
+.bb{flex-shrink:0;background:#1b1e24;border-bottom:1px solid #2a2e36;
+  padding:calc(env(safe-area-inset-top,0px) + 6px) 9px 6px;display:flex;flex-direction:column;gap:5px}
+.bb-r{display:flex;align-items:center;gap:5px}
+.bb-t{font:800 10px 'Manrope',sans-serif;letter-spacing:.2px;color:#9aa4b0;flex-shrink:0}
+.sp{flex:1}
+.btn{border:1px solid #3a4049;background:#252a32;color:#e8eaed;border-radius:7px;
+  padding:5px 8px;font:700 10.5px 'Manrope',sans-serif;cursor:pointer;white-space:nowrap;user-select:none}
+.btn:active{background:#30363f}
+.btn.on{background:#2A8C84;border-color:#2A8C84;color:#fff}
+.btn.hold{background:#6b5426;border-color:#8a6d31}
+.seg{display:flex;border:1px solid #3a4049;border-radius:7px;overflow:hidden;flex-shrink:0}
+.seg .btn{border:none;border-radius:0;border-right:1px solid #3a4049}
+.seg .btn:last-child{border-right:none}
+.zb{font:800 10px 'Manrope',sans-serif;color:#7f8b98;min-width:34px;text-align:center}
 
-#bench{display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+/* стейдж: скролиться при зумі (device-фідбек: «не можу дотягнутись до зони») */
+#stageWrap{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;
+  background:radial-gradient(120% 90% at 50% 0%,#1b1f26 0%,#101216 100%)}
+#stagePad{display:flex;align-items:center;justify-content:center;min-width:100%;min-height:100%}
+.frame{position:relative;flex-shrink:0;transform-origin:center center;
+  background:#0b0c0e;border-radius:var(--fr-rad);padding:var(--fr-bez);
+  box-shadow:0 0 0 1.5px #33383f,0 18px 40px rgba(0,0,0,.55)}
+.screenbox{position:relative;width:var(--scr-w);height:var(--scr-h);overflow:hidden;
+  border-radius:calc(var(--fr-rad) - var(--fr-bez));background:var(--bg)}
+.cut{position:absolute;top:0;left:50%;transform:translateX(-50%);background:#000;z-index:40}
+.stage[data-dev="xs"] .cut{width:154px;height:30px;border-radius:0 0 20px 20px}
+.stage[data-dev="p15"] .cut{width:120px;height:34px;top:11px;border-radius:20px}
+.homeind{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);width:134px;height:5px;
+  border-radius:3px;background:var(--ink);opacity:.28;z-index:41}
+.stbar{position:absolute;top:0;left:0;right:0;height:var(--sa-t);z-index:39;
+  display:flex;align-items:flex-end;justify-content:space-between;padding:0 22px 6px;
+  font:700 13px 'Manrope',sans-serif;color:var(--ink);pointer-events:none}
 
-/* ── toolbar (device/theme/zoom/compare) ── */
-.bt-bar{flex-shrink:0;display:flex;align-items:center;gap:6px;padding:8px 10px;background:#1a1d23;border-bottom:1px solid #2a2e36;overflow-x:auto;scrollbar-width:none}
-.bt-bar::-webkit-scrollbar{display:none}
-.bt-group{display:flex;align-items:center;gap:2px;background:#0f1114;border-radius:9px;padding:2px;flex-shrink:0}
-.bt-btn{padding:6px 10px;border-radius:7px;font-size:11px;font-weight:700;color:#8a919c;white-space:nowrap}
-.bt-btn.act{background:#2c3038;color:#7fd9cf}
-.bt-sep{width:1px;height:20px;background:#2a2e36;flex-shrink:0;margin:0 2px}
-.bt-zoom{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.bt-zoom button{width:26px;height:26px;border-radius:7px;background:#0f1114;font-weight:800;font-size:14px;color:#c7ccd3}
-.bt-zoom .zv{min-width:40px;text-align:center;font-size:11px;font-weight:700;color:#8a919c;font-variant-numeric:tabular-nums}
-.bt-compare{flex-shrink:0;padding:6px 12px;border-radius:8px;background:#3a2e10;color:#e6b23d;font-size:11px;font-weight:700;-webkit-user-select:none;user-select:none;touch-action:none}
-.bt-compare:active,.bt-compare.held{background:#e6b23d;color:#1a1503}
-.bt-copy{flex-shrink:0;padding:6px 12px;border-radius:8px;background:#12321f;color:#4fce8e;font-size:11px;font-weight:700}
-.bt-copy.done{background:#4fce8e;color:#08170e}
-
-/* ── stage (де живе телефон) ── */
-#stage{flex:1;min-height:0;position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden;
-  background:radial-gradient(ellipse at 50% 30%,#1d2027 0%,#121418 70%)}
-#stageInner{transform-origin:center center;transition:transform .18s ease}
-.spec-badge{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:700;letter-spacing:.04em;color:#6b7280;background:#1a1d23;padding:4px 10px;border-radius:20px;border:1px solid #2a2e36;z-index:5}
-
-/* ── floating panel toggle (завжди видима, §3-п.8) ── */
-.panel-fab{position:absolute;right:12px;bottom:12px;z-index:20;display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:20px;background:#2c3038;color:#e7ebee;font-size:12px;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,.4)}
-.panel-fab .cnt{font-size:10px;color:#8a919c;font-weight:600}
-
-/* ── lever drawer (докнута знизу, НЕ оверлей стейджа, §3-п.2) ── */
-#drawer{flex-shrink:0;max-height:0;overflow:hidden;background:#181b20;border-top:1px solid #2a2e36;transition:max-height .22s ease}
-#drawer.open{max-height:46dvh}
-.dr-inner{overflow-y:auto;max-height:46dvh;padding:10px 12px 14px}
-.dr-fam{display:flex;gap:4px;margin-bottom:10px;overflow-x:auto;scrollbar-width:none}
-.dr-fam::-webkit-scrollbar{display:none}
-.dr-fam-btn{flex-shrink:0;padding:7px 12px;border-radius:16px;background:#0f1114;color:#8a919c;font-size:11px;font-weight:700}
-.dr-fam-btn.act{background:#233a35;color:#7fd9cf}
-.dr-lever{margin-bottom:14px}
-.dr-lever-top{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-bottom:2px}
-.dr-lever-lbl{font-size:12px;font-weight:600;color:#c7ccd3}
-.dr-lever-val{font-size:11px;font-weight:700;color:#7fd9cf;font-variant-numeric:tabular-nums;flex-shrink:0}
-.dr-lever input[type=range]{width:100%;accent-color:#2A8C84;height:22px}
-.dr-hint{font-size:10.5px;color:#6b7280;margin-top:1px;line-height:1.35}
-.dr-lock{display:inline-flex;align-items:center;gap:3px;font-size:9.5px;font-weight:700;padding:1px 6px;border-radius:10px;margin-left:6px}
-.dr-lock.none{background:#26292f;color:#666c76}
-.dr-lock.match{background:#12321f;color:#4fce8e}
-.dr-lock.drift{background:#3a2e10;color:#e6b23d}
-.dr-coverage{font-size:10.5px;color:#6b7280;margin-bottom:10px}
-.dr-copybox{width:100%;min-height:52px;margin-top:8px;background:#0f1114;border:1px solid #2a2e36;border-radius:8px;color:#8a919c;font-size:10px;font-family:ui-monospace,monospace;padding:8px;resize:vertical}
-
-/* ══════════════════════════════════════════════════════════
-   PHONE FRAME — реальні пропорції (§2-п.2)
-   ══════════════════════════════════════════════════════════ */
-.phone-frame{position:relative;background:#000;border-radius:54px;padding:11px;box-shadow:0 40px 90px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.05)}
-.phone-frame[data-device="xs"]{width:397px;height:834px}
-.phone-frame[data-device="15pro"]{width:415px;height:874px}
-.phone-screen{position:relative;width:100%;height:100%;border-radius:43px;overflow:hidden}
-
-/* status bar chrome */
-.psb{position:absolute;top:0;left:0;right:0;z-index:80;display:flex;align-items:flex-end;justify-content:space-between;padding:0 26px;pointer-events:none;color:var(--ink)}
-[data-device="xs"] .psb{height:44px;padding-bottom:8px}
-[data-device="15pro"] .psb{height:52px;padding-bottom:9px}
-.psb-time{font-size:15px;font-weight:700;letter-spacing:-.2px}
-.psb-icons{display:flex;align-items:center;gap:4px}
-.psb-icons svg{display:block}
-.notch{position:absolute;top:0;left:50%;transform:translateX(-50%);background:#000;z-index:81;pointer-events:none}
-[data-device="xs"] .notch{width:180px;height:26px;border-radius:0 0 18px 18px}
-[data-device="15pro"] .notch{width:118px;height:34px;border-radius:20px;top:11px}
-.home-ind{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:134px;height:5px;border-radius:3px;background:var(--ink);opacity:.35;z-index:80;pointer-events:none}
-
-/* ══════════════════════════════════════════════════════════
-   PRODUCT TOKENS (реальні, з QR_Lens_preview_batch59) — scoped
-   ══════════════════════════════════════════════════════════ */
-.phone-screen[data-theme="light"]{
+/* ═══ токени B59 (grep-верифіковано) ═══ */
+.stage{--accent:#2A8C84;--acc-rgb:42,140,132}
+.stage[data-th="light"]{
   --bg:#eef3f2;--bg-soft:#e3ebe9;--card:#fff;--card-2:#f4f8f7;
-  --border:#d3dedb;--border-2:#bfcecb;--border-rgb:211,222,219;
-  --ink:#1a1b1e;--ink-2:#3e4a46;--muted:#74827d;--muted-2:#a3afaa;
-  --accent:#2A8C84;--accent-text:#237770;--accent-soft:#E8F4F2;
-  --r:14px;--rs:10px;--rxs:6px;
-}
-.phone-screen[data-theme="dark"]{
+  --border:#d3dedb;--border-2:#bfcecb;
+  --ink:#1a1b1e;--ink-2:#3e4a46;--muted:#74827d;--muted-2:#a3afaa;--accent-text:#237770;
+  --av-bg:color-mix(in srgb,var(--accent) 15%,var(--card));--av-ink:#237770;
+  --av-sh:0 2.5px 5px -1px rgba(0,0,0,.22);--div-c:0,0,0}
+.stage[data-th="dark"]{
   --bg:#0a0e14;--bg-soft:#11161e;--card:#232a35;--card-2:#2b3340;
-  --border:#333b46;--border-2:#46505d;--border-rgb:51,59,70;
-  --ink:#e6edf3;--ink-2:#b7c0c8;--muted:#8b949e;--muted-2:#6e7681;
-  --accent:#2A8C84;--accent-text:#34A097;--accent-soft:#1A4540;
-  --r:14px;--rs:10px;--rxs:6px;
-}
-.phone-screen{font-family:'Manrope',sans-serif;background:var(--bg);color:var(--ink)}
+  --border:#333b46;--border-2:#46505d;
+  --ink:#e6edf3;--ink-2:#b7c0c8;--muted:#8b949e;--muted-2:#6e7681;--accent-text:#34A097;
+  --av-bg:color-mix(in srgb,var(--accent) 18%,var(--card));--av-ink:#45A194;
+  --av-sh:inset 0 1px 0 rgba(255,255,255,.158),inset 0 -1px 0 rgba(0,0,0,.22);--div-c:255,255,255}
 
-/* ── дим-фон (мокап живого QR Lens позаду щита, §2-п.6) ── */
-.mock-bg{position:absolute;inset:0;padding-top:var(--sb-space,44px)}
-[data-device="15pro"] .mock-bg{--sb-space:52px}
-.mock-appbar{display:flex;align-items:center;gap:8px;padding:10px 14px 8px;border-bottom:1px solid var(--border)}
-.mock-brand{font-size:15px;font-weight:800;color:var(--ink);flex-shrink:0}
-.mock-brand em{color:var(--accent-text);font-style:normal}
-.mock-srpill{flex:1;display:flex;align-items:center;gap:6px;background:var(--bg-soft);border:1px solid var(--border);border-radius:20px;padding:5px 10px 5px 5px;cursor:pointer}
-.mock-av{width:22px;height:22px;border-radius:50%;background:color-mix(in srgb,var(--accent) 16%,var(--card));color:var(--accent-text);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
-.mock-srpill span{font-size:12px;font-weight:600;color:var(--ink)}
-.mock-th{width:30px;height:30px;border-radius:16px;background:var(--bg-soft);border:1px solid var(--border);flex-shrink:0}
-.mock-body{padding:12px 14px}
-.mock-tiles{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.mock-tile{height:64px;border-radius:10px;background:var(--card);border:1px solid var(--border)}
+/* ═══ контент позаду ═══ */
+.behind{position:absolute;inset:0;background:var(--bg);overflow:hidden}
+.bh-bar{padding:calc(var(--sa-t) + 4px) 14px 8px;background:var(--card);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;gap:9px}
+.bh-logo{width:26px;height:26px;border-radius:7px;background:color-mix(in srgb,var(--accent) 14%,var(--card));
+  border:1px solid color-mix(in srgb,var(--accent) 30%,transparent);flex-shrink:0}
+.bh-wm{font:800 15px 'Manrope',sans-serif;color:var(--ink)}
+.bh-wm i{color:var(--accent-text);font-style:normal}
+.bh-pill{flex:1;display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:99px;
+  background:var(--bg-soft);border:1px solid var(--border);font:600 12px 'Manrope',sans-serif;color:var(--ink-2)}
+.bh-av{width:20px;height:20px;border-radius:50%;background:var(--av-bg);color:var(--av-ink);
+  font:800 9px 'Manrope',sans-serif;display:flex;align-items:center;justify-content:center}
+.bh-sub{padding:5px 16px 9px;font:600 11px 'Manrope',sans-serif;color:var(--muted);
+  background:var(--card);display:flex;align-items:center;gap:6px}
+.bh-dot{width:7px;height:7px;border-radius:50%;background:#2e9e5c}
+.bh-card{margin:9px 14px;padding:12px;border-radius:12px;background:var(--card);
+  border:1px solid var(--border);height:62px}
+.dim{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:10}
 
-/* ── scrim + sheet ── */
-.scrim{position:absolute;inset:0;background:rgba(0,0,0,.5);z-index:90;opacity:0;pointer-events:none;transition:opacity .22s ease}
-.scrim.open{opacity:1;pointer-events:auto}
-.pk-sheet{position:absolute;left:0;right:0;bottom:0;background:var(--card);border-radius:18px 18px 0 0;
-  transform:translateY(100%);transition:transform .24s cubic-bezier(.32,.72,0,1);
-  display:flex;flex-direction:column;max-height:calc(100% - var(--sb-space,44px) - 30px)}
-.scrim.open .pk-sheet{transform:translateY(0)}
-.pk-grip-w{padding:9px 0 4px;display:flex;justify-content:center;flex-shrink:0}
-.pk-grip{width:34px;height:4px;border-radius:2px;background:var(--border-2)}
-.pk-head{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:0 16px 9px;border-bottom:1px solid var(--border)}
-.pk-title{font-size:14px;font-weight:700;color:var(--ink)}
-.pk-x{width:26px;height:26px;border-radius:50%;background:var(--bg-soft);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--ink-2);font-size:13px}
+/* ═══ SHEET ═══ */
+.sh-head{border-bottom:calc(var(--eave-h)*1px) solid rgba(var(--div-c),calc(var(--eave-a)/100))}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:11;display:flex;flex-direction:column;
+  height:calc(var(--sheet-h)*1%);
+  background:var(--card);
+  border-radius:calc(var(--sheet-rad)*1px) calc(var(--sheet-rad)*1px) 0 0;
+  box-shadow:0 -4px 20px rgba(0,0,0,calc(var(--sheet-drop-a)/100));
+  padding-bottom:var(--sa-b);overflow:hidden}
+.sh-grip-w{padding:10px 0 4px;display:flex;justify-content:center;flex-shrink:0}
+.sh-grip{width:36px;height:4px;background:var(--border-2);border-radius:2px}
+.sh-head{display:flex;justify-content:space-between;align-items:center;
+  padding:0 16px calc(var(--head-padb)*1px);flex-shrink:0}
+.sh-title{font:700 15px 'Manrope',sans-serif;color:var(--ink)}
+.sh-x{width:28px;height:28px;border-radius:50%;background:var(--bg-soft);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;color:var(--ink-2);font-size:14px}
 
-/* fixed zone: search + chips — важіль pk-tray-shadow дає recess-глибину */
-.pk-fixed{flex-shrink:0;background:var(--bg);box-shadow:var(--pk-tray-shadow);padding:12px 16px 10px}
-.pk-search-wrap{position:relative;display:flex;align-items:center;gap:8px;background:var(--card);border:1px solid var(--border);
-  border-radius:var(--pk-search-r,12px);padding:8px 10px;box-shadow:var(--pk-search-well);margin-bottom:10px}
-.pk-search-wrap svg{color:var(--muted);flex-shrink:0}
-.pk-search{flex:1;min-width:0;border:none;outline:none;background:transparent;color:var(--ink);font-size:14px}
-.pk-search::placeholder{color:var(--muted)}
-.pk-clr{flex-shrink:0;width:20px;height:20px;border-radius:50%;background:var(--border);color:var(--ink-2);display:flex;align-items:center;justify-content:center;font-size:12px}
-.pk-clr[hidden]{display:none}
+/* НАВІС */
+.eave{flex-shrink:0;height:calc(var(--eave-h)*1px);position:relative;
+  background:rgba(var(--div-c),calc(var(--eave-a)/100))}
+.eave::after{content:"";position:absolute;left:0;right:0;top:100%;
+  height:calc(var(--eave-sh-h)*1px);pointer-events:none;
+  background:linear-gradient(180deg,rgba(0,0,0,calc(var(--eave-sh-a)/100)),rgba(0,0,0,0))}
 
-.pk-chips{display:flex;gap:var(--pk-chip-gap,8px);overflow-x:auto;scrollbar-width:none;padding:1px 2px;transition:opacity .15s ease}
-.pk-chips.dim{opacity:.35;pointer-events:none}
-.pk-chips::-webkit-scrollbar{display:none}
-.pk-chip-row{position:relative}
-.pk-chip-row::before,.pk-chip-row::after{content:'';position:absolute;top:0;bottom:0;width:var(--pk-fade-w,20px);z-index:2;pointer-events:none}
-.pk-chip-row::before{left:0;background:linear-gradient(to right,var(--bg),transparent)}
-.pk-chip-row::after{right:0;background:linear-gradient(to left,var(--bg),transparent)}
-.pk-chip{flex-shrink:0;padding:7px 14px;border-radius:20px;border:1.5px solid var(--border);font-size:12px;font-weight:600;
-  white-space:nowrap;background:var(--card);color:var(--ink-2)}
-.pk-chip.act{background:var(--pk-chip-act-bg);color:var(--accent-text);border-color:var(--accent)}
+/* ТАРЕЛЬ .sh-body — реальний матеріал B56 (р.775-777):
+   світла bg #eef3f2 + inset 0 1px 3px rgba(20,40,35,.28) · темна bg-soft #11161e + нижня біла губа .28.
+   Саме він дає ту тональність, якої в стенді бракувало (device-фідбек 11.08). */
+.sh-body{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden;
+  padding:calc(var(--tarel-padt)*1px) calc(var(--tarel-padx)*1px) calc(var(--tarel-padb)*1px);
+  background:
+    linear-gradient(rgba(0,0,0,calc(var(--tarel-dk)/100)),rgba(0,0,0,calc(var(--tarel-dk)/100))),
+    linear-gradient(rgba(255,255,255,calc(var(--tarel-lt)/100)),rgba(255,255,255,calc(var(--tarel-lt)/100))),
+    var(--tarel-base);
+  box-shadow:
+    inset 0 calc(var(--tarel-ins-y)*1px) calc(var(--tarel-ins-b)*1px) rgba(20,40,35,calc(var(--tarel-ins-a)/100)),
+    inset 0 -1px 0 rgba(255,255,255,calc(var(--tarel-lip-a)/100))}
+.stage[data-th="light"]{--tarel-base:var(--bg)}
+.stage[data-th="dark"]{--tarel-base:var(--bg-soft)}
 
-/* scroll viewport — САМЕ ЦЕЙ ВАЖІЛЬ вирішує баг */
-.pk-list-wrap{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px 16px 0;max-height:var(--pk-list-maxh,46vh)}
-.gcard{background:var(--card);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;
-  box-shadow:0 1px 2px rgba(20,40,35,.05),0 calc(1px + var(--pk-card-elev,6px)*.3) calc(4px + var(--pk-card-elev,6px)) rgba(20,40,35,.06)}
-.sr-opt{display:flex;align-items:center;gap:12px;padding:var(--pk-row-pady,12px) 14px;
-  border-bottom:1px solid rgba(var(--border-rgb),var(--pk-divider-a,1));cursor:pointer;color:var(--ink-2)}
-.sr-opt:last-child{border-bottom:none}
-.sr-opt.sel{background:rgba(var(--accent-rgb,42,140,132),var(--pk-sel-tint,0))}
-.sr-av{width:var(--pk-av,34px);height:var(--pk-av,34px);border-radius:50%;flex-shrink:0;
-  background:color-mix(in srgb,var(--accent) 16%,var(--card));color:var(--accent-text);
-  display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
-.sr-opt.sel .sr-av{box-shadow:0 0 0 var(--pk-ring,2px) var(--accent)}
-.sr-opt-name{font-size:14px;font-weight:600;flex:1;min-width:0}
-.sr-opt.sel .sr-opt-name{color:var(--accent-text);font-weight:700}
-.sr-check{margin-left:auto;color:var(--accent-text);opacity:0;flex-shrink:0}
-.sr-opt.sel .sr-check{opacity:1}
-.pk-empty{padding:26px 14px;text-align:center;color:var(--muted);font-size:12.5px}
+/* ТУНЕЛЬ — база = ТАРЕЛЬ (dk=lt=0 → таця зливається з дошкою) */
+.tray-w{flex-shrink:0;padding:calc(var(--tray-mt)*1px) 0 calc(var(--tray-mb)*1px)}
+.tray{display:flex;gap:calc(var(--tray-gap)*1px);align-items:center;
+  margin:0 calc(var(--tray-mx)*1px);
+  padding:calc(var(--tray-padt)*1px) 10px calc(var(--tray-padb)*1px);
+  border-radius:calc(var(--tray-rad)*1px);overflow-x:auto;scrollbar-width:none;
+  background:
+    linear-gradient(rgba(0,0,0,calc(var(--tray-dk)/100)),rgba(0,0,0,calc(var(--tray-dk)/100))),
+    linear-gradient(rgba(255,255,255,calc(var(--tray-lt)/100)),rgba(255,255,255,calc(var(--tray-lt)/100))),
+    var(--tarel-base);
+  box-shadow:
+    inset 0 2px calc(var(--tray-ins-b)*1px) rgba(0,0,0,calc(var(--tray-ins-a)/100)),
+    inset 0 -1px 0 rgba(255,255,255,calc(var(--tray-lip-a)/100)),
+    0 calc(var(--tray-drop-y)*1px) calc(var(--tray-drop-b)*1px) rgba(0,0,0,calc(var(--tray-drop-a)/100));
+  -webkit-mask-image:linear-gradient(to right,transparent 0,#000 calc(var(--tray-fade)*1px),#000 calc(100% - var(--tray-fade)*1px),transparent 100%);
+  mask-image:linear-gradient(to right,transparent 0,#000 calc(var(--tray-fade)*1px),#000 calc(100% - var(--tray-fade)*1px),transparent 100%)}
+.tray::-webkit-scrollbar{display:none}
 
-/* about block — статичний, поза скролом списку */
-.pk-about{flex-shrink:0;padding:12px 16px 16px}
-.ab-eb{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:2px 4px 7px}
-.about-row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);font-size:12.5px}
-.about-row:last-child{border-bottom:none}
-.ar-k{color:var(--muted);font-weight:500}
-.ar-v{color:var(--ink-2);font-weight:600}
+/* ЧІП: halo-wrapper + капсула. halo завжди в DOM → перенос не зсуває сусідів */
+.ac{flex-shrink:0;display:inline-flex;padding:calc(var(--halo-gap)*1px);
+  border:calc(var(--halo-w)*1px) solid color-mix(in srgb,var(--accent) calc(var(--halo-acc)*1%),transparent);
+  border-radius:calc((var(--cap-rad) + var(--halo-gap) + var(--halo-w) + var(--halo-rad-d))*1px);
+  background:
+    linear-gradient(rgba(0,0,0,calc(var(--halo-dk)/100)),rgba(0,0,0,calc(var(--halo-dk)/100))),
+    linear-gradient(rgba(255,255,255,calc(var(--halo-lt)/100)),rgba(255,255,255,calc(var(--halo-lt)/100))),
+    transparent;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,calc(var(--halo-lip-a)/100)),
+             0 1px 2px rgba(0,0,0,calc(var(--halo-drop-a)/100));
+  cursor:pointer}
+.ac:not(.on){--halo-acc:0;--halo-dk:0;--halo-lt:0;--halo-lip-a:0;--halo-drop-a:0}
+.ac-cap{display:inline-flex;align-items:center;justify-content:center;gap:5px;white-space:nowrap;
+  padding:calc(var(--cap-pady)*1px) calc(var(--cap-padx)*1px);
+  min-height:calc(var(--cap-minh)*1px);
+  border-radius:calc(var(--cap-rad)*1px);
+  border:calc(var(--cap-bw)*1px) solid color-mix(in srgb,var(--accent) calc(var(--cap-bd)*1%),var(--border));
+  background:
+    linear-gradient(rgba(var(--acc-rgb),calc(var(--cap-tint)/100)),rgba(var(--acc-rgb),calc(var(--cap-tint)/100))),
+    linear-gradient(rgba(0,0,0,calc(var(--cap-dk)/100)),rgba(0,0,0,calc(var(--cap-dk)/100))),
+    linear-gradient(rgba(255,255,255,calc(var(--cap-lt)/100)),rgba(255,255,255,calc(var(--cap-lt)/100))),
+    var(--card);
+  color:color-mix(in srgb,var(--ink) calc(var(--cap-txtw)*1%),
+        color-mix(in srgb,var(--accent-text) calc(var(--cap-txt)*1%),var(--ink-2)));
+  font-family:'Manrope',sans-serif;font-size:calc(var(--cap-fs)*1px);font-weight:var(--cap-fw);
+  box-shadow:
+    inset 0 calc(var(--cap-ins-y)*1px) calc(var(--cap-ins-b)*1px) rgba(0,0,0,calc(var(--cap-ins-a)/100)),
+    inset 0 calc(var(--cap-lip-y)*1px) 0 rgba(255,255,255,calc(var(--cap-lip-a)/100)),
+    0 calc(var(--cap-drop-y)*1px) calc(var(--cap-drop-b)*1px) rgba(0,0,0,calc(var(--cap-drop-a)/100))}
+.ac-n{opacity:.72;font-weight:600}
+
+/* СПИСОК + ДІВАЙДЕР (важелі: inset зліва/справа, товщина, прозорість) */
+.sh-list{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0}
+.sh-list::-webkit-scrollbar{display:none}
+.gcard{border-radius:calc(var(--gc-rad)*1px);overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--border) calc(var(--gc-bd)*1%),transparent);
+  background:
+    linear-gradient(rgba(0,0,0,calc(var(--gc-dk)/100)),rgba(0,0,0,calc(var(--gc-dk)/100))),
+    linear-gradient(rgba(255,255,255,calc(var(--gc-lt)/100)),rgba(255,255,255,calc(var(--gc-lt)/100))),
+    var(--card);
+  box-shadow:0 3px 8px rgba(0,0,0,calc(var(--gc-drop-a)/100))}
+.sr-opt{position:relative;display:flex;align-items:center;gap:12px;
+  padding:calc(var(--row-pady)*1px) 14px;color:var(--ink-2)}
+.sr-opt::after{content:"";position:absolute;bottom:0;
+  left:calc(var(--div-l)*1px);right:calc(var(--div-r)*1px);
+  height:calc(var(--div-h)*1px);background:rgba(var(--div-c),calc(var(--div-a)/100))}
+.sr-opt:last-child::after{display:none}
+.sr-av{width:34px;height:34px;border-radius:50%;background:var(--av-bg);color:var(--av-ink);
+  box-shadow:var(--av-sh);display:flex;align-items:center;justify-content:center;
+  font:800 14px 'Manrope',sans-serif;flex-shrink:0}
+.sr-n{font:600 14px 'Manrope',sans-serif;flex:1;min-width:0}
+.sr-opt.sel .sr-av{box-shadow:0 0 0 2px var(--accent),var(--av-sh)}
+.sr-opt.sel .sr-n{color:var(--accent);font-weight:700}
+.sh-eyebrow{font:700 10px 'Manrope',sans-serif;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);padding:14px 2px 6px}
+
+/* ═══ ПАНЕЛЬ ═══ */
+#panel{flex-shrink:0;background:#1b1e24;border-top:1px solid #2a2e36;
+  padding:6px 9px calc(env(safe-area-inset-bottom,0px) + 6px);
+  display:flex;flex-direction:column;gap:5px;max-height:46dvh}
+#panel.hidden{display:none}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0}
+.tabs::-webkit-scrollbar{display:none}
+.presets{display:flex;flex-wrap:wrap;gap:4px;align-items:center;flex-shrink:0}
+.pl{font:800 9px 'Manrope',sans-serif;color:#7f8b98;letter-spacing:.05em;
+  text-transform:uppercase;min-width:44px;flex-shrink:0}
+#levers{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;display:flex;flex-direction:column;gap:2px}
+.lv{display:flex;align-items:center;gap:6px}
+.lv-n{font:700 9.5px 'Manrope',sans-serif;color:#a6b1bd;width:74px;flex-shrink:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lv-s{flex:1;min-width:0;height:22px;accent-color:#2A8C84;background:transparent}
+.lv-v{font:800 9.5px 'Manrope',sans-serif;color:#e8eaed;width:38px;text-align:right;flex-shrink:0}
+.lv-k{font-size:11px;width:20px;text-align:center;flex-shrink:0;opacity:.45;cursor:pointer;
+  background:none;border:none;color:#e8eaed;padding:0}
+.lv-k.lk{opacity:1;color:#f0c25a}
+.lv.drift .lv-v{color:#f0c25a}
+.leg{font:500 9.5px/1.4 'Manrope',sans-serif;color:#7d8794;border-top:1px solid #2a2e36;padding-top:5px;
+  max-height:38dvh;overflow-y:auto;flex-shrink:0}
+.leg.hidden{display:none}
+.leg b{color:#9fb0bd;font-weight:800}
+#showPanel{position:fixed;right:12px;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:90;display:none}
+#showPanel.on{display:block}
+#betBox{position:fixed;inset:8% 6%;z-index:99;background:#11141a;border:1px solid #3a4049;
+  border-radius:12px;padding:10px;display:none;flex-direction:column;gap:7px}
+#betBox.on{display:flex}
+#betTxt{flex:1;width:100%;background:#0b0d11;color:#cfd6de;border:1px solid #2a2e36;border-radius:8px;
+  font:500 10px/1.4 ui-monospace,monospace;padding:8px;resize:none}
 </style>
 </head>
 <body>
-<div id="bench">
 
-  <!-- ══ TOOLBAR ══ -->
-  <div class="bt-bar">
-    <div class="bt-group" id="grpDevice">
-      <button class="bt-btn act" data-device="xs">XS 375×812</button>
-      <button class="bt-btn" data-device="15pro">15 Pro 393×852</button>
-    </div>
-    <div class="bt-group" id="grpTheme">
-      <button class="bt-btn act" data-theme="light">☀ Світла</button>
-      <button class="bt-btn" data-theme="dark">☾ Темна</button>
-    </div>
-    <div class="bt-sep"></div>
-    <div class="bt-zoom">
-      <button id="zoomOut">−</button>
-      <span class="zv" id="zoomVal">100%</span>
-      <button id="zoomIn">+</button>
-      <button id="zoomReset" style="font-size:10px;font-weight:700">1:1</button>
-    </div>
-    <div class="bt-sep"></div>
-    <button class="bt-compare" id="btnCompare">⇄ Порівняти з P0 (тримай)</button>
-    <button class="bt-copy" id="btnCopy">📋 Скопіювати важелі</button>
+<div class="bb" id="bb">
+  <div class="bb-r">
+    <span class="bb-t">AREA-CHIP v2.3</span>
+    <div class="seg"><button class="btn on" data-dev="xs">XS</button><button class="btn" data-dev="p15">15 Pro</button></div>
+    <button class="btn" id="thBtn">☀︎ світла</button>
+    <span class="sp"></span>
+    <button class="btn" id="hideBtn">⤢</button>
   </div>
-
-  <!-- ══ STAGE ══ -->
-  <div id="stage">
-    <div class="spec-badge" id="specBadge">XS · 375×812 · Світла</div>
-    <div id="stageInner">
-      <div class="phone-frame" data-device="xs" id="phoneFrame">
-        <div class="phone-screen" data-theme="light" id="phoneScreen">
-          <div class="notch"></div>
-          <div class="psb">
-            <span class="psb-time">9:41</span>
-            <span class="psb-icons">
-              <svg width="17" height="11" viewBox="0 0 17 11"><rect x="0" y="6" width="3" height="5" rx="0.5" fill="currentColor"/><rect x="4.5" y="4" width="3" height="7" rx="0.5" fill="currentColor"/><rect x="9" y="1.5" width="3" height="9.5" rx="0.5" fill="currentColor"/><rect x="13.5" y="0" width="3" height="11" rx="0.5" fill="currentColor"/></svg>
-              <svg width="24" height="12" viewBox="0 0 24 12"><rect x="0.5" y="0.5" width="21" height="11" rx="2.5" stroke="currentColor" fill="none"/><rect x="2" y="2" width="16" height="8" rx="1" fill="currentColor"/><rect x="22.5" y="3.5" width="1.5" height="5" rx="0.7" fill="currentColor"/></svg>
-            </span>
-          </div>
-
-          <!-- живий фон позаду щита -->
-          <div class="mock-bg">
-            <div class="mock-appbar">
-              <span class="mock-brand">QR<em>Lens</em></span>
-              <button class="mock-srpill" id="mockSrPill"><span class="mock-av">К</span><span id="mockSrName">Константінов А.</span></button>
-              <span class="mock-th"></span>
-            </div>
-            <div class="mock-body"><div class="mock-tiles"><div class="mock-tile"></div><div class="mock-tile"></div><div class="mock-tile"></div></div></div>
-          </div>
-
-          <!-- SR PICKER SHEET -->
-          <div class="scrim open" id="scrim">
-            <div class="pk-sheet" id="pkSheet">
-              <div class="pk-grip-w"><div class="pk-grip"></div></div>
-              <div class="pk-head">
-                <span class="pk-title">Оберіть представника</span>
-                <button class="pk-x" id="btnClose">×</button>
-              </div>
-
-              <div class="pk-fixed">
-                <div class="pk-search-wrap">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
-                  <input class="pk-search" id="pkSearch" type="search" placeholder="Пошук за ім'ям або прізвищем" autocomplete="off"/>
-                  <button class="pk-clr" id="pkClr" hidden>×</button>
-                </div>
-                <div class="pk-chip-row">
-                  <div class="pk-chips" id="pkChips"></div>
-                </div>
-              </div>
-
-              <div class="pk-list-wrap">
-                <div class="gcard" id="pkList"></div>
-              </div>
-
-              <div class="pk-about">
-                <div class="ab-eb">Про застосунок</div>
-                <div class="gcard">
-                  <div class="about-row"><span class="ar-k">Розробник</span><span class="ar-v">Konst.Andre</span></div>
-                  <div class="about-row"><span class="ar-k">Версія</span><span class="ar-v">Stage-bench · Крок 1</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="home-ind"></div>
-        </div>
-      </div>
-    </div>
-    <button class="panel-fab" id="panelFab">⚙ Важелі <span class="cnt" id="lockCnt">ЛОК 0/13</span></button>
+  <div class="bb-r">
+    <button class="btn" data-z="minus">−</button><span class="zb" id="zb">100%</span>
+    <button class="btn" data-z="plus">+</button><button class="btn" data-z="one">fit</button>
+    <span class="sp"></span>
+    <button class="btn" id="holdBtn">✋ lift</button>
+    <button class="btn" id="betBtn">📋</button>
+    <button class="btn" id="legBtn">?</button>
+    <span class="zb" id="lockN">🔒0</span>
   </div>
-
-  <!-- ══ LEVER DRAWER ══ -->
-  <div id="drawer">
-    <div class="dr-inner">
-      <div class="dr-coverage" id="drCoverage">Тема: <b id="drThemeLbl">Світла</b> · важелі нижче застосовуються лише до неї</div>
-      <div class="dr-fam" id="drFam"></div>
-      <div id="drLevers"></div>
-      <textarea class="dr-copybox" id="copyBox" readonly placeholder="Тут з'явиться текст після «Скопіювати важелі» (webview інколи блокує clipboard — копіюй вручну звідси)"></textarea>
-    </div>
-  </div>
-
 </div>
 
-<script>
-'use strict';
-
-/* ══════════════════════════════════════════════════════════
-   ДАНІ — реальні 15 SR / 5 Area з _SR_List_Area.md
-   ══════════════════════════════════════════════════════════ */
-const AREA_DATA = [
-  {area:'Київська',        people:['Негода Олександр','Трачук Олександр','Шоптенко Альона','Кімачук Оксана','Нікітіна Анна','Мошківська Надія','Леоненко Наталія']},
-  {area:'Дніпропетровська',people:['Бутуліна Владислава','Константінов Андрій','Серченко Ірина']},
-  {area:'Житомирська',     people:['Гончаренко Карина','Соколенко Валерія']},
-  {area:'Полтавська',      people:['Дяченко Наталія','Ніна Коломієць']},
-  {area:'Кіровоградська',  people:['Дуднік Вікторія']},
-];
-let _gid = 0;
-const PEOPLE = AREA_DATA.flatMap(g => g.people.map(name => ({idx:_gid++, name, area:g.area})));
-const DEFAULT_SELECTED = PEOPLE.find(p => p.name === 'Константінов Андрій');
-
-/* ══════════════════════════════════════════════════════════
-   LEVERS — 13 важелів, 5 родин, окремо для light/dark (§ manifest)
-   ══════════════════════════════════════════════════════════ */
-const LEVER_DEFS = [
-  {key:'trayShadow',      fam:'tray',   lbl:'Глибина втоплення (шапка+search)', min:0,  max:60, step:1,   unit:'',   hint:'Recess-тінь зони search+чіпів. Формула різна для light/dark (inset shadow vs light-lip), число одне й те саме — 0=пласко, 60=глибокий колодязь.'},
-  {key:'cardElevation',   fam:'tray',   lbl:'Підняття картки списку',           min:0,  max:20, step:1,   unit:'',   hint:'Наскільки список "виринає" над recess-зоною (тінь знизу картки).'},
-  {key:'searchWellDepth', fam:'search', lbl:'Глибина search-поля',              min:0,  max:40, step:1,   unit:'',   hint:'Inset-тінь самого інпута (втопленість поля вводу).'},
-  {key:'searchRadius',    fam:'search', lbl:'Радіус search-поля',               min:6,  max:20, step:1,   unit:'px', hint:''},
-  {key:'chipFadeWidth',   fam:'chip',   lbl:'Ширина edge-fade чіпів',           min:8,  max:40, step:1,   unit:'px', hint:'Той самий трюк, що вже є в .qr-chips на Tab 3 — сигнал "можна гортати".'},
-  {key:'chipActiveFillAlpha', fam:'chip', lbl:'Заливка активного чіпа',         min:0,  max:100,step:1,   unit:'%',  hint:'Скільки accent підмішано у фон вибраної Area-пігулки.'},
-  {key:'chipGap',         fam:'chip',   lbl:'Відстань між чіпами',              min:4,  max:16, step:1,   unit:'px', hint:''},
-  {key:'listMaxH',        fam:'list',   lbl:'Макс. висота списку (viewport)',   min:30, max:70, step:1,   unit:'vh', hint:'ГОЛОВНИЙ важіль — саме він вирішує баг "щит роздутий". Список стискається по контенту до цієї стелі, далі — внутрішній скрол.'},
-  {key:'rowPadY',         fam:'list',   lbl:'Вертик. padding рядка',            min:8,  max:16, step:1,   unit:'px', hint:''},
-  {key:'rowDividerAlpha', fam:'list',   lbl:'Прозорість розділювача',           min:0,  max:100,step:1,   unit:'%',  hint:''},
-  {key:'avatarSize',      fam:'row',    lbl:'Розмір аватара',                   min:28, max:40, step:1,   unit:'px', hint:''},
-  {key:'selectedRingWidth', fam:'row',  lbl:'Товщина кільця вибору',            min:0,  max:3,  step:0.5, unit:'px', hint:'Кільце навколо аватара вибраного представника.'},
-  {key:'selectedTint',    fam:'row',    lbl:'Тонування вибраного рядка',        min:0,  max:100,step:1,   unit:'%',  hint:'Фонова підсвітка всього рядка (0 = лише кільце+колір імені, як зараз у продукті).'},
-];
-const FAMILIES = [
-  {id:'tray',   lbl:'Шапка'},
-  {id:'search', lbl:'Пошук'},
-  {id:'chip',   lbl:'Чіпи'},
-  {id:'list',   lbl:'Список'},
-  {id:'row',    lbl:'Рядок'},
-];
-
-const P0 = {
-  trayShadow:28, cardElevation:6, searchWellDepth:18, searchRadius:12,
-  chipFadeWidth:20, chipActiveFillAlpha:14, chipGap:8,
-  listMaxH:46, rowPadY:12, rowDividerAlpha:100,
-  avatarSize:34, selectedRingWidth:2, selectedTint:0,
-};
-const values = {light:{...P0}, dark:{...P0}};
-// ЛОК-регістр (§3-п.13): порожньо — жодного канону ще не зафіксовано на цьому стенді.
-// Формат майбутнього запису: LOCK.light.listMaxH = 46;
-const LOCK = {light:{}, dark:{}};
-
-/* ══════════════════════════════════════════════════════════
-   STATE
-   ══════════════════════════════════════════════════════════ */
-const state = {
-  device:'xs', theme:'light', zoom:1, panelOpen:false, family:'list',
-  search:'', activeArea:AREA_DATA[0].area, selectedIdx:DEFAULT_SELECTED.idx,
-  sheetOpen:true,
-};
-// відкриваємо на Area того, хто зараз "вибраний" — консистентно з реальною поведінкою
-state.activeArea = DEFAULT_SELECTED.area;
-
-/* ══════════════════════════════════════════════════════════
-   RENDER: chips
-   ══════════════════════════════════════════════════════════ */
-function renderChips(){
-  const wrap = document.getElementById('pkChips');
-  wrap.classList.toggle('dim', !!state.search.trim());
-  wrap.innerHTML = AREA_DATA.map(g => `
-    <button class="pk-chip${state.activeArea===g.area?' act':''}" data-area="${g.area}">${g.area} · ${g.people.length}</button>
-  `).join('');
-  wrap.querySelectorAll('.pk-chip').forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      state.activeArea = btn.dataset.area;
-      renderChips(); renderList();
-    });
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   RENDER: people list
-   ══════════════════════════════════════════════════════════ */
-function renderList(){
-  const el = document.getElementById('pkList');
-  const q = state.search.trim().toLowerCase();
-  let list;
-  if(q){
-    list = PEOPLE.filter(p => p.name.toLowerCase().includes(q)); // глобально, ігнорує чіп (рішення користувача)
-  } else {
-    list = PEOPLE.filter(p => p.area === state.activeArea);
-  }
-  if(!list.length){
-    el.innerHTML = `<div class="pk-empty">Нічого не знайдено</div>`;
-    return;
-  }
-  el.innerHTML = list.map(p => {
-    const sel = p.idx === state.selectedIdx;
-    return `<div class="sr-opt${sel?' sel':''}" data-idx="${p.idx}">
-      <div class="sr-av">${p.name.charAt(0)}</div>
-      <span class="sr-opt-name">${p.name}</span>
-      <svg class="sr-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-    </div>`;
-  }).join('');
-  el.querySelectorAll('.sr-opt').forEach(row=>{
-    row.addEventListener('click', ()=>{
-      state.selectedIdx = +row.dataset.idx;
-      const p = PEOPLE.find(x=>x.idx===state.selectedIdx);
-      document.getElementById('mockSrName').textContent = p.name.split(' ')[0]+' '+p.name.split(' ')[1].charAt(0)+'.';
-      renderList();
-    });
-  });
-}
-
-/* ══════════════════════════════════════════════════════════
-   APPLY LEVERS → CSS custom properties (формула залежить від теми)
-   ══════════════════════════════════════════════════════════ */
-function applyLevers(){
-  const v = values[state.theme];
-  const screen = document.getElementById('phoneScreen');
-  const isDark = state.theme === 'dark';
-
-  const traySh = isDark
-    ? `inset 0 -1px 0 rgba(255,255,255,${(v.trayShadow/150).toFixed(3)})`
-    : `inset 0 1px 3px rgba(20,40,35,${(v.trayShadow/100).toFixed(3)})`;
-  const searchWell = isDark
-    ? `inset 0 1px 2px rgba(0,0,0,${(v.searchWellDepth/60).toFixed(3)}), inset 0 -1px 0 rgba(255,255,255,${(v.searchWellDepth/250).toFixed(3)})`
-    : `inset 0 1px 3px rgba(20,40,35,${(v.searchWellDepth/100).toFixed(3)})`;
-
-  screen.style.setProperty('--pk-tray-shadow', traySh);
-  screen.style.setProperty('--pk-search-well', searchWell);
-  screen.style.setProperty('--pk-search-r', v.searchRadius+'px');
-  screen.style.setProperty('--pk-card-elev', v.cardElevation+'px');
-
-  screen.style.setProperty('--pk-fade-w', v.chipFadeWidth+'px');
-  screen.style.setProperty('--pk-chip-gap', v.chipGap+'px');
-  screen.style.setProperty('--pk-chip-act-bg', `color-mix(in srgb, var(--accent) ${v.chipActiveFillAlpha}%, var(--card))`);
-
-  screen.style.setProperty('--pk-list-maxh', v.listMaxH+'vh');
-  screen.style.setProperty('--pk-row-pady', v.rowPadY+'px');
-  screen.style.setProperty('--pk-divider-a', (v.rowDividerAlpha/100).toFixed(2));
-
-  screen.style.setProperty('--pk-av', v.avatarSize+'px');
-  screen.style.setProperty('--pk-ring', v.selectedRingWidth+'px');
-  screen.style.setProperty('--accent-rgb', '42,140,132');
-  screen.style.setProperty('--pk-sel-tint', (v.selectedTint/100).toFixed(2));
-
-  renderPanel();
-  updateLockCounter();
-}
-
-/* ══════════════════════════════════════════════════════════
-   LEVER PANEL (family tabs + sliders + ЛОК-маркер)
-   ══════════════════════════════════════════════════════════ */
-function renderFamilyTabs(){
-  const wrap = document.getElementById('drFam');
-  wrap.innerHTML = FAMILIES.map(f=>`<button class="dr-fam-btn${state.family===f.id?' act':''}" data-f="${f.id}">${f.lbl}</button>`).join('');
-  wrap.querySelectorAll('.dr-fam-btn').forEach(b=>b.addEventListener('click',()=>{state.family=b.dataset.f;renderPanel();}));
-}
-function lockBadge(key){
-  const lock = LOCK[state.theme][key];
-  const cur = values[state.theme][key];
-  if(lock === undefined) return `<span class="dr-lock none">нема ЛОКу</span>`;
-  if(lock === cur) return `<span class="dr-lock match">= ЛОК</span>`;
-  return `<span class="dr-lock drift">ЛОК ${lock}</span>`;
-}
-function renderPanel(){
-  document.getElementById('drThemeLbl').textContent = state.theme==='light' ? 'Світла' : 'Темна';
-  const box = document.getElementById('drLevers');
-  const defs = LEVER_DEFS.filter(d=>d.fam===state.family);
-  box.innerHTML = defs.map(d=>{
-    const v = values[state.theme][d.key];
-    return `<div class="dr-lever">
-      <div class="dr-lever-top">
-        <span class="dr-lever-lbl">${d.lbl}${lockBadge(d.key)}</span>
-        <span class="dr-lever-val">${v}${d.unit}</span>
+<div id="stageWrap"><div id="stagePad">
+  <div class="stage frame" id="stage" data-dev="xs" data-th="light">
+    <div class="screenbox">
+      <div class="behind">
+        <div class="bh-bar"><div class="bh-logo"></div><div class="bh-wm"><i>QR</i>Lens</div>
+          <div class="bh-pill"><span class="bh-av">К</span>Константінов А.</div></div>
+        <div class="bh-sub"><span class="bh-dot"></span>Оновлено: 10.08.2026</div>
+        <div class="bh-card"></div><div class="bh-card"></div><div class="bh-card"></div>
       </div>
-      <input type="range" min="${d.min}" max="${d.max}" step="${d.step}" value="${v}" data-key="${d.key}">
-      ${d.hint?`<div class="dr-hint">${d.hint}</div>`:''}
-    </div>`;
-  }).join('');
-  box.querySelectorAll('input[type=range]').forEach(inp=>{
-    inp.addEventListener('input', ()=>{
-      values[state.theme][inp.dataset.key] = parseFloat(inp.value);
-      applyLevers();
-    });
+      <div class="stbar"><span>15:59</span><span>LTE ▮</span></div>
+      <div class="cut"></div><div class="dim"></div>
+      <div class="sheet" id="sheet">
+        <div class="sh-grip-w"><div class="sh-grip"></div></div>
+        <div class="sh-head"><div class="sh-title">Оберіть представника</div><div class="sh-x">✕</div></div>
+        <div class="eave"></div>
+        <div class="sh-body">
+        <div class="tray-w"><div class="tray" id="tray"></div></div>
+        <div class="sh-list"><div class="gcard" id="srList"></div>
+          <div class="sh-eyebrow">Про застосунок</div>
+          <div class="gcard"><div class="sr-opt"><span class="sr-n" style="color:var(--muted)">Розробник</span><span style="font:600 14px Manrope,sans-serif">Konst.Andre</span></div></div>
+        </div>
+        </div>
+      </div>
+      <div class="homeind"></div>
+    </div>
+  </div>
+</div></div>
+
+<div id="panel">
+  <div class="presets" id="presets"></div>
+  <div class="tabs" id="tabs"></div>
+  <div id="levers"></div>
+  <div class="leg hidden" id="leg"></div>
+</div>
+<button class="btn" id="showPanel">⚙︎ панель</button>
+<div id="betBox"><textarea id="betTxt" readonly></textarea>
+  <div class="bb-r"><button class="btn" id="betCopy">Копіювати</button><span class="sp"></span>
+  <button class="btn" id="betClose">Закрити</button></div></div>
+
+<script>
+"use strict";
+/* ═══ ДАНІ ═══ Прив'язка SR→Area — реальна, надана оператором 11.08.2026. Заглушок немає. */
+var AREAS=["Київська","Дніпропетровська","Житомирська","Полтавська","Кіровоградська"];
+var SR={
+ "Київська":["Кімачук Оксана","Леоненко Наталія","Мошківська Надія","Негода Олександр","Нікітіна Анна","Трачук Олександр","Шоптенко Альона"],
+ "Дніпропетровська":["Бутуліна Владислава","Константінов Андрій","Серченко Ірина"],
+ "Житомирська":["Гончаренко Карина","Соколенко Валерія"],
+ "Полтавська":["Дяченко Наталія","Ніна Коломієць"],
+ "Кіровоградська":["Дуднік Вікторія"]};
+var DEV={xs:{w:375,h:812,sat:44,sab:34,rad:44,bez:10},p15:{w:393,h:852,sat:59,sab:34,rad:50,bez:11}};
+
+/* ═══ РЕЄСТР ВАЖЕЛІВ (Д-4: панель/копія/ЛОК рендеряться ЗВІДСИ) ═══
+   sc: G=глобально · T=на тему · TM=тема+модель (активний чіп) · TO=тема+OFF-режим */
+var L=[
+ // геометрія капсули
+ ["G","чіп","cap-rad","radius",6,26,.5],["G","чіп","cap-padx","pad-X",6,28,1],
+ ["G","чіп","cap-pady","pad-Y",2,14,1],["G","чіп","cap-minh","min-height",26,48,1],
+ ["G","чіп","cap-fs","font-size",10,16,.5],["G","чіп","cap-bw","border-w",0,2.5,.25],
+ // матеріал АКТИВНОЇ капсули
+ ["TM","ON","cap-tint","accent-tint",0,40,1],["TM","ON","cap-dk","затемнити",0,40,1],
+ ["TM","ON","cap-lt","освітлити",0,40,1],["TM","ON","cap-bd","border-accent",0,100,2],
+ ["TM","ON","cap-txt","text-accent",0,100,2],["TM","ON","cap-txtw","text→ink",0,100,2],
+ ["TM","ON","cap-fw","font-weight",400,800,100],
+ ["TM","ON","cap-ins-y","inset-Y",0,5,.5],["TM","ON","cap-ins-b","inset-blur",0,14,1],
+ ["TM","ON","cap-ins-a","inset-alpha",0,60,1],
+ ["TM","ON","cap-lip-y","губа-Y",-2,2,1],["TM","ON","cap-lip-a","губа-alpha",0,80,2],
+ ["TM","ON","cap-drop-y","drop-Y",0,10,.5],["TM","ON","cap-drop-b","drop-blur",0,28,1],
+ ["TM","ON","cap-drop-a","drop-alpha",0,40,1],
+ // halo / борт гнізда
+ ["TM","halo","halo-gap","gap",0,10,.5],["TM","halo","halo-w","ring-w",0,4,.25],
+ ["TM","halo","halo-rad-d","radius-Δ",-6,10,.5],["TM","halo","halo-acc","ring-accent",0,100,2],
+ ["TM","halo","halo-dk","борт-затемн",0,40,1],["TM","halo","halo-lt","борт-освітл",0,40,1],
+ ["TM","halo","halo-lip-a","кромка-світло",0,90,2],["TM","halo","halo-drop-a","борт-drop",0,30,1],
+ // матеріал НЕАКТИВНОЇ капсули
+ ["TO","OFF","cap-tint","accent-tint",0,40,1],["TO","OFF","cap-dk","затемнити",0,40,1],
+ ["TO","OFF","cap-lt","освітлити",0,40,1],["TO","OFF","cap-bd","border-accent",0,100,2],
+ ["TO","OFF","cap-txt","text-accent",0,100,2],["TO","OFF","cap-txtw","text→ink",0,100,2],
+ ["TO","OFF","cap-fw","font-weight",400,800,100],
+ ["TO","OFF","cap-ins-y","inset-Y",0,5,.5],["TO","OFF","cap-ins-b","inset-blur",0,14,1],
+ ["TO","OFF","cap-ins-a","inset-alpha",0,60,1],
+ ["TO","OFF","cap-lip-y","губа-Y",-2,2,1],["TO","OFF","cap-lip-a","губа-alpha",0,80,2],
+ ["TO","OFF","cap-drop-y","drop-Y",0,10,.5],["TO","OFF","cap-drop-b","drop-blur",0,28,1],
+ ["TO","OFF","cap-drop-a","drop-alpha",0,40,1],
+ // тунель
+ ["T","таця","tray-rad","radius",0,22,1],["T","таця","tray-mx","поля-X",0,24,1],
+ ["T","таця","tray-mt","відступ↑",0,22,1],["T","таця","tray-mb","відступ↓",0,22,1],
+ ["T","таця","tray-padt","pad↑",0,18,1],["T","таця","tray-padb","pad↓",0,18,1],
+ ["T","таця","tray-gap","gap чіпів",0,16,1],["T","таця","tray-fade","edge-fade",0,40,2],
+ ["T","таця","tray-dk","затемнити",0,40,1],["T","таця","tray-lt","освітлити",0,40,1],
+ ["T","таця","tray-ins-b","inset-blur",0,16,1],["T","таця","tray-ins-a","inset-alpha",0,40,1],
+ ["T","таця","tray-lip-a","нижнє світло",0,30,1],
+ ["T","таця","tray-drop-y","drop-Y",0,10,.5],["T","таця","tray-drop-b","drop-blur",0,26,1],
+ ["T","таця","tray-drop-a","drop-alpha",0,30,1],
+ // ДОШКА (тарель під списком)
+ ["T","дошка","tarel-padx","поля-X",0,28,1],["T","дошка","tarel-padt","pad↑",0,26,1],
+ ["T","дошка","tarel-padb","pad↓",0,30,1],
+ ["T","дошка","tarel-dk","затемнити",0,30,1],["T","дошка","tarel-lt","освітлити",0,30,1],
+ ["T","дошка","tarel-ins-y","inset-Y",-2,3,1],["T","дошка","tarel-ins-b","inset-blur",0,12,1],
+ ["T","дошка","tarel-ins-a","inset-alpha",0,45,1],["T","дошка","tarel-lip-a","нижня губа",0,45,1],
+ // навіс + шапка
+ ["T","навіс","head-padb","шапка pad↓",0,24,1],
+ ["T","навіс","eave-h","лінія-h",0,3,.5],["T","навіс","eave-a","лінія-alpha",0,40,1],
+ ["T","навіс","eave-sh-h","тінь-висота",0,26,1],["T","навіс","eave-sh-a","ВАГА ТІНІ",0,45,1],
+ // картка + дівайдер
+ ["T","дівайдер","gc-rad","картка radius",0,22,1],["T","дівайдер","gc-bd","картка border",0,100,4],
+ ["T","дівайдер","gc-dk","картка затемн",0,30,1],["T","дівайдер","gc-lt","картка освітл",0,30,1],
+ ["T","дівайдер","gc-drop-a","картка drop",0,30,1],["T","дівайдер","row-pady","рядок pad-Y",6,20,1],
+ ["T","дівайдер","div-l","відступ ←",0,80,2],["T","дівайдер","div-r","відступ →",0,80,2],
+ ["T","дівайдер","div-h","товщина",0,2,.25],["T","дівайдер","div-a","ВАГА",0,30,1],
+ // sheet
+ ["T","sheet","sheet-h","висота %",50,95,1],["T","sheet","sheet-rad","radius",0,32,1],
+ ["T","sheet","sheet-drop-a","drop-alpha",0,60,2]
+];
+
+/* ═══ P0-ПРЕСЕТИ ═══ */
+var G0={"cap-rad":20,"cap-padx":14,"cap-pady":6,"cap-minh":32,"cap-fs":12,"cap-bw":1};
+
+/* активний чіп: lift = літерали B59 · press = дзеркалення B59 (Д-1) · flat = тільки акцент */
+var ON={
+ "light/lift":{"cap-tint":0,"cap-dk":9,"cap-lt":0,"cap-bd":70,"cap-txt":100,"cap-txtw":40,"cap-fw":700,
+   "cap-ins-y":0,"cap-ins-b":0,"cap-ins-a":0,"cap-lip-y":1,"cap-lip-a":0,
+   "cap-drop-y":3,"cap-drop-b":10,"cap-drop-a":20,
+   "halo-gap":3,"halo-w":1.5,"halo-rad-d":0,"halo-acc":34,"halo-dk":0,"halo-lt":0,"halo-lip-a":0,"halo-drop-a":0},
+ "dark/lift":{"cap-tint":16,"cap-dk":0,"cap-lt":8,"cap-bd":100,"cap-txt":0,"cap-txtw":100,"cap-fw":700,
+   "cap-ins-y":0,"cap-ins-b":0,"cap-ins-a":0,"cap-lip-y":1,"cap-lip-a":26,
+   "cap-drop-y":6,"cap-drop-b":20,"cap-drop-a":15,
+   "halo-gap":3,"halo-w":1.5,"halo-rad-d":0,"halo-acc":52,"halo-dk":0,"halo-lt":0,"halo-lip-a":0,"halo-drop-a":0},
+ "light/press":{"cap-tint":11,"cap-dk":5,"cap-lt":0,"cap-bd":46,"cap-txt":100,"cap-txtw":0,"cap-fw":700,
+   "cap-ins-y":2,"cap-ins-b":5,"cap-ins-a":16,"cap-lip-y":-1,"cap-lip-a":55,
+   "cap-drop-y":0,"cap-drop-b":0,"cap-drop-a":0,
+   "halo-gap":3,"halo-w":1.5,"halo-rad-d":0,"halo-acc":0,"halo-dk":8,"halo-lt":0,"halo-lip-a":75,"halo-drop-a":5},
+ /* ТЕМНА press: несучий = tone-recess (A65) — капсула ТЕМНІША за підлогу, inset лише підкреслює */
+ "dark/press":{"cap-tint":6,"cap-dk":26,"cap-lt":0,"cap-bd":62,"cap-txt":100,"cap-txtw":0,"cap-fw":700,
+   "cap-ins-y":2,"cap-ins-b":4,"cap-ins-a":34,"cap-lip-y":1,"cap-lip-a":5,
+   "cap-drop-y":0,"cap-drop-b":0,"cap-drop-a":0,
+   "halo-gap":3,"halo-w":1.5,"halo-rad-d":0,"halo-acc":0,"halo-dk":0,"halo-lt":9,"halo-lip-a":9,"halo-drop-a":0},
+ "light/flat":{"cap-tint":0,"cap-dk":0,"cap-lt":0,"cap-bd":60,"cap-txt":100,"cap-txtw":0,"cap-fw":700,
+   "cap-ins-y":0,"cap-ins-b":0,"cap-ins-a":0,"cap-lip-y":1,"cap-lip-a":0,
+   "cap-drop-y":0,"cap-drop-b":0,"cap-drop-a":0,
+   "halo-gap":3,"halo-w":1.5,"halo-rad-d":0,"halo-acc":0,"halo-dk":0,"halo-lt":0,"halo-lip-a":0,"halo-drop-a":0},
+ "dark/flat":{"cap-tint":0,"cap-dk":0,"cap-lt":0,"cap-bd":70,"cap-txt":100,"cap-txtw":0,"cap-fw":700,
+   "cap-ins-y":0,"cap-ins-b":0,"cap-ins-a":0,"cap-lip-y":1,"cap-lip-a":0,
+   "cap-drop-y":0,"cap-drop-b":0,"cap-drop-a":0,
+   "halo-gap":3,"halo-w":1.5,"halo-rad-d":0,"halo-acc":0,"halo-dk":0,"halo-lt":0,"halo-lip-a":0,"halo-drop-a":0}};
+
+var OFF={
+ "light/raised":{"cap-tint":0,"cap-dk":2,"cap-lt":0,"cap-bd":0,"cap-txt":0,"cap-txtw":0,"cap-fw":600,
+   "cap-ins-y":0,"cap-ins-b":0,"cap-ins-a":0,"cap-lip-y":1,"cap-lip-a":0,
+   "cap-drop-y":2,"cap-drop-b":6,"cap-drop-a":7},
+ "dark/raised":{"cap-tint":0,"cap-dk":0,"cap-lt":3,"cap-bd":0,"cap-txt":0,"cap-txtw":0,"cap-fw":600,
+   "cap-ins-y":0,"cap-ins-b":0,"cap-ins-a":0,"cap-lip-y":1,"cap-lip-a":11,
+   "cap-drop-y":5,"cap-drop-b":14,"cap-drop-a":6},
+ "light/flat":{"cap-tint":0,"cap-dk":0,"cap-lt":0,"cap-bd":0,"cap-txt":0,"cap-txtw":0,"cap-fw":600,
+   "cap-ins-y":0,"cap-ins-b":0,"cap-ins-a":0,"cap-lip-y":1,"cap-lip-a":0,
+   "cap-drop-y":0,"cap-drop-b":0,"cap-drop-a":0},
+ "dark/flat":{"cap-tint":0,"cap-dk":0,"cap-lt":0,"cap-bd":0,"cap-txt":0,"cap-txtw":0,"cap-fw":600,
+   "cap-ins-y":0,"cap-ins-b":0,"cap-ins-a":0,"cap-lip-y":1,"cap-lip-a":0,
+   "cap-drop-y":0,"cap-drop-b":0,"cap-drop-a":0}};
+
+/* тема-рівень: старт = device-вибір Konst (навіс-тінь + таця lift).
+   ТЕМНА таця lift вирівняна зі світлою: обидві зливаються з карткою Sheet (dk=lt=0),
+   структуру дає drop + навіс зверху + межа картки списку знизу. */
+var T0={
+ light:{"tray-rad":12,"tray-mx":0,"tray-mt":10,"tray-mb":10,"tray-padt":8,"tray-padb":8,
+   "tray-gap":6,"tray-fade":16,"tray-dk":0,"tray-lt":0,"tray-ins-b":0,"tray-ins-a":0,"tray-lip-a":0,
+   "tray-drop-y":2,"tray-drop-b":8,"tray-drop-a":8,
+   "tarel-padx":16,"tarel-padt":14,"tarel-padb":18,"tarel-dk":0,"tarel-lt":0,
+   "tarel-ins-y":1,"tarel-ins-b":3,"tarel-ins-a":28,"tarel-lip-a":0,
+   "head-padb":10,"eave-h":1,"eave-a":10,"eave-sh-h":10,"eave-sh-a":9,
+   "gc-rad":12,"gc-bd":100,"gc-dk":0,"gc-lt":0,"gc-drop-a":6,"row-pady":12,
+   "div-l":16,"div-r":16,"div-h":1,"div-a":6,
+   "sheet-h":78,"sheet-rad":16,"sheet-drop-a":10},
+ dark:{"tray-rad":12,"tray-mx":0,"tray-mt":10,"tray-mb":10,"tray-padt":8,"tray-padb":8,
+   "tray-gap":6,"tray-fade":16,"tray-dk":0,"tray-lt":0,"tray-ins-b":0,"tray-ins-a":0,"tray-lip-a":0,
+   "tray-drop-y":2,"tray-drop-b":10,"tray-drop-a":26,
+   "tarel-padx":16,"tarel-padt":14,"tarel-padb":18,"tarel-dk":0,"tarel-lt":0,
+   "tarel-ins-y":-1,"tarel-ins-b":0,"tarel-ins-a":0,"tarel-lip-a":28,
+   "head-padb":10,"eave-h":1,"eave-a":9,"eave-sh-h":10,"eave-sh-a":30,
+   "gc-rad":12,"gc-bd":100,"gc-dk":0,"gc-lt":3,"gc-drop-a":22,"row-pady":12,
+   "div-l":16,"div-r":16,"div-h":1,"div-a":5,
+   "sheet-h":78,"sheet-rad":16,"sheet-drop-a":45}};
+
+/* пресети таці / навісу — пишуть у ті самі важелі (Д: «пресети + повзунки під них») */
+var TRAY_P={
+ recess:{light:{"tray-dk":6,"tray-lt":0,"tray-ins-b":6,"tray-ins-a":14,"tray-lip-a":0,"tray-drop-a":0},
+         dark:{"tray-dk":14,"tray-lt":0,"tray-ins-b":2,"tray-ins-a":16,"tray-lip-a":5,"tray-drop-a":0}},
+ flat:{light:{"tray-dk":3,"tray-lt":0,"tray-ins-b":0,"tray-ins-a":0,"tray-lip-a":0,"tray-drop-a":0},
+       dark:{"tray-dk":6,"tray-lt":0,"tray-ins-b":0,"tray-ins-a":0,"tray-lip-a":0,"tray-drop-a":0}},
+ lift:{light:{"tray-dk":0,"tray-lt":0,"tray-ins-b":0,"tray-ins-a":0,"tray-lip-a":0,"tray-drop-y":2,"tray-drop-b":8,"tray-drop-a":8},
+       dark:{"tray-dk":0,"tray-lt":0,"tray-ins-b":0,"tray-ins-a":0,"tray-lip-a":0,"tray-drop-y":2,"tray-drop-b":10,"tray-drop-a":26}}};
+var EAVE_P={
+ none:{light:{"eave-h":0,"eave-a":0,"eave-sh-h":0,"eave-sh-a":0},dark:{"eave-h":0,"eave-a":0,"eave-sh-h":0,"eave-sh-a":0}},
+ line:{light:{"eave-h":1,"eave-a":10,"eave-sh-h":0,"eave-sh-a":0},dark:{"eave-h":1,"eave-a":9,"eave-sh-h":0,"eave-sh-a":0}},
+ shade:{light:{"eave-h":1,"eave-a":10,"eave-sh-h":10,"eave-sh-a":9},dark:{"eave-h":1,"eave-a":9,"eave-sh-h":10,"eave-sh-a":30}},
+ recess:{light:{"eave-h":0,"eave-a":0,"eave-sh-h":8,"eave-sh-a":11},dark:{"eave-h":0,"eave-a":0,"eave-sh-h":8,"eave-sh-a":38}}};
+
+/* ═══ STORE ═══ */
+var S={dev:"xs",th:"light",model:"press",off:"raised",area:"Дніпропетровська",zoom:0,hold:false,tab:"ON",
+       eave:"shade",trayp:"lift"};
+var V={},LK={};                                    // V=значення по слоту · LK=мої ЛОКи
+function slot(sc){return sc==="G"?"G":sc==="T"?"T/"+S.th:sc==="TM"?"TM/"+S.th+"/"+(S.hold?"lift":S.model):"TO/"+S.th+"/"+S.off;}
+function seed(){
+  V["G"]=Object.assign({},G0);
+  ["light","dark"].forEach(function(t){
+    V["T/"+t]=Object.assign({},T0[t]);
+    ["lift","press","flat"].forEach(function(m){V["TM/"+t+"/"+m]=Object.assign({},ON[t+"/"+m]);});
+    ["raised","flat"].forEach(function(o){V["TO/"+t+"/"+o]=Object.assign({},OFF[t+"/"+o]);});
   });
 }
-function updateLockCounter(){
-  const total = LEVER_DEFS.length;
-  const locked = LEVER_DEFS.filter(d => LOCK[state.theme][d.key] !== undefined).length;
-  document.getElementById('lockCnt').textContent = `ЛОК ${locked}/${total}`;
+function get(sc,k){var s=V[slot(sc)];return s?s[k]:0;}
+function set(sc,k,v){V[slot(sc)][k]=v;}
+
+var stage=document.getElementById("stage"),tray=document.getElementById("tray"),
+    srList=document.getElementById("srList"),panel=document.getElementById("panel"),
+    bb=document.getElementById("bb"),showPanel=document.getElementById("showPanel"),
+    zb=document.getElementById("zb"),levBox=document.getElementById("levers");
+
+function applyVars(){
+  for(var i=0;i<L.length;i++){
+    var e=L[i];
+    if(e[0]==="TM"||e[0]==="G"||e[0]==="T") stage.style.setProperty("--"+e[2],get(e[0],e[2]));
+  }
+  // OFF-значення живуть на неактивних чіпах (окремий scope у DOM)
+  var offv=V[slot("TO")],css="";
+  for(var k in offv) css+="--"+k+":"+offv[k]+";";
+  var nodes=tray.querySelectorAll(".ac:not(.on)");
+  for(var j=0;j<nodes.length;j++) nodes[j].setAttribute("style",css);
+}
+function applyDev(){
+  var d=DEV[S.dev];
+  stage.style.setProperty("--scr-w",d.w+"px");stage.style.setProperty("--scr-h",d.h+"px");
+  stage.style.setProperty("--sa-t",d.sat+"px");stage.style.setProperty("--sa-b",d.sab+"px");
+  stage.style.setProperty("--fr-rad",d.rad+"px");stage.style.setProperty("--fr-bez",d.bez+"px");
+  stage.dataset.dev=S.dev;fit();
+}
+function fit(){
+  var wrap=document.getElementById("stageWrap"),pad=document.getElementById("stagePad"),d=DEV[S.dev];
+  var fw=d.w+d.bez*2,fh=d.h+d.bez*2;
+  var auto=Math.min(1,(wrap.clientHeight-16)/fh,(wrap.clientWidth-12)/fw);
+  var sc=(S.zoom>0)?S.zoom:auto;
+  stage.style.transform="scale("+sc+")";
+  pad.style.width=(fw*sc+12)+"px";pad.style.height=(fh*sc+16)+"px";
+  zb.textContent=Math.round(sc*100)+"%";
+}
+function renderTray(){
+  var h="";
+  for(var i=0;i<AREAS.length;i++){
+    var a=AREAS[i],n=SR[a].length,on=(a===S.area)?" on":"";
+    h+='<button class="ac'+on+'" data-a="'+a+'"><span class="ac-cap">'+a+'<span class="ac-n">· '+n+'</span></span></button>';
+  }
+  tray.innerHTML=h;
+}
+function renderList(){
+  var arr=SR[S.area]||[],h="";
+  for(var i=0;i<arr.length;i++){
+    var nm=arr[i],sel=(nm==="Константінов Андрій")?" sel":"";
+    h+='<div class="sr-opt'+sel+'"><div class="sr-av">'+nm.charAt(0)+'</div><span class="sr-n">'+nm+'</span></div>';
+  }
+  srList.innerHTML=h;
+}
+function groups(){var g=[],seen={};for(var i=0;i<L.length;i++){if(!seen[L[i][1]]){seen[L[i][1]]=1;g.push(L[i][1]);}}return g;}
+function renderTabs(){
+  var g=groups(),h="";
+  for(var i=0;i<g.length;i++) h+='<button class="btn'+(g[i]===S.tab?" on":"")+'" data-tab="'+g[i]+'">'+g[i]+'</button>';
+  document.getElementById("tabs").innerHTML=h;
+}
+function renderPresets(){
+  var mk=function(lab,attr,vals,cur){
+    var s='<span class="pl">'+lab+'</span>';
+    for(var i=0;i<vals.length;i++) s+='<button class="btn'+(vals[i][0]===cur?" on":"")+'" data-'+attr+'="'+vals[i][0]+'">'+vals[i][1]+'</button>';
+    return s;
+  };
+  document.getElementById("presets").innerHTML=
+    mk("модель","m",[["lift","lift"],["press","press"],["flat","flat"]],S.model)+
+    mk("OFF","o",[["raised","raised"],["flat","flat"]],S.off)+
+    mk("навіс","e",[["none","–"],["line","лінія"],["shade","навіс"],["recess","recess"]],S.eave)+
+    mk("таця","t",[["recess","recess"],["flat","flat"],["lift","lift"]],S.trayp);
+}
+function lkey(sc,k){return slot(sc)+"|"+k;}
+function renderLevers(){
+  var h="";
+  for(var i=0;i<L.length;i++){
+    var e=L[i];if(e[1]!==S.tab)continue;
+    var sc=e[0],k=e[2],v=get(sc,k),lk=LK[lkey(sc,k)],dr=(lk!==undefined&&lk!==v);
+    h+='<div class="lv'+(dr?" drift":"")+'"><span class="lv-n">'+e[3]+'</span>'+
+       '<input class="lv-s" type="range" min="'+e[4]+'" max="'+e[5]+'" step="'+e[6]+'" value="'+v+'" data-sc="'+sc+'" data-k="'+k+'">'+
+       '<span class="lv-v">'+(dr?lk+"→"+v:v)+'</span>'+
+       '<button class="lv-k'+(lk!==undefined?" lk":"")+'" data-lock="'+sc+"|"+k+'">'+(lk!==undefined?"🔒":"🔓")+'</button></div>';
+  }
+  levBox.innerHTML=h;
+  var live=0,tot=0;
+  for(var j=0;j<L.length;j++){tot++;if(LK[lkey(L[j][0],L[j][2])]!==undefined)live++;}
+  document.getElementById("lockN").textContent="🔒"+live+"/"+tot;
+}
+function renderLeg(){
+  document.getElementById("leg").innerHTML=
+   "<b>ДОШКА</b> = тарель .sh-body з проду (світла --bg / темна --bg-soft + inset). Таця тепер лежить на ньому, "+
+   "тому «таця lift» = зливається з дошкою.<br>"+
+   "<b>Пресети пишуть у ці самі повзунки</b> — тапнув пресет, далі докручуєш руками.<br>"+
+   "<b>🔓/🔒</b> — фіксує значення для поточного зрізу (тема × модель/OFF). Повзунок лишається живим; "+
+   "жовте <b>ЛОК→зараз</b> показує зсув від твого локу. 📋 друкує залочене й живе ОКРЕМО.<br>"+
+   "<b>Області:</b> реальний розподіл SR по Area (15 представників, 5 областей). Тап по чіпу міняє список: "+
+   "Кіровоградська·1 — найкоротший, Київська·7 — зі скролом.<br>"+
+   "<b>?</b> — ховає цю панель, щоб важелям лишався весь простір.";
+}
+function paint(){
+  stage.dataset.th=S.th;
+  document.getElementById("thBtn").textContent=(S.th==="light")?"☀︎ світла":"🌙 темна";
+  applyVars();renderLevers();renderPresets();
+}
+function applyPreset(tbl,key){
+  var src=tbl[key]&&tbl[key][S.th];if(!src)return;
+  for(var k in src) V["T/"+S.th][k]=src[k];
+  paint();
+}
+function bet(){
+  var out=["AREA-CHIP v2.3 · "+S.th+" · model="+S.model+" · OFF="+S.off+" · dev="+S.dev,""];
+  var lockL=[],liveL=[];
+  for(var i=0;i<L.length;i++){
+    var e=L[i],sc=e[0],k=e[2];
+    // Д-3: мертві важелі не друкуються — TM-зріз читається лише для активної моделі
+    var v=get(sc,k),lk=LK[lkey(sc,k)];
+    var line="  "+k+" = "+v+(lk!==undefined&&lk!==v?"   (ЛОК "+lk+")":"");
+    if(lk!==undefined) lockL.push(line); else liveL.push(line);
+  }
+  out.push("ЗАЛОЧЕНО ("+lockL.length+"):");out=out.concat(lockL.length?lockL:["  —"]);
+  out.push("","ЖИВЕ, НЕ ЗАЛОЧЕНО ("+liveL.length+"):");out=out.concat(liveL);
+  document.getElementById("betTxt").value=out.join("\n");
+  document.getElementById("betBox").classList.add("on");
 }
 
-/* ══════════════════════════════════════════════════════════
-   TOOLBAR: device / theme / zoom / drawer / compare / copy
-   ══════════════════════════════════════════════════════════ */
-document.getElementById('grpDevice').addEventListener('click', e=>{
-  const b = e.target.closest('[data-device]'); if(!b) return;
-  state.device = b.dataset.device;
-  document.querySelectorAll('#grpDevice .bt-btn').forEach(x=>x.classList.toggle('act', x===b));
-  document.getElementById('phoneFrame').dataset.device = state.device;
-  document.getElementById('phoneScreen').closest('.phone-frame').dataset.device = state.device;
-  document.querySelector('.notch')?.parentElement; // no-op guard
-  document.getElementById('phoneFrame').setAttribute('data-device', state.device);
-  document.getElementById('specBadge').textContent = specLabel();
-  fitStage();
+document.addEventListener("input",function(e){
+  var t=e.target;if(!t.classList||!t.classList.contains("lv-s"))return;
+  set(t.getAttribute("data-sc"),t.getAttribute("data-k"),parseFloat(t.value));
+  applyVars();
+  var row=t.parentNode,sc=t.getAttribute("data-sc"),k=t.getAttribute("data-k");
+  var lk=LK[lkey(sc,k)],v=parseFloat(t.value),dr=(lk!==undefined&&lk!==v);
+  row.classList.toggle("drift",dr);
+  row.querySelector(".lv-v").textContent=dr?(lk+"→"+v):v;
 });
-document.getElementById('grpTheme').addEventListener('click', e=>{
-  const b = e.target.closest('[data-theme]'); if(!b) return;
-  state.theme = b.dataset.theme;
-  document.querySelectorAll('#grpTheme .bt-btn').forEach(x=>x.classList.toggle('act', x===b));
-  document.getElementById('phoneScreen').dataset.theme = state.theme;
-  document.getElementById('specBadge').textContent = specLabel();
-  applyLevers();
+document.addEventListener("click",function(e){
+  /* ФІКС: .ac сам є <button> → closest("button") повертав його і клік «з'їдався».
+     Чіп перевіряємо ПЕРШИМ, до загальної кнопкової гілки. */
+  var chip=e.target.closest(".ac");
+  if(chip){S.area=chip.getAttribute("data-a");renderTray();renderList();applyVars();return;}
+  var t=e.target.closest("button");
+  if(!t)return;
+  if(t.hasAttribute("data-lock")){
+    var p=t.getAttribute("data-lock").split("|"),key=lkey(p[0],p[1]);
+    if(LK[key]!==undefined) delete LK[key]; else LK[key]=get(p[0],p[1]);
+    renderLevers();return;
+  }
+  if(t.hasAttribute("data-tab")){S.tab=t.getAttribute("data-tab");renderTabs();renderLevers();return;}
+  if(t.hasAttribute("data-dev")){S.dev=t.getAttribute("data-dev");applyDev();
+    var a=document.querySelectorAll("[data-dev]");for(var i=0;i<a.length;i++)if(a[i].tagName==="BUTTON")a[i].classList.toggle("on",a[i].getAttribute("data-dev")===S.dev);return;}
+  if(t.hasAttribute("data-m")){S.model=t.getAttribute("data-m");paint();return;}
+  if(t.hasAttribute("data-o")){S.off=t.getAttribute("data-o");paint();return;}
+  if(t.hasAttribute("data-e")){S.eave=t.getAttribute("data-e");applyPreset(EAVE_P,S.eave);return;}
+  if(t.hasAttribute("data-t")){S.trayp=t.getAttribute("data-t");applyPreset(TRAY_P,S.trayp);return;}
+  if(t.hasAttribute("data-z")){var z=t.getAttribute("data-z");
+    var cur=(S.zoom>0)?S.zoom:parseFloat(zb.textContent)/100;
+    if(z==="plus")S.zoom=Math.min(2.4,cur+0.15);
+    else if(z==="minus")S.zoom=Math.max(0.35,cur-0.15);
+    else S.zoom=0;
+    fit();return;}
+  if(t.id==="thBtn"){S.th=(S.th==="light")?"dark":"light";paint();return;}
+  if(t.id==="legBtn"){var lg=document.getElementById("leg");
+    lg.classList.toggle("hidden");t.classList.toggle("on",!lg.classList.contains("hidden"));return;}
+  if(t.id==="betBtn"){bet();return;}
+  if(t.id==="betClose"){document.getElementById("betBox").classList.remove("on");return;}
+  if(t.id==="betCopy"){var ta=document.getElementById("betTxt");ta.select();
+    try{document.execCommand("copy");t.textContent="✓ скопійовано";
+      setTimeout(function(){t.textContent="Копіювати";},1400);}catch(err){}
+    return;}
+  if(t.id==="hideBtn"){bb.style.display="none";panel.classList.add("hidden");showPanel.classList.add("on");fit();return;}
+  if(t.id==="showPanel"){bb.style.display="";panel.classList.remove("hidden");showPanel.classList.remove("on");fit();return;}
 });
-function specLabel(){
-  const dLbl = state.device==='xs' ? 'XS · 375×812' : '15 Pro · 393×852';
-  const tLbl = state.theme==='light' ? 'Світла' : 'Темна';
-  return `${dLbl} · ${tLbl}`;
-}
-
-function fitStage(){
-  const stage = document.getElementById('stage');
-  const inner = document.getElementById('stageInner');
-  const frame = document.getElementById('phoneFrame');
-  const natW = state.device==='xs' ? 397 : 415;
-  const natH = state.device==='xs' ? 834 : 874;
-  const avail = stage.getBoundingClientRect();
-  const fit = Math.min((avail.width-24)/natW, (avail.height-24)/natH, 1);
-  inner.dataset.fit = fit;
-  inner.style.transform = `scale(${(fit*state.zoom).toFixed(4)})`;
-  document.getElementById('zoomVal').textContent = Math.round(state.zoom*100)+'%';
-}
-document.getElementById('zoomIn').addEventListener('click', ()=>{state.zoom=Math.min(2.0,+(state.zoom+0.1).toFixed(2));fitStage();});
-document.getElementById('zoomOut').addEventListener('click', ()=>{state.zoom=Math.max(0.6,+(state.zoom-0.1).toFixed(2));fitStage();});
-document.getElementById('zoomReset').addEventListener('click', ()=>{state.zoom=1;fitStage();});
-window.addEventListener('resize', fitStage);
-
-document.getElementById('panelFab').addEventListener('click', ()=>{
-  state.panelOpen = !state.panelOpen;
-  document.getElementById('drawer').classList.toggle('open', state.panelOpen);
-  requestAnimationFrame(fitStage); // стейдж пересчитує доступну висоту після появи/зникнення drawer
-});
-
-// hold-to-compare (§4-варіанти: phone-single-frame)
-let _savedVals = null;
-const btnCompare = document.getElementById('btnCompare');
-function compareStart(){
-  if(_savedVals) return;
-  _savedVals = JSON.parse(JSON.stringify(values[state.theme]));
-  values[state.theme] = {...P0};
-  btnCompare.classList.add('held');
-  applyLevers();
-}
-function compareEnd(){
-  if(!_savedVals) return;
-  values[state.theme] = _savedVals;
-  _savedVals = null;
-  btnCompare.classList.remove('held');
-  applyLevers();
-}
-btnCompare.addEventListener('pointerdown', compareStart);
-btnCompare.addEventListener('pointerup', compareEnd);
-btnCompare.addEventListener('pointercancel', compareEnd);
-btnCompare.addEventListener('pointerleave', compareEnd);
-
-// copy-bet (§2-п.8): рядок + textarea fallback (webview блокує clipboard)
-document.getElementById('btnCopy').addEventListener('click', ()=>{
-  const fmt = t => LEVER_DEFS.map(d=>`${d.key}=${values[t][d.key]}`).join(' ');
-  const text = `QRLens SRPicker stage-bench v1 | device=${state.device} theme=${state.theme}\nLIGHT: ${fmt('light')}\nDARK:  ${fmt('dark')}`;
-  document.getElementById('copyBox').value = text;
-  navigator.clipboard?.writeText(text).then(()=>{
-    const b=document.getElementById('btnCopy'); b.classList.add('done'); b.textContent='✓ Скопійовано';
-    setTimeout(()=>{b.classList.remove('done'); b.textContent='📋 Скопіювати важелі';},1600);
-  }).catch(()=>{ if(!state.panelOpen){document.getElementById('panelFab').click();} });
-});
-
-/* ══════════════════════════════════════════════════════════
-   SEARCH + SHEET open/close
-   ══════════════════════════════════════════════════════════ */
-const pkSearch = document.getElementById('pkSearch');
-const pkClr = document.getElementById('pkClr');
-pkSearch.addEventListener('input', e=>{
-  state.search = e.target.value;
-  pkClr.hidden = !state.search;
-  renderChips(); renderList();
-});
-pkClr.addEventListener('click', ()=>{
-  pkSearch.value=''; state.search=''; pkClr.hidden=true; renderChips(); renderList(); pkSearch.focus();
-});
-
-function closeSheet(){ document.getElementById('scrim').classList.remove('open'); state.sheetOpen=false; }
-function openSheet(){ document.getElementById('scrim').classList.add('open'); state.sheetOpen=true; }
-document.getElementById('btnClose').addEventListener('click', closeSheet);
-document.getElementById('scrim').addEventListener('click', e=>{ if(e.target.id==='scrim') closeSheet(); });
-document.getElementById('mockSrPill').addEventListener('click', openSheet);
-
-/* ══════════════════════════════════════════════════════════
-   INIT
-   ══════════════════════════════════════════════════════════ */
-renderFamilyTabs();
-renderChips();
-renderList();
-applyLevers();
-fitStage();
-document.getElementById('specBadge').textContent = specLabel();
+(function(){
+  var b=document.getElementById("holdBtn");
+  var on=function(ev){ev.preventDefault();S.hold=true;b.classList.add("hold");applyVars();renderLevers();};
+  var off=function(){if(!S.hold)return;S.hold=false;b.classList.remove("hold");applyVars();renderLevers();};
+  b.addEventListener("touchstart",on,{passive:false});b.addEventListener("touchend",off);
+  b.addEventListener("touchcancel",off);b.addEventListener("mousedown",on);
+  b.addEventListener("mouseup",off);b.addEventListener("mouseleave",off);
+})();
+window.addEventListener("resize",fit);
+seed();applyDev();renderTray();renderList();renderTabs();renderLeg();paint();
 </script>
 </body>
 </html>
