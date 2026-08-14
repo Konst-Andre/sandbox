@@ -1,5 +1,8 @@
 <!doctype html>
-<!-- QRLens_areachip_pressbench_v3_0.html
+<!-- QRLens_areachip_pressbench_v3_1.html
+     v3.1 (device-фідбек Konst на v3.0): Б-1 інлайн-стилі не знімались з чіпа, що став
+     активним -> у гілці surgical гніздо не вмикалось · min-hold latch (канон B52.1: 120ms)
+     · defer перемикання до кінця преса (прецеденти SHEET_RESET_DELAY, B58 settle-then-close).
      живе доки: доки прес-модель Area-чіпа не залочена на девайсі (XS+15Pro, обидві теми)
                 і не портована в QR_Lens_preview_batch60; тоді -> archive/stands/
      ВИВЕДЕНО з v2_5 патчем. Уся статика (87 важелів, ЛОК 87/87 обох тем) — НЕДОТОРКАНА:
@@ -21,7 +24,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<title>Area-chip PRESS bench v3.0</title>
+<title>Area-chip PRESS bench v3.1</title>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -264,7 +267,7 @@ body{font-family:'Manrope',system-ui,sans-serif;background:#14161a;color:#e8eaed
 
 <div class="bb" id="bb">
   <div class="bb-r">
-    <span class="bb-t">AREA-CHIP PRESS v3.0</span>
+    <span class="bb-t">AREA-CHIP PRESS v3.1</span>
     <div class="seg"><button class="btn on" data-dev="xs">XS</button><button class="btn" data-dev="p15">15 Pro</button></div>
     <button class="btn" id="thBtn">☀︎ світла</button>
     <span class="sp"></span>
@@ -282,6 +285,7 @@ body{font-family:'Manrope',system-ui,sans-serif;background:#14161a;color:#e8eaed
   <div class="bb-r">
     <div class="seg"><button class="btn on" data-rb="html">innerHTML</button><button class="btn" data-rb="surg">surgical</button></div>
     <div class="seg"><button class="btn on" data-sm="1">×1</button><button class="btn" data-sm="2">×2</button><button class="btn" data-sm="4">×4</button></div>
+    <button class="btn on" id="dfBtn">defer</button>
     <button class="btn" id="rmBtn">reduce</button>
     <span class="sp"></span>
     <span class="zb" id="fps" style="min-width:104px">gap – · drop –</span>
@@ -410,7 +414,8 @@ var L=[
  ["P","прес","pr-dur","press-dur",40,200,5],
  ["P","прес","ret-dur","return-dur",120,500,10],
  ["P","прес","ret-spring","return-spring",1,1.8,.05],
- ["P","прес","pr-cancel","cancel-px",2,16,1]
+ ["P","прес","pr-cancel","cancel-px",2,16,1],
+ ["P","прес","pr-hold","min-hold ms",0,240,10]
 ];
 
 /* ═══ P0-ПРЕСЕТИ ═══ */
@@ -421,7 +426,8 @@ var G0={"cap-rad":20,"cap-padx":14,"cap-pady":6,"cap-minh":32,"cap-fs":12,"cap-b
    і рух важелем тихо переписав би контрольний варіант теж (урок H5_5 §6.4). */
 function pr0(th){return {"pr-scale":.96,"pr-dy":1,
   "pr-ins-y":(th==="dark")?2.5:2,"pr-ins-b":(th==="dark")?8:5,"pr-ins-a":(th==="dark")?10:6,
-  "pr-drop-d":-60,"pr-dur":80,"ret-dur":280,"ret-spring":1.5,"pr-cancel":6};}
+  "pr-drop-d":-60,"pr-dur":80,"ret-dur":280,"ret-spring":1.5,"pr-cancel":6,
+  "pr-hold":120};}  /* 120 — канон B52.1, не з голови */
 var PRESS_P={
  /* P1 · чистий scale — як у проді (.qr-chip .92). Жест не про глибину. */
  p1:function(th){var o=pr0(th);o["pr-scale"]=.92;o["pr-dy"]=0;o["pr-ins-a"]=0;o["pr-drop-d"]=0;return o;},
@@ -517,7 +523,7 @@ var EAVE_P={
 
 /* ═══ STORE ═══ */
 var S={dev:"xs",th:"light",model:"press",off:"raised",area:"Дніпропетровська",zoom:0,hold:false,tab:"прес",
-       eave:"shade",trayp:"lift",rb:"html",slow:1,press:"p3",reduce:false};
+       eave:"shade",trayp:"lift",rb:"html",slow:1,press:"p3",reduce:false,defer:true};
 var V={},LK={};                                    // V=значення по слоту · LK=мої ЛОКи
 function slot(sc){return sc==="G"?"G":sc==="T"?"T/"+S.th:sc==="P"?"P/"+S.th:sc==="TM"?"TM/"+S.th+"/"+(S.hold?"lift":S.model):"TO/"+S.th+"/"+S.off;}
 function seed(){
@@ -545,6 +551,13 @@ function applyVars(){
   // OFF-значення живуть на неактивних чіпах (окремий scope у DOM)
   var offv=V[slot("TO")],css="";
   for(var k in offv) css+="--"+k+":"+offv[k]+";";
+  /* Б-1 (device, гілка surgical): інлайн ставився лише на :not(.on) і НІКОЛИ не знімався.
+     У innerHTML цього не видно — вузли народжуються чисті. У surgical вузол ЖИВИЙ, і чіп,
+     що став активним, ніс старий інлайн (--cap-bd:0, --cap-tint:3 з часів «неактивний»).
+     Інлайн б'є стейдж -> гніздо не вмикалось: капсула без кільця й акценту.
+     Чистимо з УСІХ .ac, аж потім ставимо OFF на неактивні. */
+  var all=tray.querySelectorAll(".ac");
+  for(var q=0;q<all.length;q++) all[q].removeAttribute("style");
   var nodes=tray.querySelectorAll(".ac:not(.on)");
   for(var j=0;j<nodes.length;j++) nodes[j].setAttribute("style",css);
   stage.style.setProperty("--slowmo",S.slow);
@@ -555,12 +568,28 @@ function applyVars(){
    Тунель — ГОРИЗОНТАЛЬНИЙ СКРОЛЕР (Д-5). Палець, що ліг на чіп і потягнув стрічку,
    мусить скасувати прес, а не доїхати до нього. Без цього прес блимає на кожному скролі.
    Поріг по Y свідомо більший (×1.6): вертикальний зсув пальця тут — не жест, а тремтіння. */
-var PR={id:null,el:null,x:0,y:0};
-function prOff(){if(PR.el)PR.el.classList.remove("pressing");PR.id=null;PR.el=null;}
+var PR={id:null,el:null,x:0,y:0,t0:0,tm:0,lat:null};
+/* prClear — гасить ЗАЛИШКОВИЙ latch попереднього тапу. Без нього серія швидких тапів
+   по різних чіпах знімала б прес нового чіпа таймером старого. */
+function prClear(){if(PR.tm){clearTimeout(PR.tm);PR.tm=0;}
+  if(PR.lat){PR.lat.classList.remove("pressing");PR.lat=null;}}
+/* СКАСУВАННЯ (скрол/cancel) — МИТТЄВЕ, min-hold не застосовується (B52.1). */
+function prOff(){if(PR.el)PR.el.classList.remove("pressing");PR.id=null;PR.el=null;prClear();}
+/* Скільки пресу лишилось «довисіти» до min-hold. */
+function prRest(){return Math.max(0,get("P","pr-hold")-(performance.now()-PR.t0));}
+/* ЗАВЕРШЕНИЙ тап — прес доживає залишок. Корінь Б-2: down триває 80ms, а швидкий тап
+   (down+up ~12ms) знімав клас ДО пейнту -> відгуку не було взагалі. */
+function prRelease(){
+  if(!PR.el)return;
+  var el=PR.el,w=prRest();PR.id=null;PR.el=null;
+  if(w<=0){el.classList.remove("pressing");return;}
+  PR.lat=el;PR.tm=setTimeout(function(){el.classList.remove("pressing");PR.tm=0;PR.lat=null;},w);
+}
 function bindPress(){
   tray.addEventListener("pointerdown",function(e){
     var c=e.target.closest(".ac");if(!c)return;
-    PR.id=e.pointerId;PR.el=c;PR.x=e.clientX;PR.y=e.clientY;
+    prClear();
+    PR.id=e.pointerId;PR.el=c;PR.x=e.clientX;PR.y=e.clientY;PR.t0=performance.now();
     c.classList.add("pressing");fgStart();
   },{passive:true});
   tray.addEventListener("pointermove",function(e){
@@ -568,7 +597,8 @@ function bindPress(){
     var lim=get("P","pr-cancel");
     if(Math.abs(e.clientX-PR.x)>lim||Math.abs(e.clientY-PR.y)>lim*1.6) prOff();
   },{passive:true});
-  ["pointerup","pointercancel","pointerleave"].forEach(function(t){
+  tray.addEventListener("pointerup",function(){prRelease();},{passive:true});
+  ["pointercancel","pointerleave"].forEach(function(t){
     tray.addEventListener(t,function(){prOff();},{passive:true});});
   tray.addEventListener("scroll",function(){prOff();},{passive:true});
 }
@@ -669,7 +699,9 @@ function renderLevers(){
      rebuild не викликає. Гасити їх було б брехнею; мовчати — теж. */
   if(S.tab==="прес"&&S.rb==="html")
     h='<div class="lv-w">ret-dur / ret-spring: у гілці innerHTML видимі ЛИШЕ на тапі по вже активному чіпу — '+
-      'перемикання області знищує вузол разом із return. Винуватець: renderTray() innerHTML.</div>'+h;
+      'перемикання області знищує вузол разом із return. Винуватець: renderTray() innerHTML.'+
+      (S.defer?'':' <b>defer ВИМКНЕНО</b> → min-hold теж безсилий: вузол гине на click раніше за таймер.')+
+      '</div>'+h;
   levBox.innerHTML=h;
   var live=0,tot=0;
   for(var j=0;j<L.length;j++){tot++;if(LK[lkey(L[j][0],L[j][2])]!==undefined)live++;}
@@ -694,7 +726,11 @@ function renderLeg(){
    "<b>reduce</b> — емуляція prefers-reduced-motion: прес мусить снапитись, не зникнути.<br>"+
    "<b>gap · drop · Δ</b> — frame-gap: ≤17 чисто · 18–33 джитер · >33 ковтнутий кадр.<br>"+
    "<b>cancel-px</b> — поріг, після якого протяг стрічки скасовує прес. Судиться пальцем: "+
-   "мало = прес зривається на дотику, багато = тунель скролиться з натиснутим чіпом.";
+   "мало = прес зривається на дотику, багато = тунель скролиться з натиснутим чіпом.<br>"+
+   "<b>min-hold</b> — скільки прес живе на ЗАВЕРШЕНОМУ тапі (канон B52.1 = 120ms). "+
+   "Скасування скролом знімає миттєво, min-hold на нього не діє.<br>"+
+   "<b>defer</b> — перемикання області чекає кінця преса. Вимкни, щоб побачити корінь: "+
+   "у innerHTML click знищує вузол раніше, ніж прес встигне з'явитись.";
 }
 function paint(){
   stage.dataset.th=S.th;
@@ -714,7 +750,7 @@ function bet(){
           ["TM","TM/light/press"],["TM","TM/dark/press"],
           ["TO","TO/light/raised"],["TO","TO/dark/raised"],
           ["P","P/light"],["P","P/dark"]];
-  var out=["AREA-CHIP PRESS v3.0 · dev="+S.dev+" · rebuild="+S.rb+" · slow-mo ×"+S.slow+
+  var out=["AREA-CHIP PRESS v3.1 · dev="+S.dev+" · rebuild="+S.rb+" · defer="+(S.defer?"on":"off")+" · slow-mo ×"+S.slow+
            " · reduce="+(S.reduce?"on":"off"),""];
   if(S.slow!==1) out.push("⚠ BAKE (manifest §8.2): прес натюнено на ×"+S.slow+
     " → у канон ідуть ЕФЕКТИВНІ значення (літерал × "+S.slow+"), не літерал зі слайдера.","");
@@ -752,9 +788,15 @@ document.addEventListener("click",function(e){
   var chip=e.target.closest(".ac");
   if(chip){var na=chip.getAttribute("data-a");
     if(na===S.area)return;                      // прод: тап по активному rebuild НЕ викликає
-    S.area=na;
-    if(S.rb==="surg")surgTray(); else renderTray();
-    renderList();applyVars();return;}
+    /* DEFER: у гілці innerHTML сам min-hold безсилий — click знищує вузол разом із пресом.
+       Тому перемикання чекає той самий залишок. Прецедент у проді: SHEET_RESET_DELAY
+       («прес видно перед close») і B58 settle-then-close 420ms (A18.1). */
+    var go=function(){S.area=na;
+      if(S.rb==="surg")surgTray(); else renderTray();
+      renderList();applyVars();};
+    var w=(S.defer&&PR.t0)?prRest():0;
+    if(w>0)setTimeout(go,w); else go();
+    return;}
   var t=e.target.closest("button");
   if(!t)return;
   if(t.hasAttribute("data-lock")){
@@ -779,6 +821,7 @@ document.addEventListener("click",function(e){
     var sm=document.querySelectorAll("[data-sm]");
     for(var si=0;si<sm.length;si++)sm[si].classList.toggle("on",parseFloat(sm[si].getAttribute("data-sm"))===S.slow);
     applyVars();return;}
+  if(t.id==="dfBtn"){S.defer=!S.defer;t.classList.toggle("on",S.defer);renderLevers();return;}
   if(t.id==="rmBtn"){S.reduce=!S.reduce;t.classList.toggle("on",S.reduce);applyVars();return;}
   if(t.hasAttribute("data-z")){var z=t.getAttribute("data-z");
     var cur=(S.zoom>0)?S.zoom:parseFloat(zb.textContent)/100;
