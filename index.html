@@ -4,14 +4,23 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0e">
-<title>EquipLens · headbench v4</title>
+<title>EquipLens · headbench v6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   EquipLens · HEADBENCH v4 — stage-bench, варіант phone-single-frame
+   EquipLens · HEADBENCH v6 — stage-bench, варіант phone-single-frame
    живе доки: до EquipLens_head_valuesLOCK.md → archive/stands/
+   v5→v6 (КРОК 0 + КРОК 1):
+     К0 · дані ×4 (20 аптек / 12 одиниць) — скло НЕ судиться над коротким списком (§2-п.6)
+     К0 · @supports + prefers-reduced-transparency накривають і бульбашку, не лише острів
+     К0 · Ф-3 розвідки: прозорість скла живе в alpha background, НІКОЛИ не в opacity
+     К1 · рядок керування [Усі N][Локація ⌄][Потреби ↓] + граматика знаків ⌄ ↓↑ ✕ заливка
+     К1 · чіпи/контроли ФІЛЬТРУЮТЬ насправді (до v5 були декоративні)
+     К1 · ФІЛЬТР ⟂ СОРТ: зміна фільтра не скидає напрям сортування
+     К1 · поповер — ОДИН примітив на локацію і тему; тема більше не сліпий цикл
+     К1 · порожній результат «Нічого не знайдено»
    §2-п.0 ВІДПОВІДЬ: стенд крутиться З ТЕЛЕФОНА → phone-single-frame (§4-варіанти)
    ОБ'ЄКТ СУДУ: теза «панель ↔ аркуш» · верхня зона · матеріал поля · знак · тон темної
    БАЗА: EquipLens_headbench_v2.html (гейт ✓8·⚠2·✗0), токени Н1′
@@ -407,6 +416,115 @@ details[open] summary::before{transform:rotate(90deg)}
 /* --- лічильник: розбивка --- */
 .bx-meter .bx-part{color:#9a9aa8}
 .bx-meter .bx-part b{color:#c6c6d2}
+
+/* ============================================================
+   v5 · device-раунд Konst (21.08). Стартові значення зафіксовані,
+   сім знахідок закриті. Правила v4 не редагуються — глушаться.
+   ============================================================ */
+
+/* --- З1 · пігулка кнопок шапки (мокап Konst) --- */
+.el-hgrp{display:flex;align-items:center;gap:2px;border-radius:calc(var(--br,11px) + 3px)}
+.el-hgrp[data-g="surf"]{background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--lift-s);padding:2px}
+.el-hgrp[data-g="well"]{background:var(--well-bg);border:1px solid var(--line);
+  box-shadow:var(--well);padding:2px}
+.el-hgrp[data-g="float"]{background:var(--surface);border:1px solid var(--line);
+  box-shadow:var(--lift);padding:2px}
+.el-hgrp[data-g="bare"]{background:transparent;padding:0}
+.el-hgrp .el-hbtn{background:transparent;border:none;box-shadow:none}
+.el-hdiv{flex:none;width:1px;align-self:stretch;margin:7px 3px;background:var(--line-hard);opacity:.5}
+
+/* --- З2 · чіпи: матеріал окремим важелем, не побічним ефектом тези --- */
+.el-chip[data-mat="out"]{background:transparent;box-shadow:none;border-color:var(--line-hard)}
+.el-chip[data-mat="surf"]{background:var(--surface);box-shadow:var(--lift-s);border-color:var(--line)}
+.el-chip[data-mat="fill"]{background:var(--well-bg);box-shadow:none;border-color:transparent}
+.el-chip[data-on="1"]{background:var(--neutral-fill);color:var(--neutral-ink);border-color:transparent;
+  box-shadow:none}
+
+/* --- З3 · тон дій свайпу (малиновий «Змінити» виїдав око) --- */
+.el-sw-actions[data-t="signal"] .edit{background:var(--accent);color:var(--accent-ink)}
+.el-sw-actions[data-t="signal"] .del{background:#D92B3A;color:#fff}
+.el-sw-actions[data-t="neutral"] .edit{background:var(--raised);color:var(--ink)}
+.el-sw-actions[data-t="neutral"] .del{background:var(--neutral-fill);color:var(--neutral-ink)}
+.el-sw-actions[data-t="quiet"] .edit{background:var(--well-bg);color:var(--ink-2)}
+.el-sw-actions[data-t="quiet"] .del{background:var(--well-bg);color:#D92B3A}
+/* safeguard: видалення питає, а не робить */
+.el-sw-ask{position:absolute;inset:0;z-index:3;display:none;align-items:center;gap:8px;
+  padding:0 12px;background:var(--surface)}
+.el-sw.ask .el-sw-ask{display:flex}
+.el-sw-ask span{flex:1;font-size:13px;font-weight:650;color:var(--ink)}
+.el-sw-ask button{flex:none;padding:9px 13px;border-radius:10px;font-size:12.5px;font-weight:750}
+.el-sw-ask .no{background:var(--well-bg);color:var(--ink-2);border:1px solid var(--line)}
+.el-sw-ask .yes{background:#D92B3A;color:#fff}
+
+/* --- З4 · тон кнопки «+» --- */
+.el-fab[data-t="accent"]{background:var(--accent);color:var(--accent-ink)}
+.el-fab[data-t="neutral"]{background:var(--neutral-fill);color:var(--neutral-ink)}
+.el-fab[data-t="glass"]{background:var(--glass);color:var(--ink);border:1px solid var(--glass-rim);
+  backdrop-filter:blur(16px) saturate(180%);-webkit-backdrop-filter:blur(16px) saturate(180%)}
+.el-nav .el-navplus i[data-t="neutral"]{background:var(--neutral-fill);color:var(--neutral-ink)}
+.el-nav .el-navplus i[data-t="glass"]{background:var(--raised);color:var(--ink);
+  border:1px solid var(--glass-rim)}
+
+/* --- З5 · ФІКС: виріз відкушував таби. Тепер таби розступаються --- */
+.el-nav .el-navgap{flex:0 0 auto;width:var(--gapW,64px);pointer-events:none}
+
+/* ============================================================
+   v6 · КРОК 0 — фолбеки скла (розвідка 21.08)
+   Ф-3: прозорість бульбашки ЖИВЕ В alpha background, НІКОЛИ не в opacity —
+        opacity<1 робить елемент backdrop-root і вбиває його ж blur.
+   Заборона: маску не виносити на батька-обгортку — обгортка стане backdrop-root
+        і скло всередині осліпне. Маска мусить бути на ТОМУ Ж елементі.
+   ============================================================ */
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .el-nav,.el-fab[data-t="glass"]{backdrop-filter:none;-webkit-backdrop-filter:none;
+    background:var(--surface)}
+}
+@media(prefers-reduced-transparency:reduce){
+  .el-fab[data-t="glass"]{backdrop-filter:none;-webkit-backdrop-filter:none;
+    background:var(--surface)}
+}
+
+/* ============================================================
+   v6 · КРОК 1 — рядок керування [ Усі N ][ Локація ⌄ ][ Потреби ↓ ]
+   ГРАМАТИКА ЗНАКІВ (нове правило, дім: Cookbook том 4):
+     ⌄  — контрол ВІДКРИЄ поверхню поверх екрана
+     ↓↑ — контрол ПЕРЕМКНЕ стан тут же, без поверхні
+     ✕  — контрол несе активний вибір, який можна зняти
+     заливка — і тільки вона — означає «фільтр активний»
+   ============================================================ */
+.el-ctl{display:flex;gap:var(--ctlGap,7px);margin-top:9px;position:relative;align-items:center}
+.el-cbtn{flex:none;display:flex;align-items:center;gap:5px;white-space:nowrap;
+  font-size:12px;font-weight:650;color:var(--ink-2);padding:6px 11px;
+  border:1px solid var(--line);border-radius:99px;background:var(--surface)}
+.el-cbtn[data-mat="out"]{background:transparent;box-shadow:none;border-color:var(--line-hard)}
+.el-cbtn[data-mat="surf"]{background:var(--surface);box-shadow:var(--lift-s);border-color:var(--line)}
+.el-cbtn[data-mat="fill"]{background:var(--well-bg);box-shadow:none;border-color:transparent}
+.el-cbtn[data-on="1"]{background:var(--neutral-fill);color:var(--neutral-ink);border-color:transparent}
+.el-cbtn svg{width:13px;height:13px;flex:none;stroke-width:2.2;opacity:.75}
+.el-cbtn[data-on="1"] svg{opacity:1}
+.el-cbtn .el-cx{margin-right:-3px;opacity:.9}
+/* стрілка сорту: один елемент, повертається — напрям видно рухом, не підміною гліфа */
+.el-cbtn .el-car{transition:transform .18s cubic-bezier(.32,.72,0,1)}
+.el-cbtn[data-dir="asc"] .el-car{transform:rotate(180deg)}
+
+/* поповер — спільний примітив: локація і тема беруть один і той самий */
+.el-pop{position:absolute;z-index:45;min-width:150px;padding:5px;
+  background:var(--raised);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 12px 30px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:2px}
+.el-pop[hidden]{display:none}
+.el-pop button{display:flex;align-items:center;gap:8px;text-align:left;
+  padding:9px 11px;border-radius:10px;font-size:13px;font-weight:650;color:var(--ink-2)}
+.el-pop button svg{width:14px;height:14px;flex:none}
+.el-pop button[aria-pressed="true"]{background:var(--neutral-fill);color:var(--neutral-ink)}
+.el-pop .el-popn{font-size:11.5px;color:var(--ink-3);font-weight:600;margin-left:auto}
+
+/* порожній результат — з'являється тільки коли фільтр справді все відсік */
+.el-none{display:flex;flex-direction:column;align-items:center;gap:9px;
+  padding:54px 40px 0;text-align:center}
+.el-none .el-ni{width:34px;height:34px;color:var(--ink-3);opacity:.5}
+.el-none h4{font-size:14.5px;font-weight:750;color:var(--ink-2)}
+.el-none p{font-size:12.5px;color:var(--ink-3);line-height:1.5}
 </style>
 </head>
 <body>
@@ -448,7 +566,7 @@ details[open] summary::before{transform:rotate(90deg)}
 <div class="bx-meter" id="meter"></div>
 
 <div class="bx-info" id="info" hidden>
-  <h1>EquipLens · headbench v3 · stage-bench (phone-single-frame)</h1>
+  <h1>EquipLens · headbench v6 · stage-bench (phone-single-frame)</h1>
   <div><b>Об'єкт суду:</b> теза «панель ↔ аркуш», верхня зона, матеріал поля пошуку, знак, тон темної теми.</div>
   <table>
     <tr><td>§2-п.0</td><td>Відповідь дана: стенд крутиться <b>з телефона</b> → варіант <b>phone-single-frame</b>. Другий кадр замінює <b>hold-to-compare</b> (утримуй — у тому ж пікселі стає P0).</td></tr>
@@ -462,6 +580,8 @@ details[open] summary::before{transform:rotate(90deg)}
     <tr><td>ЛОК-регістр</td><td>§3-п.13: <code>EquipLens_head_valuesLOCK.md</code> ще не існує → всі важелі «нема ЛОКу», покриття рахується за ознакою <code>data-k</code>.</td></tr>
     <tr><td>свайп</td><td>Порт <b>A22</b> (Cookbook том 2, Drive Lens Batch 10/10.2, device-валідовано): <b>end-only</b>, axis-lock, <code>preventDefault</code> лише на осі x. Зсув == 2&times;ширини дії. У тезі «аркуш» рядок у спокої плоский, а під пальцем <b>набирає радіус і піднімається</b> — це той самий <code>transition</code>, що вже прописаний у каноні.</td></tr>
     <tr><td>Ф-фікси v4</td><td>Ф1 — зсув індексу в даних аптек (звідси «Дніпро потреб» і місто в бейджі). Ф2 — <code>zoom</code> замінено на <code>transform:scale</code>: <code>zoom</code> зміщує hit-test на iOS, через що не тапався острівець. Ф3 — місто повернулось в адресу.</td></tr>
+    <tr><td>З5-ФІКС</td><td>Маска вирізу <b>відкушувала комірки</b> «Аптеки» і «План» — це був дефект, не компроміс. Тепер при F1 таби <b>розступаються</b> порожньою коміркою <code>notchR&times;2&nbsp;&minus;&nbsp;6</code>, і виріз потрапляє в порожнечу. Ціна: 4 таби тісніші — це видно й це чесно.</td></tr>
+    <tr><td>акцент темної</td><td>«Вицвіле» = <code>#FF5C93</code> має <b>L&nbsp;68&nbsp;%</b>. На OLED високе L читається як пастель. Лікується <b>насиченістю</b>, не яскравістю. Акцент темної тепер керований і тягне за собою бейдж, дії свайпу, «+», лоток знака й градієнт.</td></tr>
     <tr><td>порядок суду</td><td>ґрунт &rarr; матеріал &rarr; <b>анатомія запису</b> &rarr; теза картка/аркуш &rarr; свайп &rarr; кнопка «+» &rarr; знак. Тезу судити <b>після</b> анатомії: доти запис усередині обох варіантів однаково неправильний.</td></tr>
     <tr><td>НЕ судиться</td><td>жест свайп-закриття шіта (В-6) · модель даних · геометрія низу острівця (Ф2) · матеріал чіпів і полів у деталях (В-4 → <code>token_harness v3</code>).</td></tr>
   </table>
@@ -555,6 +675,9 @@ details[open] summary::before{transform:rotate(90deg)}
       <div class="bx-lv" data-k="n5Tray"><label>Н5 глибина лотка<i></i></label><input type="range" id="n5Tray" min="2.4" max="7" step="0.2"><output></output></div>
       <div class="bx-lv" data-k="n5TrayW"><label>Н5 виступ лотка<i></i></label><input type="range" id="n5TrayW" min="0" max="2" step="0.2"><output></output></div>
       <div class="bx-lv" data-k="n5Lines"><label>Н5 ліній<i></i></label><input type="range" id="n5Lines" min="0" max="3" step="1"><output></output></div>
+      <div class="bx-lv" data-k="n5w1"><label>Н5 довж. 1-ї<i></i></label><input type="range" id="n5w1" min="25" max="100" step="5"><output></output></div>
+      <div class="bx-lv" data-k="n5w2"><label>Н5 довж. 2-ї<i></i></label><input type="range" id="n5w2" min="25" max="100" step="5"><output></output></div>
+      <div class="bx-lv" data-k="n5w3"><label>Н5 довж. 3-ї<i></i></label><input type="range" id="n5w3" min="25" max="100" step="5"><output></output></div>
       <div class="bx-pick" id="pkPaint" data-dk="n5Paint">
         <button data-v="accent" aria-pressed="true">лоток акцентом</button>
         <button data-v="ink">нейтральний</button>
@@ -630,6 +753,25 @@ details[open] summary::before{transform:rotate(90deg)}
     </div>
   </details>
 
+  <details open>
+    <summary>N &middot; рядок керування (v6 &mdash; фільтр &perp; сорт)</summary>
+    <div class="bx-grp">
+      <div class="bx-pick" id="pkCtl" data-dk="ctl">
+        <button data-v="chips">ряд чіпів (control)</button>
+        <button data-v="v6" aria-pressed="true">три контроли</button>
+      </div>
+      <div class="bx-pick" id="pkLocS" data-dk="locSurf">
+        <button data-v="pop" aria-pressed="true">локація: поповер</button>
+        <button data-v="sheet">нижній шіт</button>
+      </div>
+      <div class="bx-lv" data-k="ctlGap"><label>зазор контролів<i></i></label><input type="range" id="ctlGap" min="4" max="14" step="1"><output></output></div>
+      <div class="bx-note"><b>Граматика знаків.</b> <code>&#8964;</code> = відкриє поверхню поверх екрана &middot; <code>&darr;&uarr;</code> = перемкне тут же &middot; <code>&#10005;</code> = зняти активний вибір &middot; <b>заливка</b> = і тільки вона означає &laquo;фільтр активний&raquo;. Три однакові на вигляд чіпи з трьома різними дієсловами &mdash; те, що лікується саме тут.</div>
+      <div class="bx-note"><b>Фільтр &perp; сорт.</b> Зміна фільтра НЕ скидає сортування: фільтр &mdash; запит, сорт &mdash; перевага читання. Перевір це руками: постав <code>Потреби &uarr;</code>, тоді обери місто &mdash; напрям мусить вижити.</div>
+      <div class="bx-note">⚠️ У режимі <b>три контроли</b> зник фільтр <b>&laquo;З потребами&raquo;</b> &mdash; його роботу тепер здебільшого робить сорт за потребами (нулі йдуть униз). Якщо на девайсі його бракує &mdash; це вирок, і він оборотний.</div>
+      <div class="bx-note"><b>Поверхня.</b> &le;5 варіантів + прив'язка до контрола &rarr; поповер; &gt;5 або потрібен пошук усередині &rarr; шіт. Міст у продукті стане більше &mdash; важіль тут саме щоб побачити, де поріг.</div>
+    </div>
+  </details>
+
   <details>
     <summary>J &middot; кнопка &laquo;+&raquo; — головна дія</summary>
     <div class="bx-grp">
@@ -661,6 +803,50 @@ details[open] summary::before{transform:rotate(90deg)}
   </details>
 
   <details>
+    <summary>L &middot; акцент темної теми (В-2, знахідка device-раунду)</summary>
+    <div class="bx-grp">
+      <div class="bx-lv" data-k="aH"><label>відтінок<i></i></label><input type="range" id="aH" min="300" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="aS"><label>насиченість<i></i></label><input type="range" id="aS" min="55" max="100" step="1"><output></output></div>
+      <div class="bx-lv" data-k="aL"><label>світлота<i></i></label><input type="range" id="aL" min="40" max="76" step="1"><output></output></div>
+      <div class="bx-lv" data-k="aSoft"><label>підкладка &alpha;<i></i></label><input type="range" id="aSoft" min="6" max="34" step="1"><output></output></div>
+      <div class="bx-note">Діагноз «вицвіле»: <code>#FF5C93</code> = <b>L&nbsp;68&nbsp;%</b>. На OLED високе L читається як пастель, а не як сигнал. Лікується <b>насиченістю</b>, не підйомом яскравості (S2: S — домінантний важіль неону на темному). Стартова ставка для проби: <b>L&nbsp;58&ndash;62 · S&nbsp;92&ndash;100</b>. Керує акцентом усюди: бейдж, дії свайпу, кнопка «+», лоток знака, градієнт.</div>
+    </div>
+  </details>
+
+  <details>
+    <summary>M &middot; шапка, чіпи, тон дій і кнопки &laquo;+&raquo;</summary>
+    <div class="bx-grp">
+      <div class="bx-pick" id="pkHgrp" data-dk="hgrp">
+        <button data-v="none">кнопки окремо</button>
+        <button data-v="surf" aria-pressed="true">пігулка на поверхні</button>
+        <button data-v="well">пігулка втоплена</button>
+        <button data-v="float">пігулка плаває</button>
+      </div>
+      <div class="bx-pick" id="pkHbare" data-dk="hbare"><button data-v="1" aria-pressed="true">пігулка без фону</button><button data-v="0">з фоном</button></div>
+      <div class="bx-pick" id="pkHdiv" data-dk="hdiv">
+        <button data-v="1" aria-pressed="true">роздільник перед &laquo;&hellip;&raquo;</button>
+        <button data-v="0">без роздільника</button>
+      </div>
+      <div class="bx-pick" id="pkChip" data-dk="chipMat">
+        <button data-v="out" aria-pressed="true">чіпи обведені</button>
+        <button data-v="surf">на поверхні</button>
+        <button data-v="fill">залиті</button>
+      </div>
+      <div class="bx-pick" id="pkAct" data-dk="actTone">
+        <button data-v="signal">дії: сигнальні</button>
+        <button data-v="neutral" aria-pressed="true">нейтральні</button>
+        <button data-v="quiet">приглушені</button>
+      </div>
+      <div class="bx-pick" id="pkFabT" data-dk="fabTone">
+        <button data-v="accent" aria-pressed="true">«+» акцентом</button>
+        <button data-v="neutral">нейтральна</button>
+        <button data-v="glass">скляна</button>
+      </div>
+      <div class="bx-note">Чіпи більше <b>не залежать від тези побічно</b> — це третій ключ пакета, і його теж видно в лічильнику «перебито».</div>
+    </div>
+  </details>
+
+  <details>
     <summary>G &middot; мертві важелі (8.7)</summary>
     <div class="bx-grp"><div id="deadTable"></div></div>
   </details>
@@ -685,39 +871,48 @@ const S = {
   /* ґрунт темної */
   dkH:250, dkC:6, dkL:5, dkS:5, dkR:9, dkI:6,
   /* склад */
-  comp:'v3', scroll:1,
+  comp:'v4', scroll:1,
   /* знак */
-  mark:'n5', mSize:30, mSw:1.9, mGap:7, hSize:96, pRad:2.2,
+  mark:'n5', mSize:30, mSw:1.2, mGap:2, hSize:96, pRad:2.2,
   n1Holes:3, n1R:1.5, n2Lines:3, n2Stub:40, n3W:8, n3H:6,
-  n5Cut:4.2, n5Gap:1.2, n5Tray:4.2, n5TrayW:0, n5Lines:2, n5Paint:'accent',
+  n5Cut:4.1, n5Gap:2, n5Tray:4.2, n5TrayW:0, n5Lines:3, n5Paint:'grad',
+  n5w1:55, n5w2:100, n5w3:100,
   /* wordmark */
-  wSize:17, wEq:800, wLe:500, wTrack:-5, eqL:'ink', eqD:'ink', gAng:100, gShift:40,
+  wSize:18, wEq:700, wLe:600, wTrack:-12, eqL:'grad', eqD:'grad', gAng:100, gShift:40,
   /* кнопки шапки */
-  bH:34, bR:11, bfill:'surf',
+  bH:34, bR:18, bfill:'surf', hgrp:'surf', hbare:1, hdiv:1,
   /* анатомія запису */
-  nSize:16.5, nWeight:750, aSize:12, mtSize:11.5, rowPadY:13, city:'filter', sort:'need',
+  nSize:15, nWeight:650, aSize:12.5, mtSize:12, rowPadY:11, city:'chip', sort:'need',
+  chipMat:'out',
   /* верхня зона */
-  headGap:2, srch:'always',
+  headGap:2, srch:'icon',
+  /* v6 · рядок керування */
+  ctl:'v6', locSurf:'pop', ctlGap:7,
   /* кнопка «+» */
-  fab:'f1', fabS:58, fabLift:24, notchR:38, notch:'mask',
+  fab:'f1', fabS:54, fabLift:34, notchR:32, notch:'mask', fabTone:'accent',
   /* свайп A22 */
-  actW:74, swTrig:44, swSlop:10
+  actW:74, swTrig:44, swSlop:10, actTone:'neutral',
+  /* акцент темної теми — знахідка device-раунду «вицвіле» */
+  aH:340, aS:100, aL:68, aSoft:15
 };
 
 /* Пакети тези (М-1: пресет, підважелі лишаються вільними) */
-const THESIS = {panel:{mat:'lift', row:'card'}, sheet:{mat:'well', row:'row'}};
+const THESIS = {panel:{mat:'lift', row:'card', chipMat:'surf'},
+                sheet:{mat:'well', row:'row',  chipMat:'out'}};
 
 /* P0 — control для hold-to-compare: стан, уже бачений на девайсі */
 const P0 = Object.assign({}, S, {
-  thesis:'panel', mat:'lift', row:'card',
+  thesis:'panel', mat:'lift', row:'card', chipMat:'surf',
   dkC:0, dkL:3.5, dkI:0, comp:'v1', scroll:0, mark:'none',
-  city:'meta', sort:'abc', srch:'always', fab:'f4', headGap:2
+  city:'meta', sort:'abc', srch:'always', fab:'f4', headGap:2,
+  hgrp:'none', actTone:'signal', fabTone:'accent', aL:68, aS:100
 });
 
 /* Референси (§3-п.10) */
 const REF = {wSize:'v2.1: 17px', wEq:'v2.1: 800', wLe:'v2.1: 500', wTrack:'v2.1: −0.45',
   dkL:'v2.1: 3.1 (#08080B)', dkC:'v2.1: 0',
-  swTrig:'A22: 44', swSlop:'A22: 10', actW:'A22: 74'};
+  swTrig:'A22: 44', swSlop:'A22: 10', actW:'A22: 74',
+  aL:'v2.1: 68 (#FF5C93)', aS:'v2.1: 100'};
 /* ЛОК-регістр (§3-п.13). EquipLens_head_valuesLOCK.md не існує → порожньо. */
 const LOCKS = {};
 
@@ -756,7 +951,14 @@ const I = {
   plus:'<path d="M12 5v14M5 12h14"/>',
   pen:'<path d="M4 20l1-4L16.5 4.5a2 2 0 013 3L8 19l-4 1z"/>',
   trash:'<path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/>',
-  wifi:'<path d="M2 7.6a15 15 0 0120 0M5.2 11a10.4 10.4 0 0113.6 0M8.4 14.4a5.6 5.6 0 017.2 0"/><circle cx="12" cy="18" r=".9" class="f"/>'
+  wifi:'<path d="M2 7.6a15 15 0 0120 0M5.2 11a10.4 10.4 0 0113.6 0M8.4 14.4a5.6 5.6 0 017.2 0"/><circle cx="12" cy="18" r=".9" class="f"/>',
+  /* v6 · граматика знаків рядка керування */
+  cav :'<path d="M6 9.5l6 6 6-6"/>',                 /* ⌄ відкриє поверхню */
+  arr :'<path d="M12 4.5v15M6.5 13.5L12 19.5l5.5-6"/>', /* ↓ перемкне тут же */
+  x   :'<path d="M6.5 6.5l11 11M17.5 6.5l-11 11"/>',  /* ✕ зняти вибір */
+  chk :'<path d="M5 12.5l4.5 4.5L19 7"/>',
+  pin :'<path d="M12 21s6.5-6.2 6.5-10.5a6.5 6.5 0 10-13 0C5.5 14.8 12 21 12 21z"/><circle cx="12" cy="10.4" r="2.4"/>',
+  ghost:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6M8.4 11h5.2"/>'
 };
 const ico = (d,s) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}">${d}</svg>`;
 
@@ -796,8 +998,11 @@ const MARKS = {
     const fold = `<path d="M${(xr-cut).toFixed(2)} ${T}v${cut.toFixed(2)}h${cut.toFixed(2)}"/>`;
     let lines = '';
     const lx0 = xl + 2.8, lx1 = xr - 2.8, top = 8.6, gap = 3.2;
-    for (let i=0;i<S.n5Lines;i++)
-      lines += `<path d="M${lx0.toFixed(2)} ${(top+gap*i).toFixed(2)}H${lx1.toFixed(2)}"/>`;
+    const wPct = [S.n5w1, S.n5w2, S.n5w3];
+    for (let i=0;i<S.n5Lines;i++){
+      const w = (lx1 - lx0) * wPct[i]/100;
+      lines += `<path d="M${lx0.toFixed(2)} ${(top+gap*i).toFixed(2)}h${w.toFixed(2)}"/>`;
+    }
     const X1 = xl - tw, X2 = xr + tw;
     const tray = `<path class="el-tray" data-p="${S.n5Paint}" d="M${X1.toFixed(2)} ${trayTop.toFixed(2)}`
       + `V${(bot-tr).toFixed(2)}Q${X1.toFixed(2)} ${bot} ${(X1+tr).toFixed(2)} ${bot}`
@@ -833,59 +1038,148 @@ function appbar(title){
     : `<span class="el-inlinettl">${title}</span>`;
   const f = themeMode === 'auto' ? I.auto : themeMode === 'dark' ? I.moon : I.sun;
   const btn = (role,d,lbl,extra) =>
-    `<button class="el-hbtn" data-fill="${S.bfill}" data-role="${role}" aria-label="${lbl}">${ico(d,17)}${extra||''}</button>`;
+    `<button class="el-hbtn" data-fill="${(S.hgrp!=='none'&&S.hbare)?'bare':S.bfill}" data-role="${role}" aria-label="${lbl}">${ico(d,17)}${extra||''}</button>`;
   const hasHead = (tab==='ph'||tab==='eq') && dataOn;
-  return `<div class="el-appbar">${brand}${inline}<div class="el-spacer"></div>`
-    + (S.srch === 'icon' && hasHead ? btn('srch', I.se, 'Пошук') : '')
+  const tools = (S.srch === 'icon' && hasHead ? btn('srch', I.se, 'Пошук') : '')
     + (S.fab === 'f4' ? btn('add', I.plus, 'Додати') : '')
-    + btn('theme', f, 'Тема', themeMode==='auto' ? '<span class="el-dotmode"></span>' : '')
-    + btn('dots', I.dots, 'Ще') + `</div>`;
+    + btn('theme', f, 'Тема', themeMode==='auto' ? '<span class="el-dotmode"></span>' : '');
+  const kebab = btn('dots', I.dots, 'Ще');
+  const grouped = S.hgrp === 'none'
+    ? tools + kebab
+    : `<div class="el-hgrp" data-g="${S.hgrp}">${tools}`
+      + (S.hdiv ? '<span class="el-hdiv"></span>' : '') + `${kebab}</div>`;
+  return `<div class="el-appbar">${brand}${inline}<div class="el-spacer"></div>${grouped}</div>`;
 }
 
 /* ============ дані (Ф1 · об'єкти замість масивів — зсув індексу вбито) ============ */
+/* Крок 0 · manifest §2-п.6: скло НЕ судиться над коротким списком.
+   20 аптек / 12 одиниць обладнання — щоб бульбашка реально їхала над текстом,
+   бейджами, роздільниками і порожнечею, а не над суцільним фоном. */
 const PHARM = [
   {n:'АНЦ',              a:'вул. Робоча, 45',           c:'Дніпро',     need:3, age:12},
   {n:'Фармастор',        a:'просп. Незалежності, 8',    c:"Кам'янське", need:1, age:3},
   {n:'9-1-1',            a:'вул. Соборності, 21',       c:'Полтава',    need:5, age:26},
   {n:'Мед-сервіс',       a:'вул. Калинова, 115',        c:'Дніпро',     need:0, age:0},
-  {n:'Ліки Полтавщини',  a:'вул. Європейська, 60',      c:'Полтава',    need:2, age:7}
+  {n:'Ліки Полтавщини',  a:'вул. Європейська, 60',      c:'Полтава',    need:2, age:7},
+  {n:'Подорожник',       a:'вул. Титова, 4',            c:'Дніпро',     need:4, age:18},
+  {n:'Бажаємо здоров’я',  a:'просп. Гагаріна, 72',       c:'Дніпро',     need:1, age:2},
+  {n:'Аптека Доброго Дня',a:'вул. Шевченка, 12',         c:'Полтава',    need:6, age:31},
+  {n:'Знахар',           a:'вул. Січових Стрільців, 9', c:"Кам'янське", need:0, age:0},
+  {n:'Фармація 24',      a:'просп. Свободи, 140',       c:'Дніпро',     need:2, age:9},
+  {n:'Сімейна аптека',   a:'вул. Полтавський Шлях, 33', c:'Полтава',    need:3, age:5},
+  {n:'Здоров’я родини',   a:'вул. Каштанова, 7',         c:'Дніпро',     need:1, age:22},
+  {n:'Аптека Низьких Цін',a:'вул. Українська, 51',       c:"Кам'янське", need:5, age:14},
+  {n:'Гармонія',         a:'вул. Металургів, 88',       c:"Кам'янське", need:0, age:0},
+  {n:'Аптека на розі',   a:'вул. Ковпака, 2',           c:'Полтава',    need:2, age:41},
+  {n:'Ваша аптека',      a:'просп. Науки, 19',          c:'Дніпро',     need:4, age:6},
+  {n:'Панацея',          a:'вул. Зелена, 64',           c:'Полтава',    need:1, age:11},
+  {n:'Медтехніка плюс',  a:'вул. Виноградна, 25',       c:'Дніпро',     need:3, age:28},
+  {n:'Аптека №7',        a:'вул. Соборна, 103',         c:"Кам'янське", need:0, age:0},
+  {n:'Первоцвіт',        a:'вул. Лугова, 16',           c:'Полтава',    need:2, age:16}
 ];
 const EQUIP = [
   {n:'Диспенсер Nurofen',   a:'настільний · 3 аптеки', c:'', need:3, age:9},
   {n:'Воблер Strepsils',    a:'вітрина · 2 аптеки',    c:'', need:2, age:21},
   {n:'Шелфтокер Gaviscon',  a:'полиця · 1 аптека',     c:'', need:1, age:4},
-  {n:'Стійка Durex',        a:'підлогова · 0 аптек',   c:'', need:0, age:0}
+  {n:'Стійка Durex',        a:'підлогова · 0 аптек',   c:'', need:0, age:0},
+  {n:'Диспенсер Strepsils', a:'настільний · 4 аптеки', c:'', need:4, age:33},
+  {n:'Хардпостер Nurofen',  a:'вітрина · 2 аптеки',    c:'', need:2, age:12},
+  {n:'Лоток Gaviscon',      a:'прикасовий · 5 аптек',  c:'', need:5, age:7},
+  {n:'Мобайл Durex',        a:'підвісний · 1 аптека',  c:'', need:1, age:19},
+  {n:'Шелфтокер Nurofen',   a:'полиця · 3 аптеки',     c:'', need:3, age:2},
+  {n:'Тестер Veet',         a:'настільний · 0 аптек',  c:'', need:0, age:0},
+  {n:'Стійка Strepsils',    a:'підлогова · 2 аптеки',  c:'', need:2, age:24},
+  {n:'Воблер Gaviscon',     a:'вітрина · 1 аптека',    c:'', need:1, age:15}
 ];
+/* ============================================================
+   v6 · МОДЕЛЬ ПОКАЗУ. До v5 чіпи були декоративні — вони НЕ фільтрували список.
+   На 5 рядках це не було видно; на 20 чіп «Полтава», що нічого не робить, — брехня.
+   Тепер один рушій обслуговує обидва режими рядка керування.
+
+   ПРАВИЛО (нове, дім: EquipLens_MASTER_LOCK): ФІЛЬТР ⟂ СОРТ.
+   Фільтр — це ЗАПИТ (що я дивлюсь), сорт — це ПЕРЕВАГА ЧИТАННЯ (як я дивлюсь).
+   Запит змінюється часто, перевага — рідко. Тому зміна фільтра НЕ скидає сорт.
+   Сорт скидається лише коли ключ не існує на табі (перехід між табами).
+   ============================================================ */
+const FLT = {ph:{city:'',need:false}, eq:{city:'',need:false}};
+const SRT = {ph:{k:'need',d:-1},      eq:{k:'need',d:-1}};
+SRT.ph.k = SRT.eq.k = S.sort;
+/* гачок для jsdom-матриці: стан показу мусить бути видимий ззовні. Стенд, не продукт. */
+window.FLT = FLT; window.SRT = SRT;
+const flt = () => FLT[tab] || {city:'',need:false};
+const srt = () => SRT[tab] || {k:'need',d:-1};
+const baseRows = () => (tab === 'ph' ? PHARM : tab === 'eq' ? EQUIP : []);
+const CITIES = () => [...new Set(baseRows().map(r => r.c).filter(Boolean))];
+function visRows(){
+  const f = flt();
+  return baseRows().filter(r => (!f.city || r.c === f.city) && (!f.need || r.need > 0));
+}
+const fltOn = () => { const f = flt(); return !!f.city || f.need; };
+/* місто в адресі ховається, коли воно вже сказане фільтром — інакше дубль */
+const cityFilterOn = () => !!flt().city;
+
 const CHIPS = {
-  ph:[{t:'Усі 5'},{t:'З потребами 4'},{t:'Дніпро',city:1},{t:'Полтава',city:1}],
-  eq:[{t:'Усі 4'},{t:'Потрібно 3'},{t:'Настільні'},{t:'Вітрина'}]
+  ph:[{t:'Усі',f:{}},{t:'З потребами',f:{need:true}},
+      {t:'Дніпро',f:{city:'Дніпро'}},{t:'Полтава',f:{city:'Полтава'}}],
+  eq:[{t:'Усі',f:{}},{t:'Потрібно',f:{need:true}}]
 };
-const cityFilterOn = () => !!((CHIPS[tab]||[])[chipIdx] || {}).city;
+function chipCount(c){
+  const f = Object.assign({city:'',need:false}, c.f);
+  return baseRows().filter(r => (!f.city || r.c === f.city) && (!f.need || r.need > 0)).length;
+}
 function plural(n,f){const a=Math.abs(n)%100,b=a%10;
   if(a>10&&a<20)return f[2]; if(b>1&&b<5)return f[1]; if(b===1)return f[0]; return f[2];}
 const ageCls = a => a > 20 ? 'el-age2' : a > 7 ? 'el-age1' : 'el-age0';
 
 function sortRows(rows){
-  const a = rows.slice();
-  if (S.sort === 'need') a.sort((x,y) => y.need - x.need);
-  else if (S.sort === 'age') a.sort((x,y) => y.age - x.age);
-  else a.sort((x,y) => x.n.localeCompare(y.n,'uk'));
+  const s = srt(), a = rows.slice();
+  if (s.k === 'need')      a.sort((x,y) => (y.need - x.need) * (s.d < 0 ? 1 : -1));
+  else if (s.k === 'age')  a.sort((x,y) => (y.age  - x.age ) * (s.d < 0 ? 1 : -1));
+  else                     a.sort((x,y) =>  x.n.localeCompare(y.n,'uk') * (s.d < 0 ? 1 : -1));
   return a;
 }
+const SORTLBL = {need:'Потреби', age:'Давність', abc:'Назва'};
 
 /* ============ верхня зона ============ */
 function srchVisible(){ return S.srch === 'always' || srchOpen; }
 function ctxhead(title){
   const big = (S.comp === 'v2' || S.comp === 'v4') ? '' : `<div class="el-ttl">${title}</div>`;
-  const chipMat = S.row === 'row' ? 'flat' : 'lift';
-  const chips = (CHIPS[tab] || []).map((c,i) =>
-    `<div class="el-chip" data-mat="${chipMat}" data-on="${i===chipIdx?1:0}" data-i="${i}">${c.t}</div>`).join('');
+  const chipMat = S.chipMat;
   const ph = tab === 'ph' ? 'Пошук за адресою або мережею' : 'Пошук за назвою обладнання';
   const hint = (S.srch === 'pull' && !srchOpen)
     ? `<div class="el-hint">потягни вниз — з'явиться пошук</div>` : '';
   return `<div class="el-ctxhead" data-srch="${srchVisible()?'on':'off'}">${big}
     <div class="el-srw"><div class="el-search" data-mat="${S.mat}" data-wb="${S.wb}">${ico(I.se,16)}<span>${ph}</span></div></div>
-    ${hint}<div class="el-chips-wrap"><div class="el-chips">${chips}</div></div></div>`;
+    ${hint}${S.ctl === 'v6' ? ctlRow(chipMat) : chipsRow(chipMat)}</div>`;
+}
+
+/* --- старий режим: горизонтальний ряд чіпів (control, лишається для порівняння) --- */
+function chipsRow(mat){
+  const chips = (CHIPS[tab] || []).map((c,i) =>
+    `<div class="el-chip" data-mat="${mat}" data-on="${i===chipIdx?1:0}" data-i="${i}">${c.t} ${chipCount(c)}</div>`).join('');
+  return `<div class="el-chips-wrap"><div class="el-chips">${chips}</div></div>`;
+}
+
+/* --- v6: три контроли, три різні дієслова, три різні знаки --- */
+function ctlRow(mat){
+  const f = flt(), s = srt();
+  const all = `<button class="el-cbtn" data-mat="${mat}" data-c="all" data-on="0">Усі ${baseRows().length}</button>`;
+  const loc = f.city
+    ? `<button class="el-cbtn" data-mat="${mat}" data-c="loc" data-on="1">${f.city}`
+      + `<i class="el-cx" data-c="locclear">${ico(I.x,13)}</i></button>`
+    : `<button class="el-cbtn" data-mat="${mat}" data-c="loc" data-on="0">Локація`
+      + `<i class="el-cav">${ico(I.cav,13)}</i></button>`;
+  const sort = `<button class="el-cbtn" data-mat="${mat}" data-c="sort" data-on="0"`
+    + ` data-dir="${s.d < 0 ? 'desc' : 'asc'}">${SORTLBL[s.k]}`
+    + `<i class="el-car">${ico(I.arr,13)}</i></button>`;
+  return `<div class="el-ctl">${all}${loc}${sort}<div class="el-pop js-loc" hidden></div></div>`;
+}
+
+/* --- порожній результат: існує тільки коли фільтр справді все відсік --- */
+function screenNone(){
+  return `<div class="el-none"><div class="el-ni">${ico(I.ghost,34)}</div>
+    <h4>Нічого не знайдено</h4>
+    <p>Жодна аптека не підходить під поточний фільтр. Зніміть його або оберіть іншу локацію.</p></div>`;
 }
 
 /* ============ запис + свайп-обгортка A22 ============ */
@@ -898,10 +1192,12 @@ function rec(r){
       + `<span class="${ageCls(r.age)}">${r.age} ${plural(r.age,['день','дні','днів'])}</span>`
     : 'потреб немає';
   return `<div class="el-sw">
-    <div class="el-sw-actions">
+    <div class="el-sw-actions" data-t="${S.actTone}">
       <button class="el-act edit">${ico(I.pen,18)}<span>Змінити</span></button>
       <button class="el-act del">${ico(I.trash,18)}<span>Видалити</span></button>
     </div>
+    <div class="el-sw-ask"><span>Видалити запис?</span>
+      <button class="no">Скасувати</button><button class="yes">Видалити</button></div>
     <div class="el-item"><div class="el-body">
       <div class="el-net"><span class="el-nm">${r.n}</span>${chip}</div>
       <div class="el-addr">${addr}</div>
@@ -928,7 +1224,9 @@ function screenBody(){
   if (tab === 'ov') return screenStub('Огляд');
   if (tab === 'pl') return screenStub('План');
   if (!dataOn) return screenEmpty();
-  return ctxhead(tab === 'ph' ? 'Аптеки' : 'Обладнання') + listOf(tab === 'ph' ? PHARM : EQUIP);
+  const rows = visRows();
+  return ctxhead(tab === 'ph' ? 'Аптеки' : 'Обладнання')
+    + (rows.length ? listOf(rows) : screenNone());
 }
 
 /* ============ острівець + кнопка «+» ============ */
@@ -937,8 +1235,15 @@ function nav(){
   const tabs = [['ov','Огляд'],['ph','Аптеки'],['pl','План'],['eq','Обладнання']];
   const notch = (S.fab === 'f1' && S.notch === 'mask') ? 1 : 0;
   if (S.fab === 'f2'){
-    const mid = `<div class="el-navplus" data-role="add"><i>${ico(I.plus,22)}</i></div>`;
+    const mid = `<div class="el-navplus" data-role="add"><i data-t="${S.fabTone}">${ico(I.plus,22)}</i></div>`;
     return `<div class="el-nav" data-notch="0">${tabs.slice(0,2).map(cell).join('')}${mid}${tabs.slice(2).map(cell).join('')}</div>`;
+  }
+  /* З5-ФІКС: при F1 таби РОЗСТУПАЮТЬСЯ, а виріз потрапляє в порожнечу.
+     Раніше маска різала комірки «Аптеки» і «План» — дефект, не компроміс. */
+  if (S.fab === 'f1'){
+    const gap = `<div class="el-navgap" style="--gapW:${(S.notchR*2 - 6)}px"></div>`;
+    return `<div class="el-nav" data-notch="${notch}">`
+      + tabs.slice(0,2).map(cell).join('') + gap + tabs.slice(2).map(cell).join('') + `</div>`;
   }
   return `<div class="el-nav" data-notch="${notch}">${tabs.map(cell).join('')}</div>`;
 }
@@ -946,7 +1251,7 @@ function fabHTML(){
   if (S.fab === 'f2' || S.fab === 'f4') return '';
   const side = S.fab === 'f3' ? ' data-side="right"' : '';
   const halo = (S.fab === 'f1' && S.notch === 'halo') ? 1 : 0;
-  return `<div class="el-fabw"><button class="el-fab" data-role="add" data-halo="${halo}"${side}>${ico(I.plus,26)}</button></div>`;
+  return `<div class="el-fabw"><button class="el-fab" data-role="add" data-t="${S.fabTone}" data-halo="${halo}"${side}>${ico(I.plus,26)}</button></div>`;
 }
 
 /* ============ шіт «•••» — ПОРТ 1:1, важелів не має ============ */
@@ -1006,6 +1311,7 @@ function applyVars(){
   s.setProperty('--rowPadY', S.rowPadY+'px'); s.setProperty('--headGap', S.headGap+'px');
   s.setProperty('--fabS', S.fabS+'px');   s.setProperty('--fabLift', S.fabLift+'px');
   s.setProperty('--notchR', S.notchR+'px'); s.setProperty('--actW', S.actW+'px');
+  s.setProperty('--ctlGap', S.ctlGap+'px');
 
   const grd = ['--canvas','--surface','--raised','--ink','--ink-2','--ink-3','--glass','--glass-rim','--line'];
   if (dark){
@@ -1022,20 +1328,80 @@ function applyVars(){
     s.setProperty('--well', `inset 0 ${S.dY}px ${S.dB}px rgba(0,0,0,${(S.dA/100).toFixed(2)}),`
       + `inset 0 -1px 0 rgba(255,255,255,${(S.hA/100).toFixed(2)})`);
     s.setProperty('--well-bg', hsl(H, C*0.92, sL - (sL - L) * S.wMixD/100));
+    /* акцент темної теми — керований, а не зашитий (знахідка «вицвіле») */
+    s.setProperty('--accent',      hsl(S.aH, S.aS, S.aL));
+    s.setProperty('--accent-soft', hsl(S.aH, S.aS, S.aL, (S.aSoft/100).toFixed(2)));
+    s.setProperty('--accent-ink',  S.aL > 56 ? hsl(S.aH, 55, 10) : '#FFFFFF');
   } else {
     grd.forEach(k => s.removeProperty(k));
+    ['--accent','--accent-soft','--accent-ink'].forEach(k => s.removeProperty(k));
     s.setProperty('--well', `inset 0 ${S.wY}px ${S.wB}px rgba(16,16,24,${(S.wA/100).toFixed(2)})`);
     s.setProperty('--well-bg', mixHex('#FFFFFF', '#EFEFF3', S.wMixL/100));
   }
-  const a = ACC[dark ? 'dark' : 'light'];
+  const a = dark ? [S.aH, S.aS, S.aL] : ACC.light;
   s.setProperty('--gang', S.gAng+'deg');
   s.setProperty('--g1', hsl(a[0], a[1], a[2]));
   s.setProperty('--g2', hsl((a[0] + S.gShift + 360) % 360, a[1], a[2]));
 }
 
+/* ============================================================
+   v6 · ПОПОВЕР — ОДИН примітив на дві роботи (локація + тема).
+   ПРАВИЛО поверхні (нове, дім: Cookbook том 4):
+     ≤5 варіантів і прив'язка до конкретного контрола → поповер під контролом;
+     >5 варіантів або потрібен пошук усередині → нижній шіт.
+   Локація має важіль `locSurf`, бо кількість міст у продукті зросте — і саме
+   на цьому порозі рішення перевертається. Тема — завжди 3, завжди поповер.
+   ============================================================ */
+let popOpen = null;
+function closePop(){
+  popOpen = null;
+  sbox.querySelectorAll('.el-pop').forEach(p => { p.hidden = true; });
+  sbox.querySelectorAll('.el-sheet').forEach(x => { x.hidden = true; });
+}
+function openPop(kind, anchor){
+  if (popOpen === kind){ closePop(); return; }
+  closePop(); popOpen = kind;
+  if (kind === 'loc' && S.locSurf === 'sheet'){
+    const s = sbox.querySelector('.el-sheet');
+    s.innerHTML = `<div class="el-grab"></div><div class="el-pop js-loc"
+      style="position:static;box-shadow:none;border:none;background:transparent;padding:2px">
+      ${locItems()}</div>`;
+    s.hidden = false; return;
+  }
+  const host = kind === 'loc' ? sbox.querySelector('.js-loc') : ensureThemePop();
+  if (!host) return;
+  host.innerHTML = kind === 'loc' ? locItems() : themeItems();
+  host.hidden = false;
+  /* прив'язка до контрола: поповер живе у тому ж позиціонованому предку,
+     тому достатньо offsetLeft — жодних getBoundingClientRect під зумом (Ф2 v4). */
+  if (kind === 'loc'){ host.style.left = anchor.offsetLeft + 'px'; host.style.top = (anchor.offsetTop + anchor.offsetHeight + 6) + 'px'; }
+  else { host.style.right = '14px'; host.style.top = (anchor.offsetTop + anchor.offsetHeight + 6) + 'px'; }
+}
+function ensureThemePop(){
+  const bar = sbox.querySelector('.el-appbar');
+  if (!bar) return null;
+  bar.style.position = 'relative';
+  let p = sbox.querySelector('#popTheme');
+  if (!p){ p = document.createElement('div'); p.className = 'el-pop'; p.id = 'popTheme'; bar.appendChild(p); }
+  return p;
+}
+function locItems(){
+  const cur = flt().city;
+  const one = (v,l,n) => `<button data-city="${v}" aria-pressed="${cur===v}">`
+    + ico(I.pin,14) + `<span>${l}</span><span class="el-popn">${n}</span></button>`;
+  return one('', 'Усі локації', baseRows().length)
+    + CITIES().map(c => one(c, c, baseRows().filter(r => r.c === c).length)).join('');
+}
+function themeItems(){
+  const one = (v,l,d) => `<button data-m="${v}" aria-pressed="${themeMode===v}">`
+    + ico(d,14) + `<span>${l}</span></button>`;
+  return one('light','Світла',I.sun) + one('dark','Темна',I.moon) + one('auto','Як у системі',I.auto);
+}
+
 /* ---- свайп рядка · A22 end-only + axis-lock (Cookbook том 2) ---- */
 let openRow = null;
-function closeAllSwipe(){ if (openRow){ openRow.classList.remove('open'); openRow = null; } }
+function closeAllSwipe(){
+  if (openRow){ openRow.classList.remove('open'); openRow.classList.remove('ask'); openRow = null; } }
 function bindSwipe(scr){
   let sx = 0, sy = 0, ax = null, row = null;
   const z = () => (zMode === 'fit' ? fitZoom() : zNum) || 1;
@@ -1096,7 +1462,14 @@ function conds(){
     ['Н2 рядок', 'знак = Н2', S.mark==='n2', ['n2Lines','n2Stub']],
     ['Н3 виріз', 'знак = Н3', S.mark==='n3', ['n3W','n3H']],
     ['Н5 лоток', 'знак = Н5', S.mark==='n5', ['n5Cut','n5Gap','n5Tray','n5TrayW','n5Lines','n5Paint']],
-    ['кнопки шапки', 'завжди', true, ['bH','bR','bfill']]
+    ['кнопки шапки', 'завжди', true, ['bH','bR']],
+    ['фон кнопок', 'кнопки окремо або пігулка з фоном', S.hgrp==='none' || !S.hbare, ['bfill']],
+    ['пігулка шапки', 'кнопки згруповані', S.hgrp!=='none', ['hbare','hdiv']],
+    ['чіпи', 'таб має список', hasHead, ['chipMat']],
+    ['тон дій свайпу', 'таб має список', hasHead, ['actTone']],
+    ['тон «+»', 'кнопка існує', S.fab!=='f4', ['fabTone']],
+    ['акцент темної', 'тема = темна', dark, ['aH','aS','aL','aSoft']],
+    ['Н5 довжини ліній', 'знак = Н5 і ліній > 0', S.mark==='n5' && S.n5Lines>0, ['n5w1','n5w2','n5w3']]
   ];
 }
 function deadSet(){
@@ -1112,7 +1485,7 @@ function paintDead(){
     `<div class="bx-dt"><span>${a}</span><span>${b}</span>
      <span style="color:${ok?'#7fd18a':'#8a8a96'}">${ok?'живий':'мертвий'}</span></div>`).join('');
   const T = THESIS[S.thesis];
-  document.querySelectorAll('#pkMat button,#pkRow button').forEach(b => {
+  document.querySelectorAll('#pkMat button,#pkRow button,#pkChip button').forEach(b => {
     const key = b.closest('.bx-pick').dataset.dk;
     b.classList.toggle('bx-ovr', S[key] !== T[key]);
   });
@@ -1173,6 +1546,8 @@ function pick(id, key){
     const b = e.target.closest('button'); if (!b) return;
     S[key] = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v;
     if (key === 'srch') srchOpen = false;
+    if (key === 'sort'){ SRT.ph.k = S.sort; SRT.eq.k = S.sort; }
+    if (key === 'ctl' || key === 'locSurf') closePop();
     syncPicks(); render();
   });
 }
@@ -1192,13 +1567,19 @@ function pick(id, key){
  ['nSize',v=>v+'px',1],['nWeight',null,1],['aSize',v=>v+'px',1],['mtSize',v=>v+'px',1],
  ['rowPadY',v=>v+'px',1],['headGap',v=>v+'px',1],
  ['fabS',v=>v+'px',1],['fabLift',v=>v+'px',1],['notchR',v=>v+'px',1],
- ['actW',v=>v+'px',1],['swTrig',v=>v+'px',1],['swSlop',v=>v+'px',1]
+ ['actW',v=>v+'px',1],['swTrig',v=>v+'px',1],['swSlop',v=>v+'px',1],
+ ['n5w1',v=>v+'%',0],['n5w2',v=>v+'%',0],['n5w3',v=>v+'%',0],
+ ['aH',v=>v+'°',1],['aS',v=>v+'%',1],['aL',v=>v+'%',1],['aSoft',v=>v+'%',1],
+ ['ctlGap',v=>v+'px',1]
 ].forEach(([id,fmt,live]) => slider(id, fmt, !!live));
 
 pick('pkMat','mat'); pick('pkRow','row'); pick('pkWb','wb'); pick('pkComp','comp');
 pick('pkScroll','scroll'); pick('pkMark','mark'); pick('pkEqL','eqL'); pick('pkEqD','eqD');
 pick('pkBfill','bfill'); pick('pkCity','city'); pick('pkSort','sort'); pick('pkSrch','srch');
+pick('pkCtl','ctl'); pick('pkLocS','locSurf');
 pick('pkFab','fab'); pick('pkNotch','notch'); pick('pkPaint','n5Paint');
+pick('pkHgrp','hgrp'); pick('pkHbare','hbare'); pick('pkHdiv','hdiv');
+pick('pkChip','chipMat'); pick('pkAct','actTone'); pick('pkFabT','fabTone');
 
 document.getElementById('pkThesis').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1296,9 +1677,34 @@ function setTheme(m){
   render();
 }
 sbox.addEventListener('click', e => {
+  const del = e.target.closest('.el-act.del');
+  if (del){ del.closest('.el-sw').classList.add('ask'); return; }
+  const no = e.target.closest('.el-sw-ask .no');
+  if (no){ no.closest('.el-sw').classList.remove('ask'); closeAllSwipe(); return; }
+  const yes = e.target.closest('.el-sw-ask .yes');
+  if (yes){ const r = yes.closest('.el-sw'); r.classList.remove('ask'); closeAllSwipe();
+            r.style.transition = 'opacity .2s'; r.style.opacity = '.25'; return; }
   if (e.target.closest('.el-act')){ closeAllSwipe(); return; }
-  if (e.target.closest('[data-role="theme"]')){
-    const o = ['auto','light','dark']; setTheme(o[(o.indexOf(themeMode)+1)%3]); return; }
+  /* v6 · тема: був СЛІПИЙ ЦИКЛ (тап → наступний із трьох, стан-простір невидимий).
+     Тепер той самий поповер-примітив, що й у локації: три варіанти видно одразу. */
+  const th = e.target.closest('[data-role="theme"]');
+  if (th){ openPop('theme', th); return; }
+  const ti = e.target.closest('#popTheme button');
+  if (ti){ closePop(); setTheme(ti.dataset.m); return; }
+
+  /* v6 · рядок керування */
+  const lx = e.target.closest('[data-c="locclear"]');
+  if (lx){ flt().city = ''; render(); return; }
+  const cb = e.target.closest('.el-cbtn');
+  if (cb){
+    const k = cb.dataset.c;
+    if (k === 'all'){ const f = flt(); f.city = ''; f.need = false; render(); return; }
+    if (k === 'loc'){ openPop('loc', cb); return; }
+    if (k === 'sort'){ srt().d = -srt().d; render(); return; }
+  }
+  const li = e.target.closest('.js-loc button');
+  if (li){ flt().city = li.dataset.city; closePop(); render(); return; }
+
   if (e.target.closest('[data-role="srch"]')){ srchOpen = !srchOpen; render(); return; }
   if (e.target.closest('[data-role="add"]')){ closeAllSwipe(); return; }
   if (e.target.closest('[data-role="dots"]')){
@@ -1306,9 +1712,15 @@ sbox.addEventListener('click', e => {
   const mi = e.target.closest('.el-tsegwide button');
   if (mi){ setTheme(mi.dataset.m); return; }
   const nb = e.target.closest('.el-nav button[data-t]');
-  if (nb){ tab = nb.dataset.t; chipIdx = 0; closeAllSwipe(); render(); return; }
+  if (nb){ tab = nb.dataset.t; chipIdx = 0; closePop(); closeAllSwipe(); render(); return; }
   const cp = e.target.closest('.el-chip');
-  if (cp){ chipIdx = +cp.dataset.i; render(); return; }
+  if (cp){
+    chipIdx = +cp.dataset.i;
+    const f = flt(), c = (CHIPS[tab] || [])[chipIdx] || {};
+    f.city = c.f && c.f.city ? c.f.city : '';
+    f.need = !!(c.f && c.f.need);
+    render(); return; }
+  if (popOpen){ closePop(); return; }
   closeAllSwipe();
   sbox.querySelectorAll('.el-sheet').forEach(x => x.hidden = true);
 });
@@ -1333,7 +1745,7 @@ document.getElementById('copyBtn').addEventListener('click', () => {
 --well:inset 0 ${S.wY}px ${S.wB}px rgba(16,16,24,${(S.wA/100).toFixed(2)});
 --well-bg:${mixHex('#FFFFFF','#EFEFF3',S.wMixL/100)};`;
   const txt =
-`EquipLens · headbench v4 · ${new Date().toISOString().slice(0,10)}
+`EquipLens · headbench v6 · ${new Date().toISOString().slice(0,10)}
 варіант: phone-single-frame (§2-п.0 — крутиться з телефона)
 девайс: ${frame.classList.contains('p15')?'15 Pro 393x852':'XS 375x812'} · тема: ${themeMode} · таб: ${tab} · дані: ${dataOn?'є':'немає'}
 теза: ${S.thesis} · перебито: ${Object.keys(THESIS[S.thesis]).filter(k=>S[k]!==THESIS[S.thesis][k]).join(', ')||'—'}
@@ -1353,7 +1765,10 @@ CSS · тема ${dark?'темна':'світла'}:${cssDark}
 .el-act{width:${S.actW}px} /* A22: зсув = 2×${S.actW} = ${2*S.actW} · TRIG ${S.swTrig} · SLOP ${S.swSlop} */
 .el-brand .el-mk{width:${S.mSize}px;height:${S.mSize}px}
 .el-brand .el-mk svg{stroke-width:${S.mSw}}
-/* Н5: cut=${S.n5Cut} gap=${S.n5Gap} tray=${S.n5Tray} trayW=${S.n5TrayW} lines=${S.n5Lines} paint=${S.n5Paint} */
+/* Н5: cut=${S.n5Cut} gap=${S.n5Gap} tray=${S.n5Tray} trayW=${S.n5TrayW} lines=${S.n5Lines} довжини=${S.n5w1}/${S.n5w2}/${S.n5w3} paint=${S.n5Paint} */
+/* шапка: ${S.hgrp}${S.hgrp!=='none'?(S.hbare?' · кнопки без фону':' · кнопки з фоном')+(S.hdiv?' · роздільник':''):''} · чіпи=${S.chipMat} · дії=${S.actTone} · «+»=${S.fabTone} */${dark?`
+--accent:${hsl(S.aH,S.aS,S.aL)}; --accent-soft:${hsl(S.aH,S.aS,S.aL,(S.aSoft/100).toFixed(2))};
+--accent-ink:${S.aL>56?hsl(S.aH,55,10):'#FFFFFF'};`:''}
 .el-wm{font-size:${S.wSize}px;letter-spacing:${(S.wTrack/10).toFixed(2)}px}
 .el-hbtn{height:${S.bH}px;min-width:${S.bH}px;border-radius:${S.bR}px} /* fill=${S.bfill} */`;
   const out = document.getElementById('out');
