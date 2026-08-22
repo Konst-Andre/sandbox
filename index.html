@@ -216,8 +216,8 @@ details[open] summary::before{transform:rotate(90deg)}
 
 /* дві кнопки шапки — власна форма (В-5), НЕ StockCheck 1:1 */
 .el-hbtn{flex:none;height:var(--bh,34px);min-width:var(--bh,34px);border-radius:var(--br,11px);
-  display:flex;align-items:center;justify-content:center;color:var(--ink-2);position:relative}
-.el-hbtn svg{width:17px;height:17px}
+  display:flex;align-items:center;justify-content:center;color:var(--hbInk,var(--ink-2));position:relative}
+.el-hbtn svg{width:var(--hbSz,17px);height:var(--hbSz,17px);stroke-width:var(--hbSw,1.7)}
 .el-hbtn[data-fill="surf"]{background:var(--surface);border:1px solid var(--line);box-shadow:var(--lift-s)}
 .el-hbtn[data-fill="out"]{background:transparent;border:1px solid var(--line-hard)}
 .el-hbtn[data-fill="bare"]{background:transparent;border:none}
@@ -264,7 +264,7 @@ details[open] summary::before{transform:rotate(90deg)}
 
 /* ---------- екран ---------- */
 .el-scr{flex:1;overflow:hidden auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
-  padding:0 0 100px;position:relative}
+  padding:0 0 calc(34px + var(--navH,60px) + 12px);position:relative}
 .el-ctxhead{padding:2px 14px 10px;background:var(--canvas);position:sticky;top:0;z-index:5}
 .el-ttl{font-size:25px;font-weight:800;letter-spacing:-.6px;padding:2px 0 11px;overflow:hidden;
   transition:height .2s,opacity .16s,padding .2s}
@@ -328,7 +328,7 @@ details[open] summary::before{transform:rotate(90deg)}
   color:var(--ink-3);border:1px dashed var(--line-hard);border-radius:99px;padding:5px 11px}
 
 /* ---------- острівець ---------- */
-.el-nav{position:absolute;left:8px;right:8px;bottom:34px;height:60px;display:flex;
+.el-nav{position:absolute;left:var(--navL,16px);right:calc(var(--navL,16px) + var(--fabS,56px) + var(--fabGap,12px));bottom:34px;height:var(--navH,60px);display:flex;
   border-radius:24px;padding:6px;gap:2px;
   background:var(--glass);border:1px solid var(--glass-rim);
   backdrop-filter:blur(12px) saturate(170%);-webkit-backdrop-filter:blur(12px) saturate(170%);
@@ -400,32 +400,19 @@ details[open] summary::before{transform:rotate(90deg)}
 .el-hint{font-size:10.5px;color:var(--ink-3);text-align:center;padding:2px 0 0;opacity:.75}
 
 /* --- C · кнопка «+» --- */
-.el-fabw{position:absolute;left:0;right:0;bottom:34px;height:60px;z-index:12;pointer-events:none}
-.el-fab{position:absolute;left:50%;margin-left:calc(var(--fabS,58px) / -2);
-  width:var(--fabS,58px);height:var(--fabS,58px);border-radius:50%;
-  bottom:var(--fabLift,24px);pointer-events:auto;
+.el-fabw{position:absolute;left:0;right:0;bottom:34px;height:var(--navH,60px);z-index:12;pointer-events:none}
+/* дзеркало «рука» — головна дія в найдешевшу точку дуги великого пальця.
+   Дзеркалиться КНОПКА, не застосунок: свайп-дії й бейджі лишаються праворуч. */
+[data-hand="left"] .el-nav{left:calc(var(--navL,16px) + var(--fabS,56px) + var(--fabGap,12px));right:var(--navL,16px)}
+[data-hand="left"] .el-fab{left:var(--navL,16px);right:auto}
+.el-fab{position:absolute;right:var(--navL,16px);
+  width:var(--fabS,56px);height:var(--fabS,56px);border-radius:50%;
+  bottom:var(--fabBot,2px);pointer-events:auto;
   background:var(--accent);color:var(--accent-ink);
   display:flex;align-items:center;justify-content:center;
   box-shadow:0 8px 20px rgba(0,0,0,.30)}
 .el-fab svg{width:26px;height:26px;stroke-width:2.4}
-.el-fab[data-halo="1"]{box-shadow:0 0 0 6px var(--canvas),var(--fab-sh)}
 .el-fab[data-t="accent"],.el-fab[data-t="neutral"]{box-shadow:var(--fab-sh)}
-.el-fab[data-side="right"]{left:auto;right:14px;margin-left:0}
-/* F1 · виріз у склі острівця. Маска ріже і фон, і backdrop-filter — це і судимо.
-   v7: radial-gradient замінено на SVG-шлях. Причина — ГАЛТЕЛЬ: градієнт уміє лише
-   коло, а коло, що врізається в пряме ребро, дає ДВА ГОСТРІ ВІСТРІ на стику
-   (розрив кривини). Галтель — маленька увігнута дуга, дотична і до ребра, і до
-   кола — прибирає саме їх. Шлях будується в JS, бо радіуси параметричні.
-   ⚠ Маска лишається НА ТОМУ Ж елементі, що й backdrop-filter (Ф-1 розвідки):
-   винесення її на батька зробило б батька backdrop-root і осліпило б скло. */
-.el-nav[data-notch="1"]{
-  -webkit-mask-image:var(--notch-mask);mask-image:var(--notch-mask);
-  -webkit-mask-size:100% 100%;mask-size:100% 100%;
-  -webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
-.el-nav .el-navplus{flex:0 0 auto;width:52px;display:flex;align-items:center;justify-content:center}
-.el-nav .el-navplus i{width:40px;height:40px;border-radius:14px;background:var(--accent);
-  color:var(--accent-ink);display:flex;align-items:center;justify-content:center}
-.el-nav .el-navplus svg{width:22px;height:22px;stroke-width:2.3}
 
 /* --- E · знак Н5: фарбування лотка --- */
 .el-mk .el-tray[data-p="accent"]{stroke:var(--accent)}
@@ -444,14 +431,32 @@ details[open] summary::before{transform:rotate(90deg)}
 
 /* --- З1 · пігулка кнопок шапки (мокап Konst) --- */
 .el-hgrp{display:flex;align-items:center;gap:2px;border-radius:calc(var(--br,11px) + 3px)}
-.el-hgrp[data-g="surf"]{background:var(--surface);border:1px solid var(--line);
+/* Тон пігулки — ОДИН важіль на всі матеріали (--hp-bg), глибина — власна в кожного.
+   Інакше «на поверхні» і «плаває» відрізняються лише тінню, а тон, який і є справжньою
+   причиною «пігулка кричить», не має де жити. */
+.el-hgrp[data-g="surf"]{background:var(--hp-bg);border:1px solid var(--line);
   box-shadow:var(--lift-s);padding:2px}
-.el-hgrp[data-g="well"]{background:var(--well-bg);border:1px solid var(--line);
+.el-hgrp[data-g="well"]{background:var(--hp-bg);border:1px solid var(--line);
   box-shadow:var(--well);padding:2px}
-.el-hgrp[data-g="float"]{background:var(--surface);border:1px solid var(--line);
+.el-hgrp[data-g="float"]{background:var(--hp-bg);border:1px solid var(--line);
   box-shadow:var(--lift);padding:2px}
+/* ПЕРЕВІРКА ЛОКУ «скло тільки внизу» (S7). Не порушення: лок писався проти
+   плаваючого верхнього острівця з колапсом, а тут статична пігулка в паперовій шапці.
+   ⚠ Ф-3: прозорість = alpha фону, НІКОЛИ не opacity — інакше backdrop-root уб'є свій же blur. */
+.el-hgrp[data-g="glass"]{background:var(--hp-bg);border:1px solid var(--line);padding:2px;
+  backdrop-filter:blur(var(--hp-blur,12px)) saturate(var(--hp-sat,170%));
+  -webkit-backdrop-filter:blur(var(--hp-blur,12px)) saturate(var(--hp-sat,170%))}
+/* КОНТРОЛЬ до скла: той самий тон, blur вимкнено. Під статичною шапкою немає
+   скрол-контенту (FINDINGS §1) — якщо оком не відрізниш від glass, питання закрито. */
+.el-hgrp[data-g="flat"]{background:var(--hp-bg);border:1px solid var(--line);padding:2px}
 .el-hgrp[data-g="bare"]{background:transparent;padding:0}
-.el-hgrp .el-hbtn{background:transparent;border:none;box-shadow:none}
+/* ⚠ ДЕФЕКТ КАСКАДУ (S7). Тут стояло безумовне глушіння фону кнопок усередині
+   пігулки — і воно перебивало важіль `hbare` за порядком джерела при рівній вазі
+   селектора. Важіль «без фону ‖ з фоном» був мертвий, а таблиця мертвих цього НЕ
+   бачила: вона перевіряє логіку стану, не каскад. Тепер «голість» несе сама кнопка
+   через data-fill="bare", який ставить hbare. Другий випадок того ж класу за сесію
+   (перший — ореол-A на .el-fab). */
+.el-hgrp .el-hbtn[data-fill="bare"]{box-shadow:none}
 .el-hdiv{flex:none;width:1px;align-self:stretch;margin:7px 3px;background:var(--line-hard);opacity:.5}
 
 /* --- З2 · чіпи: матеріал окремим важелем, не побічним ефектом тези --- */
@@ -490,12 +495,7 @@ details[open] summary::before{transform:rotate(90deg)}
   backdrop-filter:blur(var(--fab-blur,16px)) saturate(var(--fab-sat,180%));
   -webkit-backdrop-filter:blur(var(--fab-blur,16px)) saturate(var(--fab-sat,180%));
   box-shadow:var(--fab-sh)}
-.el-nav .el-navplus i[data-t="neutral"]{background:var(--neutral-fill);color:var(--neutral-ink)}
-.el-nav .el-navplus i[data-t="glass"]{background:var(--raised);color:var(--ink);
-  border:1px solid var(--glass-rim)}
 
-/* --- З5 · ФІКС: виріз відкушував таби. Тепер таби розступаються --- */
-.el-nav .el-navgap{flex:0 0 auto;width:var(--gapW,64px);pointer-events:none}
 
 /* ============================================================
    v6 · КРОК 0 — фолбеки скла (розвідка 21.08)
@@ -608,7 +608,6 @@ details[open] summary::before{transform:rotate(90deg)}
     <tr><td>ЛОК-регістр</td><td>§3-п.13: <code>EquipLens_head_valuesLOCK.md</code> ще не існує → всі важелі «нема ЛОКу», покриття рахується за ознакою <code>data-k</code>.</td></tr>
     <tr><td>свайп</td><td>Порт <b>A22</b> (Cookbook том 2, Drive Lens Batch 10/10.2, device-валідовано): <b>end-only</b>, axis-lock, <code>preventDefault</code> лише на осі x. Зсув == 2&times;ширини дії. У тезі «аркуш» рядок у спокої плоский, а під пальцем <b>набирає радіус і піднімається</b> — це той самий <code>transition</code>, що вже прописаний у каноні.</td></tr>
     <tr><td>Ф-фікси v4</td><td>Ф1 — зсув індексу в даних аптек (звідси «Дніпро потреб» і місто в бейджі). Ф2 — <code>zoom</code> замінено на <code>transform:scale</code>: <code>zoom</code> зміщує hit-test на iOS, через що не тапався острівець. Ф3 — місто повернулось в адресу.</td></tr>
-    <tr><td>З5-ФІКС</td><td>Маска вирізу <b>відкушувала комірки</b> «Аптеки» і «План» — це був дефект, не компроміс. Тепер при F1 таби <b>розступаються</b> порожньою коміркою <code>notchR&times;2&nbsp;&minus;&nbsp;6</code>, і виріз потрапляє в порожнечу. Ціна: 4 таби тісніші — це видно й це чесно.</td></tr>
     <tr><td>акцент темної</td><td>«Вицвіле» = <code>#FF5C93</code> має <b>L&nbsp;68&nbsp;%</b>. На OLED високе L читається як пастель. Лікується <b>насиченістю</b>, не яскравістю. Акцент темної тепер керований і тягне за собою бейдж, дії свайпу, «+», лоток знака й градієнт.</td></tr>
     <tr><td>порядок суду</td><td>ґрунт &rarr; матеріал &rarr; <b>анатомія запису</b> &rarr; теза картка/аркуш &rarr; свайп &rarr; кнопка «+» &rarr; знак. Тезу судити <b>після</b> анатомії: доти запис усередині обох варіантів однаково неправильний.</td></tr>
     <tr><td>НЕ судиться</td><td>жест свайп-закриття шіта (В-6) · модель даних · геометрія низу острівця (Ф2) · матеріал чіпів і полів у деталях (В-4 → <code>token_harness v3</code>).</td></tr>
@@ -790,6 +789,22 @@ details[open] summary::before{transform:rotate(90deg)}
       <div class="bx-lv" data-k="fabSatD"><label>насиченість &Delta;<i></i></label><input type="range" id="fabSatD" min="-40" max="60" step="5"><output></output></div>
       <div class="bx-lv" data-k="fabRimA"><label>кант<i></i></label><input type="range" id="fabRimA" min="0" max="60" step="2"><output></output></div>
       <div class="bx-lv" data-k="fabElev"><label>елевація <b style="color:#9a9aa8">·при alpha≈.4 важка від 16</b><i></i></label><input type="range" id="fabElev" min="0" max="40" step="2"><output></output></div>
+      <div class="bx-lv" data-k="fabGap"><label>зазор до острівця<i></i></label><input type="range" id="fabGap" min="6" max="24" step="1"><output></output></div>
+      <div class="bx-pick" id="pkAlign" data-dk="fabAlign">
+        <button data-v="mid" aria-pressed="true">по центру острівця</button>
+        <button data-v="base">по нижньому ребру</button>
+      </div>
+      <div class="bx-pick" id="pkHand" data-dk="hand">
+        <button data-v="right" aria-pressed="true">рука: права</button>
+        <button data-v="left">рука: ліва</button>
+      </div>
+      <div class="bx-pick" id="pkShT" data-dk="fabShTint">
+        <button data-v="none" aria-pressed="true">тінь: нейтральна</button>
+        <button data-v="accent">тінь: у тон акценту</button>
+      </div>
+      <div class="bx-lv" data-k="fabShA"><label>тінь: сила<i></i></label><input type="range" id="fabShA" min="0" max="45" step="1"><output></output></div>
+      <div class="bx-note"><b>Тінь у тон — важіль СВІТЛОЇ теми.</b> На темній вона примусово нейтральна: <code>A45</code> — темна елевація це тон, не drop-shadow, а кольорове світіння на OLED дасть неон. Перемикач на темній стоїть у таблиці мертвих.</div>
+      <div class="bx-note"><b>Рука дзеркалить КНОПКУ, не застосунок.</b> Свайп-дії рядка й бейджі лишаються праворуч — це свідомий компроміс, а не недоробка.</div>
       <div class="bx-pick" id="pkFabE" data-dk="fabEdge">
         <button data-v="none" aria-pressed="true">край: голий</button>
         <button data-v="ring">внутр. кільце</button>
@@ -801,15 +816,12 @@ details[open] summary::before{transform:rotate(90deg)}
       <div class="bx-lv" data-k="fabHaloAL"><label>ореол СВІТЛА: сила<i></i></label><input type="range" id="fabHaloAL" min="0" max="35" step="1"><output></output></div>
       <div class="bx-lv" data-k="fabHaloSD"><label>ореол ТЕМНА: розтяг<i></i></label><input type="range" id="fabHaloSD" min="0" max="30" step="2"><output></output></div>
       <div class="bx-lv" data-k="fabHaloAD"><label>ореол ТЕМНА: сила<i></i></label><input type="range" id="fabHaloAD" min="0" max="35" step="1"><output></output></div>
-      <div class="bx-lv" data-k="nFillet"><label>галтель вирізу<i></i></label><input type="range" id="nFillet" min="0" max="18" step="1"><output></output></div>
-      <div class="bx-lv" data-k="nLift"><label>центр вирізу вище ребра<i></i></label><input type="range" id="nLift" min="-8" max="14" step="1"><output></output></div>
       <div class="bx-pick" id="pkShPos" data-dk="shPos">
         <button data-v="screen" aria-pressed="true">шіт: від низу екрана</button>
         <button data-v="island">на кромці острівця</button>
       </div>
       <div class="bx-note"><b>Прозорість &mdash; це alpha фону, НЕ <code>opacity</code>.</b> <code>opacity&lt;1</code> зробило б бульбашку backdrop-root і вбило б її ж blur (Ф-3 розвідки 21.08). Важеля <code>opacity</code> тут немає навмисно &mdash; він був би не просто мертвим, а шкідливим.</div>
       <div class="bx-note"><b>Блюр &mdash; дельта, не абсолют.</b> Острівець блюрить 12px. Два скла впритул із різними радіусами дають видимий шов на кромці вирізу, тож судиться саме різниця. <code>&Delta;=0</code> &mdash; одне скло на двох тілах.</div>
-      <div class="bx-note"><b>Галтель.</b> Коло, що врізається в пряме ребро, дає два вістря: кривина стрибає з 0 на 1/R миттєво. Галтель <code>f</code> вставляє сходинку 1/f між ними (G1). <code>f=0</code> &mdash; старий гострий виріз, control. Практична вилка: 6&ndash;10 при R=34.</div>
       <div class="bx-note">⚠️ <b>WebKit 158807:</b> <code>-webkit-backdrop-filter</code> лишає артефакти на заокруглених рамках. Коло + кант + скло &mdash; найризикованіша форма з можливих. Якщо на кромці видно брудну облямівку &mdash; це платформа, і лікується зняттям канта або перенесенням його в псевдоелемент поверх.</div>
       <div class="bx-note"><b>Ореол &ne; кільце</b> (Cookbook <b>A88</b>). Кільце (<code>inset</code>) додає чіткості <b>формі</b> &mdash; всередині, від фону не залежить, на скролі не дихає. Ореол (зовнішній) додає <b>відділення від контенту</b> &mdash; від фону залежить повністю.</div>
       <div class="bx-note">&#128308; <b>Виправлено у v8.</b> До v7 ореол малювався <code>rgba(20,20,30)</code> на <b>обох</b> темах: на світлій це була друга тінь під першою &mdash; читалось як бруд, не як відділення. Тепер ореол <b>білий на обох темах</b>, а важелі розтягу й сили &mdash; <b>роздільні</b>. Спільний важіль на дві теми не давав судити взагалі: тюн світлої псував темну (<b>A39</b>).</div>
@@ -839,20 +851,7 @@ details[open] summary::before{transform:rotate(90deg)}
   <details>
     <summary>J &middot; кнопка &laquo;+&raquo; — головна дія</summary>
     <div class="bx-grp">
-      <div class="bx-pick" id="pkFab" data-dk="fab">
-        <button data-v="f1" aria-pressed="true">F1 бульбашка над острівцем</button>
-        <button data-v="f2">F2 п'ята комірка</button>
-        <button data-v="f3">F3 FAB справа</button>
-        <button data-v="f4">F4 у шапці</button>
-      </div>
       <div class="bx-lv" data-k="fabS"><label>діаметр<i></i></label><input type="range" id="fabS" min="46" max="70" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabLift"><label>виступ<i></i></label><input type="range" id="fabLift" min="8" max="46" step="2"><output></output></div>
-      <div class="bx-lv" data-k="notchR"><label>радіус вирізу<i></i></label><input type="range" id="notchR" min="26" max="54" step="2"><output></output></div>
-      <div class="bx-pick" id="pkNotch" data-dk="notch">
-        <button data-v="mask" aria-pressed="true">виріз маскою</button>
-        <button data-v="halo">ореол канви</button>
-      </div>
-      <div class="bx-note">Маска ріже <b>і фон, і backdrop-filter</b> — у вирізі буде видно контент без блюру. Ореол кладе непрозорий круг канви поверх скла й ламає тезу «острівець плаває». Обидва — оком.</div>
     </div>
   </details>
 
@@ -885,8 +884,19 @@ details[open] summary::before{transform:rotate(90deg)}
         <button data-v="surf" aria-pressed="true">пігулка на поверхні</button>
         <button data-v="well">пігулка втоплена</button>
         <button data-v="float">пігулка плаває</button>
+        <button data-v="glass">скло</button>
+        <button data-v="flat">контроль: заливка</button>
       </div>
       <div class="bx-pick" id="pkHbare" data-dk="hbare"><button data-v="1" aria-pressed="true">пігулка без фону</button><button data-v="0">з фоном</button></div>
+      <div class="bx-lv" data-k="hpTone"><label>тон пігулки <b style="color:#9a9aa8">·&minus; темніше · + світліше</b><i></i></label><input type="range" id="hpTone" min="-25" max="40" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpBlur"><label>скло: blur<i></i></label><input type="range" id="hpBlur" min="0" max="24" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpSat"><label>скло: saturate<i></i></label><input type="range" id="hpSat" min="100" max="220" step="5"><output></output></div>
+      <div class="bx-lv" data-k="hbSw"><label>іконки: вага штриха<i></i></label><input type="range" id="hbSw" min="14" max="26" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hbInk"><label>іконки: тон <b style="color:#9a9aa8">·0=приглушені · 100=основне чорнило</b><i></i></label><input type="range" id="hbInk" min="0" max="100" step="5"><output></output></div>
+      <div class="bx-lv" data-k="hbSz"><label>іконки: розмір<i></i></label><input type="range" id="hbSz" min="14" max="22" step="1"><output></output></div>
+      <div class="bx-note"><b>Тон працює при БУДЬ-ЯКОМУ матеріалі.</b> «На поверхні» і «плаває» різняться лише тінню — якщо пігулка кричить, причина майже завжди в тоні, а не в глибині.</div>
+      <div class="bx-note"><b>Скло ⟂ контроль.</b> Під статичною шапкою немає скрол-контенту, тож блюрити нічого (<code>FINDINGS §1</code>). Порівняй <code>скло</code> з <code>контроль: заливка</code> при тому самому тоні: якщо різниці немає — лок «скло тільки внизу» підтверджено, і питання закрите.</div>
+      <div class="bx-note"><b>Іконки судити ПІСЛЯ матеріалу</b> (2.8): скло піднімає локальну яскравість і з'їдає контраст гліфа. Крутити разом = брудний вирок.</div>
       <div class="bx-pick" id="pkHdiv" data-dk="hdiv">
         <button data-v="1" aria-pressed="true">роздільник перед &laquo;&hellip;&raquo;</button>
         <button data-v="0">без роздільника</button>
@@ -944,7 +954,7 @@ const S = {
   /* wordmark */
   wSize:20, wEq:700, wLe:600, wTrack:-9, eqL:'grad', eqD:'grad', gAng:100, gShift:40,
   /* кнопки шапки */
-  bH:34, bR:18, bfill:'surf', hgrp:'surf', hbare:1, hdiv:1,
+  bH:34, bR:18, bfill:'surf', hgrp:'surf', hbare:1, hdiv:1, hpTone:8, hpBlur:12, hpSat:170, hbSw:17, hbInk:55, hbSz:17,
   /* анатомія запису */
   nSize:14, nWeight:650, aSize:12.5, mtSize:11.5, rowPadY:11, city:'chip', sort:'need',
   chipMat:'out',
@@ -953,12 +963,11 @@ const S = {
   /* v6 · рядок керування */
   ctl:'v6', locSurf:'sheet', ctlGap:7,
   /* кнопка «+» */
-  fab:'f1', fabS:58, fabLift:32, notchR:34, notch:'mask', fabTone:'glass',
+  fabS:56, fabGap:12, fabAlign:'mid', hand:'right', fabShTint:'none', fabShA:22, fabTone:'glass',
   /* v7 · КРОК 3 · скло бульбашки. Ф-3 розвідки: прозорість = alpha фону, НІКОЛИ не opacity */
   fabAL:40, fabAD:70, fabBlurD:4, fabSatD:10, fabRimA:26, fabElev:12,
   fabEdge:'none', fabRingA:14, fabHaloSL:10, fabHaloAL:12, fabHaloSD:10, fabHaloAD:12,
-  /* v7 · виріз: галтель + підняття центру */
-  nFillet:8, nLift:2, shPos:'screen',
+  shPos:'screen',
   /* свайп A22 */
   actW:74, swTrig:44, swSlop:10, actTone:'neutral',
   /* акцент темної теми — знахідка device-раунду «вицвіле» */
@@ -1003,8 +1012,7 @@ const hsl = (h,s,l,a) => a==null ? `hsl(${h} ${s}% ${l}%)` : `hsl(${h} ${s}% ${l
 const I = {
   se:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/>',
   ov:'<path d="M4 13h5v7H4zM10 8h4v12h-4zM15 4h5v16h-5z"/>',
-  ph:'<path d="M4 20V9l8-5 8 5v11"/><path d="M9 20v-6h6v6"/>',
-  pl:'<path d="M5 6h14M5 12h14M5 18h9"/><circle cx="19" cy="18" r="2"/>',
+  ph:'<path d="M5 6h13M5 12h13M5 18h8"/><circle cx="19.5" cy="18" r="1.9"/>',
   eq:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 10h16M10 10v10"/>',
   sun:'<circle cx="12" cy="12" r="4.2"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M18.4 5.6L17 7M7 17l-1.4 1.4"/>',
   moon:'<path d="M20 14.5A8.2 8.2 0 019.5 4a8.5 8.5 0 1010.5 10.5z"/>',
@@ -1110,7 +1118,7 @@ function appbar(title){
     `<button class="el-hbtn" data-fill="${(S.hgrp!=='none'&&S.hbare)?'bare':S.bfill}" data-role="${role}" aria-label="${lbl}">${ico(d,17)}${extra||''}</button>`;
   const hasHead = (tab==='ph'||tab==='eq') && dataOn;
   const tools = (S.srch === 'icon' && hasHead ? btn('srch', I.se, 'Пошук') : '')
-    + (S.fab === 'f4' ? btn('add', I.plus, 'Додати') : '')
+    + ''
     + btn('theme', f, 'Тема', themeMode==='auto' ? '<span class="el-dotmode"></span>' : '');
   const kebab = btn('dots', I.dots, 'Ще');
   const grouped = S.hgrp === 'none'
@@ -1291,36 +1299,20 @@ function screenStub(name){
 }
 function screenBody(){
   if (tab === 'ov') return screenStub('Огляд');
-  if (tab === 'pl') return screenStub('План');
   if (!dataOn) return screenEmpty();
   const rows = visRows();
-  return ctxhead(tab === 'ph' ? 'Аптеки' : 'Обладнання')
+  return ctxhead(tab === 'ph' ? 'Потреби' : 'Обладнання')
     + (rows.length ? listOf(rows) : screenNone());
 }
 
 /* ============ острівець + кнопка «+» ============ */
 function nav(){
   const cell = ([k,l]) => `<button data-t="${k}" aria-pressed="${k===tab}">${ico(I[k],19)}<span>${l}</span></button>`;
-  const tabs = [['ov','Огляд'],['ph','Аптеки'],['pl','План'],['eq','Обладнання']];
-  const notch = (S.fab === 'f1' && S.notch === 'mask') ? 1 : 0;
-  if (S.fab === 'f2'){
-    const mid = `<div class="el-navplus" data-role="add"><i data-t="${S.fabTone}">${ico(I.plus,22)}</i></div>`;
-    return `<div class="el-nav" data-notch="0">${tabs.slice(0,2).map(cell).join('')}${mid}${tabs.slice(2).map(cell).join('')}</div>`;
-  }
-  /* З5-ФІКС: при F1 таби РОЗСТУПАЮТЬСЯ, а виріз потрапляє в порожнечу.
-     Раніше маска різала комірки «Аптеки» і «План» — дефект, не компроміс. */
-  if (S.fab === 'f1'){
-    const gap = `<div class="el-navgap" style="--gapW:${(S.notchR*2 - 6)}px"></div>`;
-    return `<div class="el-nav" data-notch="${notch}">`
-      + tabs.slice(0,2).map(cell).join('') + gap + tabs.slice(2).map(cell).join('') + `</div>`;
-  }
-  return `<div class="el-nav" data-notch="${notch}">${tabs.map(cell).join('')}</div>`;
+  const tabs = [['ov','Огляд'],['ph','Потреби'],['eq','Обладнання']];
+  return `<div class="el-nav">${tabs.map(cell).join('')}</div>`;
 }
 function fabHTML(){
-  if (S.fab === 'f2' || S.fab === 'f4') return '';
-  const side = S.fab === 'f3' ? ' data-side="right"' : '';
-  const halo = (S.fab === 'f1' && S.notch === 'halo') ? 1 : 0;
-  return `<div class="el-fabw"><button class="el-fab" data-role="add" data-t="${S.fabTone}" data-halo="${halo}"${side}>${ico(I.plus,26)}</button></div>`;
+  return `<div class="el-fabw"><button class="el-fab" data-role="add" data-t="${S.fabTone}">${ico(I.plus,26)}</button></div>`;
 }
 
 /* ============ шіт «•••» — ПОРТ 1:1, важелів не має ============ */
@@ -1352,9 +1344,10 @@ function effTheme(){
     ? (matchMedia('(prefers-color-scheme:dark)').matches ? 'dark' : 'light') : themeMode;
 }
 function render(){
+  sbox.dataset.hand = S.hand;
   sbox.dataset.theme = effTheme();
   sbox.classList.remove('sc');
-  const title = tab === 'ph' ? 'Аптеки' : tab === 'eq' ? 'Обладнання' : tab === 'ov' ? 'Огляд' : 'План';
+  const title = tab === 'ph' ? 'Потреби' : tab === 'eq' ? 'Обладнання' : 'Огляд';
   sbox.innerHTML = statusbar() + appbar(title)
     + `<div class="el-scr">${screenBody()}</div>` + nav() + fabHTML()
     + `<div class="el-sheet" hidden></div>`;
@@ -1365,7 +1358,7 @@ function render(){
     sbox.classList.toggle('sc', scr.scrollTop > 26);
   }, {passive:true});
   bindSwipe(scr);
-  applyVars(); paintNotch(); measure(); paintDead(); paintLoupe();
+  applyVars(); measure(); paintDead(); paintLoupe();
 }
 
 /* ---- токени з важелів ---- */
@@ -1379,8 +1372,17 @@ function applyVars(){
   s.setProperty('--nSize', S.nSize+'px'); s.setProperty('--nWeight', S.nWeight);
   s.setProperty('--aSize', S.aSize+'px'); s.setProperty('--mtSize', S.mtSize+'px');
   s.setProperty('--rowPadY', S.rowPadY+'px'); s.setProperty('--headGap', S.headGap+'px');
-  s.setProperty('--fabS', S.fabS+'px');   s.setProperty('--fabLift', S.fabLift+'px');
-  s.setProperty('--notchR', S.notchR+'px'); s.setProperty('--actW', S.actW+'px');
+  /* тон пігулки: накладка на полотно. + світліше (на темній це tone-lift, A45), − темніше. */
+  s.setProperty('--hp-bg', S.hpTone >= 0
+    ? `rgba(255,255,255,${(S.hpTone/100).toFixed(3)})`
+    : `rgba(0,0,0,${(-S.hpTone/100).toFixed(3)})`);
+  s.setProperty('--hp-blur', S.hpBlur+'px'); s.setProperty('--hp-sat', S.hpSat+'%');
+  s.setProperty('--hbSw', (S.hbSw/10).toFixed(1)); s.setProperty('--hbSz', S.hbSz+'px');
+  s.setProperty('--hbInk', S.hbInk >= 100 ? 'var(--ink)' : S.hbInk <= 0 ? 'var(--ink-3)'
+    : `color-mix(in srgb, var(--ink) ${S.hbInk}%, var(--ink-3))`);
+  s.setProperty('--fabS', S.fabS+'px');   s.setProperty('--fabGap', S.fabGap+'px');
+  s.setProperty('--fabBot', S.fabAlign==='base' ? '0px' : 'calc((var(--navH,60px) - '+S.fabS+'px) / 2)');
+  s.setProperty('--actW', S.actW+'px');
   s.setProperty('--ctlGap', S.ctlGap+'px');
 
   /* v7 · КРОК 3 · скло бульбашки. Усі три носії прозорості — alpha, не opacity. */
@@ -1405,7 +1407,11 @@ function applyVars(){
     const hA = dark ? S.fabHaloAD : S.fabHaloAL;
     parts.push(`0 0 ${hS}px rgba(255,255,255,${(hA/100).toFixed(2)})`);
   }
-  parts.push(`0 8px ${S.fabElev}px rgba(0,0,0,${dark?0.42:0.22})`);
+  /* кольорова тінь — ТІЛЬКИ світла тема (A45). На темній примусово нейтральна. */
+  const tint = (!dark && S.fabShTint === 'accent');
+  parts.push(`0 8px ${S.fabElev}px ${tint
+    ? `rgba(228,0,90,${(S.fabShA/100).toFixed(2)})`
+    : `rgba(0,0,0,${dark?0.42:(S.fabShA/100).toFixed(2)})`}`);
   s.setProperty('--fab-sh', parts.join(','));
 
   const grd = ['--canvas','--surface','--raised','--ink','--ink-2','--ink-3','--glass','--glass-rim','--line'];
@@ -1495,49 +1501,6 @@ function themeItems(){
 }
 
 /* ============================================================
-   v7 · МАСКА ВИРІЗУ З ГАЛТЕЛЛЮ.
-   Геометрія: острівець = прямокутник W×H. Виріз = коло R із центром на (W/2, −nLift).
-   Без галтелі коло врізається в пряме ребро y=0 і дає два ВІСТРЯ — кривина
-   стрибає з нуля (пряма) на 1/R миттєво, і око читає це як «гострий зріз».
-   Галтель — коло радіуса f, дотичне до ребра знизу і зовні дотичне до вирізу.
-   Центр галтелі: (W/2 ± dx, f), де dx = √((R+f)² − (f+nLift)²).
-   Дотик до вирізу: T = C + R·(F−C)/(R+f). Кривина тепер міняється сходинками
-   0 → 1/f → 1/R, а не 0 → 1/R. Це G1-неперервність — той самий прийом, яким
-   робиться «squircle» вирізу в нативних барах.
-   f = 0 → dx вироджується в √(R²−nLift²), дуги стають нульовими, і форма
-   байт-у-байт повертається до старого кола. Тобто control безкоштовний.
-   ============================================================ */
-function notchMask(W, H){
-  const R = S.notchR, f = S.nFillet, cx = W/2, cy = -S.nLift;
-  if (!(R > 0) || W <= 0) return 'none';
-  const d0 = Math.sqrt(Math.max(0, R*R - cy*cy));
-  let dpath;
-  if (f <= 0 || (R+f)*(R+f) <= (f-cy)*(f-cy)){
-    dpath = `M0 0 H${(cx-d0).toFixed(2)} A${R} ${R} 0 0 0 ${(cx+d0).toFixed(2)} 0`
-          + ` H${W} V${H} H0 Z`;
-  } else {
-    const dx = Math.sqrt((R+f)*(R+f) - (f-cy)*(f-cy));
-    const k  = R/(R+f);
-    const txL = cx + k*(-dx), tyL = cy + k*(f-cy);
-    const txR = cx + k*( dx), tyR = tyL;
-    dpath = `M0 0 H${(cx-dx).toFixed(2)}`
-          + ` A${f} ${f} 0 0 1 ${txL.toFixed(2)} ${tyL.toFixed(2)}`
-          + ` A${R} ${R} 0 0 0 ${txR.toFixed(2)} ${tyR.toFixed(2)}`
-          + ` A${f} ${f} 0 0 1 ${(cx+dx).toFixed(2)} 0`
-          + ` H${W} V${H} H0 Z`;
-  }
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}">`
-            + `<path d="${dpath}" fill="#fff"/></svg>`;
-  return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
-}
-/* маску можна порахувати лише ПІСЛЯ верстки — ширина острівця залежить від девайса */
-window.notchMask = notchMask;
-function paintNotch(){
-  const nav = sbox.querySelector('.el-nav');
-  if (!nav) return;
-  if (nav.dataset.notch !== '1'){ nav.style.removeProperty('--notch-mask'); return; }
-  nav.style.setProperty('--notch-mask', notchMask(nav.offsetWidth, nav.offsetHeight));
-}
 
 /* ---- свайп рядка · A22 end-only + axis-lock (Cookbook том 2) ---- */
 let openRow = null;
@@ -1589,18 +1552,17 @@ function conds(){
     ['свайп A22', 'таб має список', hasHead, ['actW','swTrig','swSlop']],
     ['відступ шапки', 'верхня зона існує', hasHead, ['headGap','srch']],
     ['колапс', 'великий заголовок існує', hasTtl, ['scroll']],
-    ['виріз/ореол', 'кнопка = F1', S.fab==='f1', ['notch']],
-    ['радіус вирізу', 'F1 з маскою', S.fab==='f1' && S.notch==='mask', ['notchR']],
-    ['геометрія вирізу', 'F1 з маскою', S.fab==='f1' && S.notch==='mask', ['nFillet','nLift']],
     ['скло бульбашки · св.', 'тема = світла і «+» скляна', !dark && S.fabTone==='glass', ['fabAL']],
     ['скло бульбашки · тем.', 'тема = темна і «+» скляна', dark && S.fabTone==='glass', ['fabAD']],
     ['блюр і кант скла', '«+» скляна', S.fabTone==='glass', ['fabBlurD','fabSatD','fabRimA']],
     ['внутрішнє кільце', 'край ∈ {кільце, обидва}', S.fabEdge==='ring'||S.fabEdge==='both', ['fabRingA']],
     ['ореол · світла', 'край ∈ {ореол, обидва} і тема = світла', !dark && (S.fabEdge==='halo'||S.fabEdge==='both'), ['fabHaloSL','fabHaloAL']],
     ['ореол · темна',  'край ∈ {ореол, обидва} і тема = темна',  dark && (S.fabEdge==='halo'||S.fabEdge==='both'), ['fabHaloSD','fabHaloAD']],
-    ['край бульбашки · елевація', 'кнопка ∈ {F1, F3}', S.fab==='f1'||S.fab==='f3', ['fabEdge','fabElev']],
+    ['тінь у тон', 'тільки світла тема (A45)', !dark, ['fabShTint']],
+    ['сила тіні', 'нейтральна на темній фіксована', !dark || S.fabShTint!=='accent', ['fabShA']],
+    ['край бульбашки · елевація', 'завжди', true, ['fabEdge','fabElev']],
     ['позиція шіта', 'локація через шіт', S.locSurf==='sheet', ['shPos']],
-    ['діаметр · виступ', 'кнопка ∈ {F1, F3}', S.fab==='f1'||S.fab==='f3', ['fabS','fabLift']],
+    ['діаметр', 'завжди', true, ['fabS']],
     ['wordmark', 'склад ∈ {В1, В4}', wmOn, ['wSize','wEq','wLe','wTrack']],
     ['колір Equip · св.', 'тема = світла і wordmark видно', !dark && wmOn, ['eqL']],
     ['колір Equip · тем.', 'тема = темна і wordmark видно', dark && wmOn, ['eqD']],
@@ -1615,9 +1577,11 @@ function conds(){
     ['кнопки шапки', 'завжди', true, ['bH','bR']],
     ['фон кнопок', 'кнопки окремо або пігулка з фоном', S.hgrp==='none' || !S.hbare, ['bfill']],
     ['пігулка шапки', 'кнопки згруповані', S.hgrp!=='none', ['hbare','hdiv']],
+    ['тон пігулки', 'пігулка є (будь-який матеріал)', S.hgrp!=='none' && S.hgrp!=='bare', ['hpTone']],
+    ['скло пігулки', 'матеріал = скло', S.hgrp==='glass', ['hpBlur','hpSat']],
     ['чіпи', 'таб має список', hasHead, ['chipMat']],
     ['тон дій свайпу', 'таб має список', hasHead, ['actTone']],
-    ['тон «+»', 'кнопка існує', S.fab!=='f4', ['fabTone']],
+    ['тон «+»', 'завжди', true, ['fabTone']],
     ['акцент темної', 'тема = темна', dark, ['aH','aS','aL','aSoft']],
     ['Н5 довжини ліній', 'знак = Н5 і ліній > 0', S.mark==='n5' && S.n5Lines>0, ['n5w1','n5w2','n5w3']]
   ];
@@ -1627,6 +1591,7 @@ function deadSet(){
   conds().forEach(([,,alive,keys]) => { if (!alive) keys.forEach(k => d.add(k)); });
   return d;
 }
+window.deadSet = deadSet;  /* для диференційного детектора (S7) */
 function paintDead(){
   const d = deadSet();
   document.querySelectorAll('[data-k]').forEach(el => el.classList.toggle('bx-dead', d.has(el.dataset.k)));
@@ -1663,7 +1628,7 @@ function measure(){
     ` <span class="bx-part">статус <b>${hSt}</b> · шапка <b>${hAb}</b> · верх <b>${hCh}</b></span>` +
     ` <span class="bx-dim">· теза ${S.thesis==='sheet'?'аркуш':'панель'}${ovr?` · <b class="bx-warn">перебито ${ovr}</b>`:''}</span>` +
     ` <span class="bx-dim">· ЛОК ${Object.keys(LOCKS).length}/${total}</span>` +
-    ` <span class="bx-dim">· ${S.mark==='none'?'Н4':S.mark.toUpperCase()}/${S.comp.toUpperCase()}/${S.fab.toUpperCase()}</span>`;
+    ` <span class="bx-dim">· ${S.mark==='none'?'Н4':S.mark.toUpperCase()}/${S.comp.toUpperCase()}</span>`;
 }
 
 /* ============ важелі ============ */
@@ -1678,7 +1643,7 @@ function slider(id, fmt, live){
   el.value = S[id]; out.textContent = fmt ? fmt(S[id]) : S[id]; markLock(row, id);
   el.addEventListener('input', () => {
     S[id] = +el.value; out.textContent = fmt ? fmt(S[id]) : S[id]; markLock(row, id);
-    if (live){ applyVars(); paintNotch(); measure(); paintDead(); paintLoupe(); } else render();
+    if (live){ applyVars(); measure(); paintDead(); paintLoupe(); } else render();
   });
 }
 function syncPicks(){
@@ -1716,7 +1681,7 @@ function pick(id, key){
  ['bH',v=>v+'px',1],['bR',v=>v+'px',1],
  ['nSize',v=>v+'px',1],['nWeight',null,1],['aSize',v=>v+'px',1],['mtSize',v=>v+'px',1],
  ['rowPadY',v=>v+'px',1],['headGap',v=>v+'px',1],
- ['fabS',v=>v+'px',1],['fabLift',v=>v+'px',1],['notchR',v=>v+'px',1],
+ ['fabS',v=>v+'px',1],['hpTone',v=>(v>0?'+':'')+v,1],['hpBlur',v=>v+'px',1],['hpSat',v=>v+'%',1],['hbSw',v=>(v/10).toFixed(1),1],['hbInk',v=>v+'%',1],['hbSz',v=>v+'px',1],['fabGap',v=>v+'px',1],['fabShA',v=>(v/100).toFixed(2),1],
  ['actW',v=>v+'px',1],['swTrig',v=>v+'px',1],['swSlop',v=>v+'px',1],
  ['n5w1',v=>v+'%',0],['n5w2',v=>v+'%',0],['n5w3',v=>v+'%',0],
  ['aH',v=>v+'°',1],['aS',v=>v+'%',1],['aL',v=>v+'%',1],['aSoft',v=>v+'%',1],
@@ -1726,15 +1691,14 @@ function pick(id, key){
  ['fabRimA',v=>(v/100).toFixed(2),1],['fabElev',v=>v+'px',1],
  ['fabRingA',v=>(v/100).toFixed(2),1],
  ['fabHaloSL',v=>v+'px',1],['fabHaloAL',v=>(v/100).toFixed(2),1],
- ['fabHaloSD',v=>v+'px',1],['fabHaloAD',v=>(v/100).toFixed(2),1],
- ['nFillet',v=>v+'px',1],['nLift',v=>v+'px',1]
+ ['fabHaloSD',v=>v+'px',1],['fabHaloAD',v=>(v/100).toFixed(2),1]
 ].forEach(([id,fmt,live]) => slider(id, fmt, !!live));
 
 pick('pkMat','mat'); pick('pkRow','row'); pick('pkWb','wb'); pick('pkComp','comp');
 pick('pkScroll','scroll'); pick('pkMark','mark'); pick('pkEqL','eqL'); pick('pkEqD','eqD');
 pick('pkBfill','bfill'); pick('pkCity','city'); pick('pkSort','sort'); pick('pkSrch','srch');
-pick('pkCtl','ctl'); pick('pkLocS','locSurf'); pick('pkFabE','fabEdge'); pick('pkShPos','shPos');
-pick('pkFab','fab'); pick('pkNotch','notch'); pick('pkPaint','n5Paint');
+pick('pkCtl','ctl'); pick('pkLocS','locSurf'); pick('pkFabE','fabEdge'); pick('pkAlign','fabAlign'); pick('pkHand','hand'); pick('pkShT','fabShTint'); pick('pkShPos','shPos');
+pick('pkPaint','n5Paint');
 pick('pkHgrp','hgrp'); pick('pkHbare','hbare'); pick('pkHdiv','hdiv');
 pick('pkChip','chipMat'); pick('pkAct','actTone'); pick('pkFabT','fabTone');
 
@@ -1928,7 +1892,7 @@ CSS · тема ${dark?'темна':'світла'}:${cssDark}
 .el-meta{font-size:${S.mtSize}px}
 .el-item{padding-block:${S.rowPadY}px}
 .el-ctxhead{padding-top:${S.headGap}px}  /* пошук=${S.srch} · місто=${S.city} · сорт=${S.sort} */
-.el-fab{width:${S.fabS}px;height:${S.fabS}px;bottom:${S.fabLift}px} /* ${S.fab} · ${S.notch} r=${S.notchR} */
+.el-fab{width:${S.fabS}px;height:${S.fabS}px} /* зазор ${S.fabGap}px · рука ${S.hand==='left'?'ліва':'права'} · вирівнювання ${S.fabAlign==='base'?'по ребру':'по центру'} · тінь ${(!dark&&S.fabShTint==='accent')?'у тон '+(S.fabShA/100).toFixed(2):'нейтральна'} */
 .el-act{width:${S.actW}px} /* A22: зсув = 2×${S.actW} = ${2*S.actW} · TRIG ${S.swTrig} · SLOP ${S.swSlop} */
 .el-brand .el-mk{width:${S.mSize}px;height:${S.mSize}px}
 .el-brand .el-mk svg{stroke-width:${S.mSw}}
@@ -1937,7 +1901,9 @@ CSS · тема ${dark?'темна':'світла'}:${cssDark}
 --accent:${hsl(S.aH,S.aS,S.aL)}; --accent-soft:${hsl(S.aH,S.aS,S.aL,(S.aSoft/100).toFixed(2))};
 --accent-ink:${S.aL>56?hsl(S.aH,55,10):'#FFFFFF'};`:''}
 .el-wm{font-size:${S.wSize}px;letter-spacing:${(S.wTrack/10).toFixed(2)}px}
-.el-hbtn{height:${S.bH}px;min-width:${S.bH}px;border-radius:${S.bR}px} /* fill=${S.bfill} */`;
+.el-hbtn{height:${S.bH}px;min-width:${S.bH}px;border-radius:${S.bR}px} /* fill=${S.bfill} */
+.el-hgrp{--hp-bg:тон ${S.hpTone>0?'+':''}${S.hpTone}} /* матеріал ${S.hgrp}${S.hgrp==='glass'?' · blur '+S.hpBlur+'px sat '+S.hpSat+'%':''} */
+.el-hbtn svg{width:${S.hbSz}px;stroke-width:${(S.hbSw/10).toFixed(1)}} /* чорнило ${S.hbInk}% */`;
   const out = document.getElementById('out');
   out.hidden = false; out.value = txt; out.select();
   if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(()=>{});
