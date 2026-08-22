@@ -4,14 +4,17 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0e">
-<title>EquipLens · headbench v7</title>
+<title>EquipLens · headbench v10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   EquipLens · HEADBENCH v8 — stage-bench, варіант phone-single-frame
+   EquipLens · HEADBENCH v10 — stage-bench, варіант phone-single-frame
    живе доки: до EquipLens_head_valuesLOCK.md → archive/stands/
+   v9→v10 (КРОК 0 · ЗАМОК): LOCKS став записуваним + localStorage + три стани
+     (off / on / drift) + окремий експорт у тіло valuesLOCK.md + скидання.
+     Нових ВАЖЕЛІВ нуль — це вимикач до механіки, що вже існувала з v5.
    v5→v6 (КРОК 0 + КРОК 1):
      К0 · дані ×4 (20 аптек / 12 одиниць) — скло НЕ судиться над коротким списком (§2-п.6)
      К0 · @supports + prefers-reduced-transparency накривають і бульбашку, не лише острів
@@ -129,6 +132,27 @@ details[open] summary::before{transform:rotate(90deg)}
 .bx-pick button[aria-pressed="true"]{background:#31313d;color:#fff;border-color:#41414f}
 .bx-pick button.bx-ovr[aria-pressed="true"]{border-color:#E4005A}
 .bx-lv.bx-dead,.bx-pick.bx-dead{opacity:.3;pointer-events:none}
+/* ===== v10 · КРОК 0 · ЗАМОК =====
+   Регістр LOCKS існував з v5 (р.995) і markLock умів три стани — не було вимикача.
+   Тут тільки він: кнопка, сховище, розбіжність. Нових важелів нуль.
+   ⚠ Замок у стенді ≠ канон. Три стани числа: покручено → залочено (тут)
+     → канонізовано (EquipLens_head_valuesLOCK.md). Другий не замінює третій. */
+.bx-lock{flex:0 0 auto;width:24px;height:24px;padding:0;border-radius:7px;display:flex;
+  align-items:center;justify-content:center;background:#1c1c23;border:1px solid #26262f;color:#5c5c6b}
+.bx-lock svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+.bx-lock .sh{transition:transform .12s}
+.bx-lock[data-st="off"] .sh{transform:translateY(-2px) translateX(2px)}
+.bx-lock[data-st="on"]{background:#14301f;border-color:#2b6b45;color:#7fd18a}
+.bx-lock[data-st="drift"]{background:#3a2410;border-color:#8a5a1e;color:#f0a94b}
+.bx-pick .bx-lock{margin-left:auto}
+.bx-lv.is-drift output,.bx-pick.is-drift{outline:none}
+.bx-lv.is-drift output{color:#f0a94b}
+.bx-lock2{margin-top:7px;width:100%;padding:11px;border-radius:10px;background:#1c1c23;color:#c9c9d4;
+  border:1px solid #2b6b45;font-size:12px;font-weight:750}
+.bx-lockrow{display:flex;gap:7px;margin-top:7px}
+.bx-lockrow .bx-lock2{margin-top:0}
+.bx-lockrow .warn{border-color:#5a2530;color:#9a9aa8}
 .bx-note{font-size:10.5px;color:#6e6e7e;line-height:1.45}
 .bx-hold{margin-top:8px;width:100%;padding:12px;border-radius:10px;background:#1c1c23;
   border:1px solid #31313d;color:#e8e8ee;font-size:12.5px;font-weight:750}
@@ -164,7 +188,12 @@ details[open] summary::before{transform:rotate(90deg)}
   --lift-s:0 1px 2px rgba(16,16,24,.07);
   --ridge:none;
   --glass:rgba(255,255,255,.80); --glass-rim:rgba(18,18,28,.09);
-  --r-card:13px; --r-ctl:'v6'px;
+  --r-card:13px; --r-ctl:10px;   /* Д-1 (v10): тут стояло значення в лапках (слід прапорця S.ctl) — синтаксично
+     недійсне значення. Недійсна підстановка custom property не «падає в дефолт
+     правила», а робить властивість-споживача invalid at computed-value time,
+     тобто border-radius ставав initial = 0. Наслідок: поле пошуку на СВІТЛІЙ темі
+     прямокутне, на темній (де токен цілий) кругле. Жоден гейт цього не ловив: тегам байдуже, node --check це не CSS,
+     а таблиця мертвих перевіряє СТАН важеля, а не валідність токена. */
   --well:inset 0 1px 2px rgba(16,16,24,.06);
   --well-bg:#F4F4F7;
 }
@@ -264,7 +293,15 @@ details[open] summary::before{transform:rotate(90deg)}
 
 /* ---------- екран ---------- */
 .el-scr{flex:1;overflow:hidden auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
-  padding:0 0 calc(34px + var(--navH,60px) + 12px);position:relative}
+  padding:0 0 calc(34px + var(--navH,60px) + 12px);position:relative;z-index:0}
+/* Д-2 (v10) · ВТЕЧА РЯДКА З-ПІД СПИСКУ.
+   `.el-sw .el-item` має z-index:1. Щоб він лишався локальним, хтось із предків
+   мусить створити КОНТЕКСТ НАШАРУВАННЯ — не створював жоден: .el-sw і .el-scr
+   були position:relative без z-index, .screenbox — relative+overflow (overflow
+   контексту не створює). Найближчим виявився .bx-frame з transform:scale, тобто
+   рядки конкурували напряму з низом: 1 > auto(острівець) і 1 < 12(бульбашка).
+   Симптом рівно такий: список з'їдає острівець і не чіпає «+».
+   `z-index:0` тут — не косметика, а замок контексту. */
 .el-ctxhead{padding:2px 14px 10px;background:var(--canvas);position:sticky;top:0;z-index:5}
 .el-ttl{font-size:25px;font-weight:800;letter-spacing:-.6px;padding:2px 0 11px;overflow:hidden;
   transition:height .2s,opacity .16s,padding .2s}
@@ -286,7 +323,7 @@ details[open] summary::before{transform:rotate(90deg)}
   border:1px solid var(--line);border-radius:99px;background:var(--surface);white-space:nowrap}
 .el-chip[data-mat="flat"]{background:transparent;box-shadow:none}
 .el-chip[data-mat="lift"]{box-shadow:var(--lift-s)}
-.el-chip[data-on="1"]{background:var(--neutral-fill);color:var(--neutral-ink);border-color:transparent}
+/* активний стан чіпа задає [data-onmat] нижче (З2б) — тут навмисно порожньо */
 
 /* ---------- список: КАРТКА (панель) ↔ РЯДОК (аркуш) ---------- */
 .el-list{padding:4px 14px 0;display:flex;flex-direction:column}
@@ -304,9 +341,13 @@ details[open] summary::before{transform:rotate(90deg)}
 .el-meta{font-size:11.5px;color:var(--ink-3);margin-top:8px;display:flex;gap:6px;align-items:center;
   white-space:nowrap;overflow:hidden}
 .el-dot{width:3px;height:3px;border-radius:99px;background:currentColor;opacity:.5;flex:none}
-.el-badge{flex:none;min-width:27px;height:27px;padding:0 7px;border-radius:9px;display:flex;
-  align-items:center;justify-content:center;font-size:13.5px;font-weight:800;
-  background:var(--accent-soft);color:var(--accent)}
+/* v10 · КРОК 6 · бейдж потреб. Додано НЕ за списком — без нього неможливо винести
+   вирок по тінту активного чіпа: критерій там «чи лишився бейдж найгучнішим
+   об'єктом екрана», а порівнювати можна лише те, що обидва рухаються. */
+.el-badge{flex:none;min-width:var(--bd-h,27px);height:var(--bd-h,27px);padding:0 7px;
+  border-radius:var(--bd-r,9px);display:flex;
+  align-items:center;justify-content:center;font-size:var(--bd-size,13.5px);font-weight:800;
+  background:var(--bd-fill);color:var(--accent)}
 .el-badge.zero{background:transparent;color:var(--ink-3);font-weight:600}
 .el-aged{color:var(--ink-2);font-weight:800}
 
@@ -328,14 +369,20 @@ details[open] summary::before{transform:rotate(90deg)}
   color:var(--ink-3);border:1px dashed var(--line-hard);border-radius:99px;padding:5px 11px}
 
 /* ---------- острівець ---------- */
-.el-nav{position:absolute;left:var(--navL,16px);right:calc(var(--navL,16px) + var(--fabS,56px) + var(--fabGap,12px));bottom:34px;height:var(--navH,60px);display:flex;
+/* z-index:12 — парний до .el-fabw. Острівець і бульбашка сидять на одному
+   bottom:34px з тією самою висотою --navH, тобто це ОДНА підсистема; тримати їх
+   у різних шарах означає лишити між ними щілину 1…11, у яку рано чи пізно щось
+   провалиться. Порядок усередині шару вирішує DOM: nav() йде перед fabHTML(). */
+.el-nav{position:absolute;left:var(--navL,16px);right:calc(var(--navL,16px) + var(--fabS,56px) + var(--fabGap,12px));bottom:34px;height:var(--navH,60px);display:flex;z-index:12;
   border-radius:24px;padding:6px;gap:2px;
   background:var(--glass);border:1px solid var(--glass-rim);
   backdrop-filter:blur(12px) saturate(170%);-webkit-backdrop-filter:blur(12px) saturate(170%);
   box-shadow:var(--lift)}
+/* v10 · КРОК 5 · нав-іконки й геометрія низу. --navH був прибитий до 60px,
+   хоча ним міряється і висота бульбашки (--fabS), і нижній відступ списку. */
 .el-nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;border-radius:16px;font-size:10px;font-weight:650;color:var(--ink-3)}
-.el-nav svg{width:19px;height:19px}
+  gap:var(--nv-gap,3px);border-radius:16px;font-size:var(--nv-lbl,10px);font-weight:650;color:var(--ink-3)}
+.el-nav svg{width:var(--nv-sz,19px);height:var(--nv-sz,19px);stroke-width:var(--nv-sw,2)}
 .el-nav button[aria-pressed="true"]{background:var(--raised);color:var(--ink);box-shadow:var(--lift-s)}
 @media(prefers-reduced-transparency:reduce){.el-nav{backdrop-filter:none;-webkit-backdrop-filter:none;background:var(--surface)}}
 @media (prefers-reduced-motion:reduce){.el-ttl,.el-inlinettl{transition:none}}
@@ -355,8 +402,13 @@ details[open] summary::before{transform:rotate(90deg)}
 .el-net .el-nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
 .el-addr{font-size:var(--aSize,12px)}
 .el-meta{font-size:var(--mtSize,11.5px)}
-.el-city{flex:none;font-size:10.5px;font-weight:700;color:var(--ink-3);
-  border:1px solid var(--line);border-radius:99px;padding:2px 7px}
+/* v10 · КРОК 4 · пігулка міста. Було: усе прибито, у родині «анатомія запису»
+   її не існувало. Висота тепер ЯВНА і центрує вміст, а не витікає з padding —
+   інакше вона мовчки повзе щоразу, коли рухається кегль. */
+.el-city{flex:none;height:var(--ct-h,20px);display:inline-flex;align-items:center;
+  font-size:var(--ct-size,10.5px);font-weight:700;color:var(--ct-ink);
+  background:var(--ct-fill);border:1px solid var(--ct-rim);
+  border-radius:var(--ct-r,99px);padding:0 var(--ct-px,7px)}
 .el-age0{color:var(--ink-3)}
 .el-age1{color:var(--ink-2)}
 .el-age2{color:var(--ink);font-weight:800}
@@ -434,21 +486,23 @@ details[open] summary::before{transform:rotate(90deg)}
 /* Тон пігулки — ОДИН важіль на всі матеріали (--hp-bg), глибина — власна в кожного.
    Інакше «на поверхні» і «плаває» відрізняються лише тінню, а тон, який і є справжньою
    причиною «пігулка кричить», не має де жити. */
-.el-hgrp[data-g="surf"]{background:var(--hp-bg);border:1px solid var(--line);
+.el-hgrp[data-g="surf"]{background:var(--hp-bg);border:1px solid var(--hp-rim);
   box-shadow:var(--lift-s);padding:2px}
-.el-hgrp[data-g="well"]{background:var(--hp-bg);border:1px solid var(--line);
+.el-hgrp[data-g="well"]{background:var(--hp-bg);border:1px solid var(--hp-rim);
   box-shadow:var(--well);padding:2px}
-.el-hgrp[data-g="float"]{background:var(--hp-bg);border:1px solid var(--line);
+.el-hgrp[data-g="float"]{background:var(--hp-bg);border:1px solid var(--hp-rim);
   box-shadow:var(--lift);padding:2px}
 /* ПЕРЕВІРКА ЛОКУ «скло тільки внизу» (S7). Не порушення: лок писався проти
    плаваючого верхнього острівця з колапсом, а тут статична пігулка в паперовій шапці.
-   ⚠ Ф-3: прозорість = alpha фону, НІКОЛИ не opacity — інакше backdrop-root уб'є свій же blur. */
-.el-hgrp[data-g="glass"]{background:var(--hp-bg);border:1px solid var(--line);padding:2px;
+   ⚠ Ф-3: прозорість = alpha фону, НІКОЛИ не opacity — інакше backdrop-root уб'є свій же blur.
+   v10 · КРОК 2: скло і контроль ділять ОДНЕ правило матеріалу. Це не економія рядків,
+   а умова валідності вироку §0-2: якщо контроль відрізняється від скла чимось окрім
+   blur, порівняння судить не blur, а суму розбіжностей. */
+.el-hgrp[data-g="glass"],.el-hgrp[data-g="flat"]{background:var(--hp-bg);
+  border:1px solid var(--hp-rim);padding:2px;box-shadow:var(--hp-sh)}
+.el-hgrp[data-g="glass"]{
   backdrop-filter:blur(var(--hp-blur,12px)) saturate(var(--hp-sat,170%));
   -webkit-backdrop-filter:blur(var(--hp-blur,12px)) saturate(var(--hp-sat,170%))}
-/* КОНТРОЛЬ до скла: той самий тон, blur вимкнено. Під статичною шапкою немає
-   скрол-контенту (FINDINGS §1) — якщо оком не відрізниш від glass, питання закрито. */
-.el-hgrp[data-g="flat"]{background:var(--hp-bg);border:1px solid var(--line);padding:2px}
 .el-hgrp[data-g="bare"]{background:transparent;padding:0}
 /* ⚠ ДЕФЕКТ КАСКАДУ (S7). Тут стояло безумовне глушіння фону кнопок усередині
    пігулки — і воно перебивало важіль `hbare` за порядком джерела при рівній вазі
@@ -457,15 +511,33 @@ details[open] summary::before{transform:rotate(90deg)}
    через data-fill="bare", який ставить hbare. Другий випадок того ж класу за сесію
    (перший — ореол-A на .el-fab). */
 .el-hgrp .el-hbtn[data-fill="bare"]{box-shadow:none}
-.el-hdiv{flex:none;width:1px;align-self:stretch;margin:7px 3px;background:var(--line-hard);opacity:.5}
+/* v10 · КРОК 2б · роздільник між кебабом і рештою кнопок.
+   Було: усе прибито — ширина 1px, вріз 7px, зазор 3px, --line-hard і ЩЕ opacity:.5
+   зверху. Дві альфи на одному об'єкті (alpha кольору × opacity) означають, що
+   реальна сила ніде не записана: у паспорт пішло б .18, а на екрані стоїть .09.
+   Тепер альфа одна, живе в кольорі, і роздільна по темах (A39). */
+.el-hdiv{flex:none;width:var(--hdv-w,1px);align-self:stretch;
+  margin:var(--hdv-in,7px) var(--hdv-gap,3px);background:var(--hdv-col);border-radius:99px}
 
 /* --- З2 · чіпи: матеріал окремим важелем, не побічним ефектом тези --- */
 .el-chip[data-mat="out"]{background:transparent;box-shadow:none;border-color:var(--line-hard)}
 .el-chip[data-mat="surf"]{background:var(--surface);box-shadow:var(--lift-s);border-color:var(--line)}
 .el-chip[data-mat="fill"]{background:var(--well-bg);box-shadow:none;border-color:transparent}
-.el-chip[data-on="1"]{background:var(--neutral-fill);color:var(--neutral-ink);border-color:transparent;
-  box-shadow:none}
 
+/* --- З2б · v10 · КРОК 3 · МАТЕРІАЛ АКТИВНОГО СТАНУ (B3, борг із S5) ---
+   Було: активний = суцільна інверсія (--neutral-fill) і крапка. Це не «матеріал»,
+   це максимальна гучність, тому в S5 воно й читалось як «ніякий»: гучність не має
+   градації, її або чути, або ні.
+   Варіант діє ОДНАКОВО на .el-chip і .el-cbtn: це одна мова стану. Розводити їх
+   означало б, що «Локація» активна інакше, ніж чіп у списку, — а вони в одному рядку. */
+[data-onmat="solid"] .el-chip[data-on="1"],[data-onmat="solid"] .el-cbtn[data-on="1"]{
+  background:var(--neutral-fill);color:var(--neutral-ink);border-color:transparent;box-shadow:none}
+[data-onmat="tint"] .el-chip[data-on="1"],[data-onmat="tint"] .el-cbtn[data-on="1"]{
+  background:var(--on-tint);color:var(--on-ink);border-color:var(--on-rim);box-shadow:none}
+[data-onmat="well"] .el-chip[data-on="1"],[data-onmat="well"] .el-cbtn[data-on="1"]{
+  background:var(--well-bg);color:var(--on-ink);border-color:var(--on-rim);box-shadow:var(--on-dep)}
+[data-onmat="mark"] .el-chip[data-on="1"],[data-onmat="mark"] .el-cbtn[data-on="1"]{
+  background:transparent;color:var(--on-ink);border-color:var(--on-rim);box-shadow:none;font-weight:800}
 /* --- З3 · тон дій свайпу (малиновий «Змінити» виїдав око) --- */
 .el-sw-actions[data-t="signal"] .edit{background:var(--accent);color:var(--accent-ink)}
 .el-sw-actions[data-t="signal"] .del{background:#D92B3A;color:#fff}
@@ -528,7 +600,6 @@ details[open] summary::before{transform:rotate(90deg)}
 .el-cbtn[data-mat="out"]{background:transparent;box-shadow:none;border-color:var(--line-hard)}
 .el-cbtn[data-mat="surf"]{background:var(--surface);box-shadow:var(--lift-s);border-color:var(--line)}
 .el-cbtn[data-mat="fill"]{background:var(--well-bg);box-shadow:none;border-color:transparent}
-.el-cbtn[data-on="1"]{background:var(--neutral-fill);color:var(--neutral-ink);border-color:transparent}
 .el-cbtn svg{width:13px;height:13px;flex:none;stroke-width:2.2;opacity:.75}
 .el-cbtn[data-on="1"] svg{opacity:1}
 .el-cbtn .el-cx{margin-right:-3px;opacity:.9}
@@ -888,9 +959,23 @@ details[open] summary::before{transform:rotate(90deg)}
         <button data-v="flat">контроль: заливка</button>
       </div>
       <div class="bx-pick" id="pkHbare" data-dk="hbare"><button data-v="1" aria-pressed="true">пігулка без фону</button><button data-v="0">з фоном</button></div>
-      <div class="bx-lv" data-k="hpTone"><label>тон пігулки <b style="color:#9a9aa8">·&minus; темніше · + світліше</b><i></i></label><input type="range" id="hpTone" min="-25" max="40" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpToneL"><label>тон · СВІТЛА <b style="color:#9a9aa8">·&minus; темніше · + світліше</b><i></i></label><input type="range" id="hpToneL" min="-25" max="40" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpToneD"><label>тон · ТЕМНА <b style="color:#9a9aa8">·+ = tone-lift (A45)</b><i></i></label><input type="range" id="hpToneD" min="-25" max="40" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpRimL"><label>кант · СВІТЛА <b style="color:#9a9aa8">·темний</b><i></i></label><input type="range" id="hpRimL" min="0" max="30" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpRimD"><label>кант · ТЕМНА <b style="color:#9a9aa8">·світлий</b><i></i></label><input type="range" id="hpRimD" min="0" max="60" step="2"><output></output></div>
+      <div class="bx-lv" data-k="hpRidgeL"><label>блік верх · СВІТЛА<i></i></label><input type="range" id="hpRidgeL" min="0" max="30" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpRidgeD"><label>блік верх · ТЕМНА<i></i></label><input type="range" id="hpRidgeD" min="0" max="30" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpElev"><label>тінь: розмиття <b style="color:#9a9aa8">·тільки світла</b><i></i></label><input type="range" id="hpElev" min="0" max="28" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hpShA"><label>тінь: сила <b style="color:#9a9aa8">·тільки світла</b><i></i></label><input type="range" id="hpShA" min="0" max="30" step="1"><output></output></div>
       <div class="bx-lv" data-k="hpBlur"><label>скло: blur<i></i></label><input type="range" id="hpBlur" min="0" max="24" step="1"><output></output></div>
       <div class="bx-lv" data-k="hpSat"><label>скло: saturate<i></i></label><input type="range" id="hpSat" min="100" max="220" step="5"><output></output></div>
+      <div class="bx-note"><b>Що роздільне і чому.</b> Тон, кант, блік і тінь несуть <b>глибину</b> — вони роздільні по темах (A39). <code>blur</code> і <code>saturate</code> несуть <b>оптику</b> й лишились спільними: радіус розмиття геометричний, а не тональний. Якщо девайс покаже розходження — розділити окремим кроком.<br><b>Контроль лишається контролем:</b> <code>заливка</code> отримує тон, кант, блік і тінь ті самі, що й <code>скло</code>. Різниця між ними рівно одна — <code>blur</code>. Інакше вирок §0-2 недійсний.</div>
+      <div class="bx-lv" data-k="hdvIn"><label>роздільник: вріз <b style="color:#9a9aa8">·0 = на всю висоту</b><i></i></label><input type="range" id="hdvIn" min="0" max="14" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hdvW"><label>роздільник: товщина<i></i></label><input type="range" id="hdvW" min="5" max="20" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hdvGap"><label>роздільник: зазор з боків<i></i></label><input type="range" id="hdvGap" min="0" max="10" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hdvAL"><label>роздільник: сила · СВІТЛА<i></i></label><input type="range" id="hdvAL" min="0" max="60" step="1"><output></output></div>
+      <div class="bx-lv" data-k="hdvAD"><label>роздільник: сила · ТЕМНА<i></i></label><input type="range" id="hdvAD" min="0" max="60" step="1"><output></output></div>
+      <div class="bx-note"><b>Вріз, не висота.</b> Роздільник тягнеться на всю висоту пігулки, а <code>вріз</code> підрізає його зверху й знизу симетрично — тому число не треба перераховувати щоразу, коли зміниться висота кнопок (<code>bH</code>). При <code>вріз 0</code> лінія йде від краю до краю й читається як шов, а не як пауза.</div>
       <div class="bx-lv" data-k="hbSw"><label>іконки: вага штриха<i></i></label><input type="range" id="hbSw" min="14" max="26" step="1"><output></output></div>
       <div class="bx-lv" data-k="hbInk"><label>іконки: тон <b style="color:#9a9aa8">·0=приглушені · 100=основне чорнило</b><i></i></label><input type="range" id="hbInk" min="0" max="100" step="5"><output></output></div>
       <div class="bx-lv" data-k="hbSz"><label>іконки: розмір<i></i></label><input type="range" id="hbSz" min="14" max="22" step="1"><output></output></div>
@@ -906,6 +991,39 @@ details[open] summary::before{transform:rotate(90deg)}
         <button data-v="surf">на поверхні</button>
         <button data-v="fill">залиті</button>
       </div>
+      <div class="bx-lv" data-k="ctH"><label>місто: висота <b style='color:#9a9aa8'>·кегль назви + 6</b><i></i></label><input type="range" id="ctH" min="16" max="26" step="1"><output></output></div>
+      <div class="bx-lv" data-k="ctSize"><label>місто: кегль<i></i></label><input type="range" id="ctSize" min="90" max="130" step="5"><output></output></div>
+      <div class="bx-lv" data-k="ctR"><label>місто: радіус <b style='color:#9a9aa8'>·0 = мітка · 16 = капсула</b><i></i></label><input type="range" id="ctR" min="0" max="16" step="1"><output></output></div>
+      <div class="bx-lv" data-k="ctPx"><label>місто: бічні поля<i></i></label><input type="range" id="ctPx" min="4" max="12" step="1"><output></output></div>
+      <div class="bx-lv" data-k="ctRimL"><label>місто: кант · СВІТЛА<i></i></label><input type="range" id="ctRimL" min="0" max="40" step="1"><output></output></div>
+      <div class="bx-lv" data-k="ctRimD"><label>місто: кант · ТЕМНА<i></i></label><input type="range" id="ctRimD" min="0" max="60" step="2"><output></output></div>
+      <div class="bx-lv" data-k="ctFill"><label>місто: заливка <b style='color:#9a9aa8'>·0 = форму несе кант</b><i></i></label><input type="range" id="ctFill" min="0" max="20" step="1"><output></output></div>
+      <div class="bx-lv" data-k="ctInk"><label>місто: чорнило<i></i></label><input type="range" id="ctInk" min="0" max="100" step="5"><output></output></div>
+      <div class="bx-note"><b>Висоту вести від кегля назви, не від абсолюту:</b> робоча прив'язка <code>висота = кегль назви + 6</code>, вилка ±2. При <code>nSize 14</code> це 20px. Інакше пропорція злітає щоразу, коли рухається назва.<br><b>Радіус — це вибір мови, не смаку.</b> Капсула (16) — мова <i>контролів</i>: рівно такий радіус мають фільтр-чіпи над списком, і око читає «це можна натиснути». Мітка (0–6) лишає пігулку в контенті. За тезою «аркуш» ставка на мітку, але судиш ти.</div>
+      <div class="bx-lv" data-k="navH"><label>низ: висота острівця <b style='color:#9a9aa8'>·пара до «+»</b><i></i></label><input type="range" id="navH" min="48" max="76" step="1"><output></output></div>
+      <div class="bx-lv" data-k="nvSz"><label>низ: розмір іконки<i></i></label><input type="range" id="nvSz" min="15" max="24" step="1"><output></output></div>
+      <div class="bx-lv" data-k="nvSw"><label>низ: вага штриха<i></i></label><input type="range" id="nvSw" min="14" max="26" step="1"><output></output></div>
+      <div class="bx-lv" data-k="nvLbl"><label>низ: кегль підпису<i></i></label><input type="range" id="nvLbl" min="80" max="130" step="5"><output></output></div>
+      <div class="bx-lv" data-k="nvGap"><label>низ: зазор іконка↔підпис<i></i></label><input type="range" id="nvGap" min="0" max="8" step="1"><output></output></div>
+      <div class="bx-note"><b>Острівець і «+» — одна підсистема.</b> Три робочі відношення: <b>рівні</b> (<code>navH = fabS</code>) — читаються як одна система; <b>підпорядковане</b> (<code>fabS = navH − 8…10</code>) — «+» другорядний; <b>домінантне</b> (<code>fabS &gt; navH</code>) — «+» найгучніший об'єкт екрана, що для нотатника хибно. Поточні 60/56 — це <code>navH − 4</code>: не рівне і не явно менше, око бачить не ієрархію, а неточність. Рухати по одному (2.8).</div>
+      <div class="bx-lv" data-k="bdH"><label>бейдж: висота<i></i></label><input type="range" id="bdH" min="20" max="34" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bdR"><label>бейдж: радіус <b style='color:#9a9aa8'>·17 = капсула</b><i></i></label><input type="range" id="bdR" min="4" max="17" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bdSize"><label>бейдж: кегль<i></i></label><input type="range" id="bdSize" min="110" max="170" step="5"><output></output></div>
+      <div class="bx-lv" data-k="bdFillL"><label>бейдж: підкладка · СВІТЛА<i></i></label><input type="range" id="bdFillL" min="0" max="30" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bdFillD"><label>бейдж: підкладка · ТЕМНА<i></i></label><input type="range" id="bdFillD" min="0" max="30" step="1"><output></output></div>
+      <div class="bx-note"><b>Це той самий бейдж, яким судиться тінт активного чіпа.</b> Акцент в «аркуші» має одну роботу — числа потреб. Якщо після будь-якої правки бейдж перестав бути найгучнішим на екрані, програла правка, а не бейдж.</div>
+      <div class="bx-pick" id="pkCtlOn" data-dk="ctlOn">
+        <button data-v="solid" aria-pressed="true">активний: суцільний</button>
+        <button data-v="tint">тінт</button>
+        <button data-v="well">втоплений</button>
+        <button data-v="mark">мітка</button>
+      </div>
+      <div class="bx-lv" data-k="ctlOnTintL"><label>тінт: насиченість · СВІТЛА<i></i></label><input type="range" id="ctlOnTintL" min="0" max="30" step="1"><output></output></div>
+      <div class="bx-lv" data-k="ctlOnTintD"><label>тінт: насиченість · ТЕМНА<i></i></label><input type="range" id="ctlOnTintD" min="0" max="30" step="1"><output></output></div>
+      <div class="bx-lv" data-k="ctlOnDep"><label>втоплення: глибина<i></i></label><input type="range" id="ctlOnDep" min="0" max="20" step="1"><output></output></div>
+      <div class="bx-lv" data-k="ctlOnRim"><label>активний: кант<i></i></label><input type="range" id="ctlOnRim" min="0" max="60" step="2"><output></output></div>
+      <div class="bx-lv" data-k="ctlOnInk"><label>активний: чорнило <b style="color:#9a9aa8">·0=приглушене · 100=основне</b><i></i></label><input type="range" id="ctlOnInk" min="0" max="100" step="5"><output></output></div>
+      <div class="bx-note"><b>Чому «суцільний» читався як ніякий.</b> Інверсна заливка — не рівень гучності, а її максимум: градації в неї немає, тому й судити нема що. Три інші варіанти дають стану <b>матеріал</b>, а не яскравість.<br><b>Ризик тінту, який треба тримати в голові.</b> За тезою «аркуш» акцент має <b>одну роботу</b>, і вона вже витрачена — малинові числа потреб. Тінт дає акценту другу роботу; якщо після нього бейдж перестає бути найгучнішим на екрані, варіант програв, хай яким гарним він здається зблизька.</div>
       <div class="bx-pick" id="pkAct" data-dk="actTone">
         <button data-v="signal">дії: сигнальні</button>
         <button data-v="neutral" aria-pressed="true">нейтральні</button>
@@ -927,6 +1045,10 @@ details[open] summary::before{transform:rotate(90deg)}
 
   <button class="bx-hold" id="holdBtn">&#8689; утримувати — показати P0 (control)</button>
   <button class="bx-copy" id="copyBtn">&#128203; Copy-ALL — живі важелі + CSS</button>
+  <div class="bx-lockrow">
+    <button class="bx-lock2" id="lockExp">ЛОК &rarr; valuesLOCK.md</button>
+    <button class="bx-lock2 warn" id="lockRst">скинути ЛОК</button>
+  </div>
   <textarea class="bx-out" id="out" hidden readonly></textarea>
 </div>
 
@@ -954,7 +1076,13 @@ const S = {
   /* wordmark */
   wSize:20, wEq:700, wLe:600, wTrack:-9, eqL:'grad', eqD:'grad', gAng:100, gShift:40,
   /* кнопки шапки */
-  bH:34, bR:18, bfill:'surf', hgrp:'surf', hbare:1, hdiv:1, hpTone:8, hpBlur:12, hpSat:170, hbSw:17, hbInk:55, hbSz:17,
+  bH:34, bR:18, bfill:'surf', hgrp:'surf', hbare:1, hdiv:1, hpBlur:12, hpSat:170,
+  ctH:20, ctSize:105, ctR:16, ctPx:7, ctRimL:14, ctRimD:22, ctFill:0, ctInk:0,
+  navH:60, nvSz:19, nvSw:20, nvLbl:100, nvGap:3,
+  bdH:27, bdR:9, bdSize:135, bdFillL:10, bdFillD:14,
+  ctlOn:'solid', ctlOnTintL:12, ctlOnTintD:16, ctlOnDep:8, ctlOnRim:14, ctlOnInk:100,
+  hdvIn:7, hdvW:10, hdvGap:3, hdvAL:9, hdvAD:10,
+  hpToneL:8, hpToneD:8, hpRimL:14, hpRimD:22, hpRidgeL:8, hpRidgeD:12, hpElev:14, hpShA:6, hbSw:17, hbInk:55, hbSz:17,
   /* анатомія запису */
   nSize:14, nWeight:650, aSize:12.5, mtSize:11.5, rowPadY:11, city:'chip', sort:'need',
   chipMat:'out',
@@ -991,8 +1119,29 @@ const REF = {wSize:'v2.1: 17px', wEq:'v2.1: 800', wLe:'v2.1: 500', wTrack:'v2.1:
   dkL:'v2.1: 3.1 (#08080B)', dkC:'v2.1: 0',
   swTrig:'A22: 44', swSlop:'A22: 10', actW:'A22: 74',
   aL:'v2.1: 68 (#FF5C93)', aS:'v2.1: 100'};
-/* ЛОК-регістр (§3-п.13). EquipLens_head_valuesLOCK.md не існує → порожньо. */
-const LOCKS = {};
+/* ЛОК-регістр (§3-п.13). EquipLens_head_valuesLOCK.md не існує → стартово порожньо.
+   v10: регістр став ЗАПИСУВАНИМ і переживає перезавантаження.
+   ⚠ Ключ сховища НЕСЕ ВЕРСІЮ БІЛДА, але читається і від попередніх версій навмисно:
+     інакше кожен новий стенд викидав би всі вироки, і замок був би марним.
+     Ціна — протухлі ключі (важіль зник, лок лишився). Вони НЕ застосовуються
+     мовчки: LOCK_STALE друкується окремим рядком у паспорті. Мовчазне підхоплення
+     чужих чисел — рівно той клас провалу, проти якого писався §8.7-в. */
+const LOCK_KEY = 'EL_LOCK', LOCK_BUILD = 'v10';
+let LOCKS = {}, LOCK_STALE = [], LOCK_MEM = false;
+function lockLoad(){
+  let raw = null;
+  try { raw = localStorage.getItem(LOCK_KEY); }
+  catch(e){ LOCK_MEM = true; return; }               /* приватне вікно Safari кидає виняток */
+  if (!raw) return;
+  let o; try { o = JSON.parse(raw); } catch(e){ return; }
+  if (!o || typeof o !== 'object') return;
+  Object.keys(o.v || {}).forEach(k => { (k in S) ? LOCKS[k] = o.v[k] : LOCK_STALE.push(k); });
+}
+function lockSave(){
+  if (LOCK_MEM) return;
+  try { localStorage.setItem(LOCK_KEY, JSON.stringify({b:LOCK_BUILD, t:Date.now(), v:LOCKS})); }
+  catch(e){ LOCK_MEM = true; }                        /* деградуємо до сесійного, не валимо стенд */
+}
 
 /* П-3 · оголошена межа правдоподібності */
 const BOUND = {topMin:120, topMax:320, searchMax:48};
@@ -1373,9 +1522,76 @@ function applyVars(){
   s.setProperty('--aSize', S.aSize+'px'); s.setProperty('--mtSize', S.mtSize+'px');
   s.setProperty('--rowPadY', S.rowPadY+'px'); s.setProperty('--headGap', S.headGap+'px');
   /* тон пігулки: накладка на полотно. + світліше (на темній це tone-lift, A45), − темніше. */
-  s.setProperty('--hp-bg', S.hpTone >= 0
-    ? `rgba(255,255,255,${(S.hpTone/100).toFixed(3)})`
-    : `rgba(0,0,0,${(-S.hpTone/100).toFixed(3)})`);
+  /* v10 · КРОК 2 · пігулка шапки роздільна по темах (A39).
+     Розділяється те, що несе ГЛИБИНУ (тон, кант, блік, тінь); спільним лишається
+     те, що несе ОПТИКУ (blur, saturate). Анти-приклад спільних наборів — S6 fabHalo. */
+  const hpT = dark ? S.hpToneD : S.hpToneL;
+  s.setProperty('--hp-bg', hpT >= 0
+    ? `rgba(255,255,255,${(hpT/100).toFixed(3)})`
+    : `rgba(0,0,0,${(-hpT/100).toFixed(3)})`);
+  s.setProperty('--hp-rim', dark
+    ? `rgba(255,255,255,${(S.hpRimD/100).toFixed(2)})`
+    : `rgba(20,20,30,${(S.hpRimL/200).toFixed(3)})`);
+  /* Тінь: A45. На OLED drop-shadow не читається, а елевацію несе ТОН (--hp-bg вище).
+     Тому на темній малюється лише блік по верхньому ребру, а hpElev/hpShA
+     оголошені мертвими в таблиці — не проігноровані мовчки. */
+  const hpParts = [];
+  const ridge = dark ? S.hpRidgeD : S.hpRidgeL;
+  if (ridge > 0) hpParts.push(`inset 0 1px 0 rgba(255,255,255,${(ridge/100).toFixed(2)})`);
+  if (!dark && S.hpElev > 0 && S.hpShA > 0)
+    hpParts.push(`0 2px ${S.hpElev}px rgba(16,16,24,${(S.hpShA/100).toFixed(2)})`);
+  s.setProperty('--hp-sh', hpParts.join(',') || 'none');
+  /* Роздільник. Альфа роздільна по темах: на світлій темна лінія по світлому тлу
+     читається набагато сильніше, ніж світла по темному при тій самій цифрі (A39). */
+  s.setProperty('--hdv-in', S.hdvIn+'px');
+  s.setProperty('--hdv-w', (S.hdvW/10).toFixed(1)+'px');
+  s.setProperty('--hdv-gap', S.hdvGap+'px');
+  s.setProperty('--hdv-col', dark
+    ? `rgba(255,255,255,${(S.hdvAD/100).toFixed(2)})`
+    : `rgba(18,18,28,${(S.hdvAL/100).toFixed(2)})`);
+  /* v10 · КРОК 3 · активний стан контролів.
+     Насиченість роздільна по темах не з симетрії, а з фізики: на темному тлі
+     ТА САМА альфа акценту дає помітно гучніший неон (S — домінантний важіль
+     придушення на темній, не L). Тому вилка темної читається інакше при тому ж числі. */
+  sbox.dataset.onmat = S.ctlOn;
+  const tintA = (dark ? S.ctlOnTintD : S.ctlOnTintL) / 100;
+  s.setProperty('--on-tint', `rgba(228,0,90,${tintA.toFixed(2)})`);
+  s.setProperty('--on-rim', dark
+    ? `rgba(255,255,255,${(S.ctlOnRim/100).toFixed(2)})`
+    : `rgba(18,18,28,${(S.ctlOnRim/200).toFixed(3)})`);
+  /* Втоплення = inset, і ТІЛЬКИ inset. Це мова «поле вводу» з тези аркуша;
+     змішати її з elevation означало б, що активний чіп водночас вдавлений і піднятий. */
+  s.setProperty('--on-dep', S.ctlOnDep > 0
+    ? `inset 0 1px ${S.ctlOnDep/5}px rgba(0,0,0,${dark ? 0.5 : (S.ctlOnDep/100).toFixed(2)})`
+    : 'none');
+  s.setProperty('--on-ink', `color-mix(in srgb, var(--ink) ${S.ctlOnInk}%, var(--ink-2))`);
+  /* Пігулка міста. Кант роздільний по темах (A39): волосяна лінія на світлому тлі
+     при тій самій цифрі читається сильніше, ніж на темному. */
+  s.setProperty('--ct-h', S.ctH+'px');
+  s.setProperty('--ct-size', (S.ctSize/10).toFixed(1)+'px');
+  s.setProperty('--ct-r', S.ctR+'px');
+  s.setProperty('--ct-px', S.ctPx+'px');
+  s.setProperty('--ct-rim', dark
+    ? `rgba(255,255,255,${(S.ctRimD/100).toFixed(2)})`
+    : `rgba(18,18,28,${(S.ctRimL/200).toFixed(3)})`);
+  s.setProperty('--ct-fill', S.ctFill > 0
+    ? (dark ? `rgba(255,255,255,${(S.ctFill/200).toFixed(3)})`
+            : `rgba(18,18,28,${(S.ctFill/400).toFixed(3)})`)
+    : 'transparent');
+  s.setProperty('--ct-ink', `color-mix(in srgb, var(--ink-2) ${S.ctInk}%, var(--ink-3))`);
+  /* Низ. navH — пара до fabS: вони ділять один рядок і одну висоту.
+     Тримати одне важелем, а друге константою означає судити пропорцію наосліп. */
+  s.setProperty('--navH', S.navH+'px');
+  s.setProperty('--nv-sz', S.nvSz+'px');
+  s.setProperty('--nv-sw', (S.nvSw/10).toFixed(1));
+  s.setProperty('--nv-lbl', (S.nvLbl/10).toFixed(1)+'px');
+  s.setProperty('--nv-gap', S.nvGap+'px');
+  /* Бейдж. Підкладка роздільна по темах: на OLED та сама альфа акценту світиться
+     помітно гучніше (S — домінантний важіль придушення на темній). */
+  s.setProperty('--bd-h', S.bdH+'px');
+  s.setProperty('--bd-r', S.bdR+'px');
+  s.setProperty('--bd-size', (S.bdSize/10).toFixed(1)+'px');
+  s.setProperty('--bd-fill', `rgba(228,0,90,${((dark?S.bdFillD:S.bdFillL)/100).toFixed(2)})`);
   s.setProperty('--hp-blur', S.hpBlur+'px'); s.setProperty('--hp-sat', S.hpSat+'%');
   s.setProperty('--hbSw', (S.hbSw/10).toFixed(1)); s.setProperty('--hbSz', S.hbSz+'px');
   s.setProperty('--hbInk', S.hbInk >= 100 ? 'var(--ink)' : S.hbInk <= 0 ? 'var(--ink-3)'
@@ -1577,7 +1793,31 @@ function conds(){
     ['кнопки шапки', 'завжди', true, ['bH','bR']],
     ['фон кнопок', 'кнопки окремо або пігулка з фоном', S.hgrp==='none' || !S.hbare, ['bfill']],
     ['пігулка шапки', 'кнопки згруповані', S.hgrp!=='none', ['hbare','hdiv']],
-    ['тон пігулки', 'пігулка є (будь-який матеріал)', S.hgrp!=='none' && S.hgrp!=='bare', ['hpTone']],
+    ['пігулка міста · геометрія', 'таб має список і місто увімкнено', hasHead && !!S.city, ['ctH','ctSize','ctR','ctPx','ctInk']],
+    ['пігулка міста · кант св.', 'тема = світла, місто увімкнено', !dark && hasHead && !!S.city, ['ctRimL']],
+    ['пігулка міста · кант тем.', 'тема = темна, місто увімкнено', dark && hasHead && !!S.city, ['ctRimD']],
+    ['пігулка міста · заливка', 'місто увімкнено (0 = без заливки, кант несе форму)', hasHead && !!S.city, ['ctFill']],
+    ['низ · геометрія', 'завжди', true, ['navH','nvSz','nvSw','nvLbl','nvGap']],
+    ['бейдж · геометрія', 'таб має список', hasHead, ['bdH','bdR','bdSize']],
+    ['бейдж · підкладка св.', 'тема = світла і таб має список', !dark && hasHead, ['bdFillL']],
+    ['бейдж · підкладка тем.', 'тема = темна і таб має список', dark && hasHead, ['bdFillD']],
+    ['тінт активного · св.', 'тема = світла і активний = тінт', !dark && S.ctlOn==='tint', ['ctlOnTintL']],
+    ['тінт активного · тем.', 'тема = темна і активний = тінт', dark && S.ctlOn==='tint', ['ctlOnTintD']],
+    ['втоплення активного', 'активний = втоплений', S.ctlOn==='well', ['ctlOnDep']],
+    ['кант активного', 'активний ≠ суцільний (у суцільного кант прозорий за визначенням)', S.ctlOn!=='solid', ['ctlOnRim']],
+    ['чорнило активного', 'активний ≠ суцільний (у суцільного чорнило задає інверсія)', S.ctlOn!=='solid', ['ctlOnInk']],
+    ['роздільник · геометрія', 'кнопки згруповані і роздільник увімкнено', S.hgrp!=='none' && !!S.hdiv, ['hdvIn','hdvW','hdvGap']],
+    ['роздільник · св.', 'тема = світла і роздільник увімкнено', !dark && S.hgrp!=='none' && !!S.hdiv, ['hdvAL']],
+    ['роздільник · тем.', 'тема = темна і роздільник увімкнено', dark && S.hgrp!=='none' && !!S.hdiv, ['hdvAD']],
+    ['тон пігулки · св.', 'тема = світла і пігулка є', !dark && S.hgrp!=='none' && S.hgrp!=='bare', ['hpToneL']],
+    ['тон пігулки · тем.', 'тема = темна і пігулка є', dark && S.hgrp!=='none' && S.hgrp!=='bare', ['hpToneD']],
+    ['кант пігулки · св.', 'тема = світла і пігулка є', !dark && S.hgrp!=='none' && S.hgrp!=='bare', ['hpRimL']],
+    ['кант пігулки · тем.', 'тема = темна і пігулка є', dark && S.hgrp!=='none' && S.hgrp!=='bare', ['hpRimD']],
+    ['блік верху · св.', 'тема = світла і матеріал скло/заливка', !dark && (S.hgrp==='glass'||S.hgrp==='flat'), ['hpRidgeL']],
+    ['блік верху · тем.', 'тема = темна і матеріал скло/заливка', dark && (S.hgrp==='glass'||S.hgrp==='flat'), ['hpRidgeD']],
+    /* A45: на темній елевацію несе ТОН, не тінь. Це не «забули підключити» —
+       drop-shadow на OLED не читається, і важіль тут був би мертвим за версткою (§8.7-б). */
+    ['тінь пігулки', 'тема = світла і матеріал скло/заливка (A45: на темній глибина = тон)', !dark && (S.hgrp==='glass'||S.hgrp==='flat'), ['hpElev','hpShA']],
     ['скло пігулки', 'матеріал = скло', S.hgrp==='glass', ['hpBlur','hpSat']],
     ['чіпи', 'таб має список', hasHead, ['chipMat']],
     ['тон дій свайпу', 'таб має список', hasHead, ['actTone']],
@@ -1600,7 +1840,7 @@ function paintDead(){
     `<div class="bx-dt"><span>${a}</span><span>${b}</span>
      <span style="color:${ok?'#7fd18a':'#8a8a96'}">${ok?'живий':'мертвий'}</span></div>`).join('');
   const T = THESIS[S.thesis];
-  document.querySelectorAll('#pkMat button,#pkRow button,#pkChip button').forEach(b => {
+  document.querySelectorAll('#pkMat button:not(.bx-lock),#pkRow button:not(.bx-lock),#pkChip button:not(.bx-lock)').forEach(b => {
     const key = b.closest('.bx-pick').dataset.dk;
     b.classList.toggle('bx-ovr', S[key] !== T[key]);
   });
@@ -1623,12 +1863,64 @@ function measure(){
   const T = THESIS[S.thesis];
   const ovr = Object.keys(T).filter(k => S[k] !== T[k]).length;
   const total = document.querySelectorAll('[data-k],[data-dk]').length;
+  const drift = Object.keys(LOCKS).filter(k => String(LOCKS[k]) !== String(S[k])).length;
+  markAllLocks();
   document.getElementById('meter').innerHTML =
     `верхня зона <b>${h}px</b> · <b class="${pc>=28?'bx-warn':''}">${pc}%</b>${verdict}${seBad}` +
     ` <span class="bx-part">статус <b>${hSt}</b> · шапка <b>${hAb}</b> · верх <b>${hCh}</b></span>` +
     ` <span class="bx-dim">· теза ${S.thesis==='sheet'?'аркуш':'панель'}${ovr?` · <b class="bx-warn">перебито ${ovr}</b>`:''}</span>` +
-    ` <span class="bx-dim">· ЛОК ${Object.keys(LOCKS).length}/${total}</span>` +
+    ` <span class="bx-dim">· ЛОК ${Object.keys(LOCKS).length}/${total}` +
+      `${drift ? ` · <b class="bx-warn">зсунуто ${drift}</b>` : ''}` +
+      `${LOCK_STALE.length ? ` · <b class="bx-warn">протухло ${LOCK_STALE.length}</b>` : ''}` +
+      `${LOCK_MEM ? ' · <b class="bx-warn">без сховища</b>' : ''}</span>` +
     ` <span class="bx-dim">· ${S.mark==='none'?'Н4':S.mark.toUpperCase()}/${S.comp.toUpperCase()}</span>`;
+}
+
+/* ============ ЗАМОК (v10 · крок 0) ============
+   Три стани, не два. `off` — вироку немає. `on` — вирок є і значення на ньому.
+   `drift` — вирок є, а важіль з нього зсунуто: це НЕ помилка, це нормальний хід
+   раунду, але воно мусить бути ВИДИМИМ, інакше «я ж залочив» через дві сесії. */
+const LOCK_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true">'
+  + '<rect x="4.5" y="10.5" width="15" height="9.5" rx="2.5"/>'
+  + '<path class="sh" d="M8 10.5V7.2a4 4 0 0 1 8 0v3.3"/></svg>';
+
+function lockState(k){
+  if (!(k in LOCKS)) return 'off';
+  return String(LOCKS[k]) === String(S[k]) ? 'on' : 'drift';
+}
+function lockToggle(k){
+  if (k in LOCKS) delete LOCKS[k]; else LOCKS[k] = S[k];
+  lockSave(); markAllLocks(); measure();
+}
+function installLocks(){
+  document.querySelectorAll('.bx-lv[data-k]').forEach(row => {
+    if (row.querySelector('.bx-lock')) return;
+    const b = document.createElement('button');
+    b.className = 'bx-lock'; b.innerHTML = LOCK_SVG; b.dataset.lk = row.dataset.k;
+    row.appendChild(b);
+  });
+  document.querySelectorAll('.bx-pick[data-dk]').forEach(p => {
+    if (p.querySelector('.bx-lock')) return;
+    const b = document.createElement('button');
+    b.className = 'bx-lock'; b.innerHTML = LOCK_SVG; b.dataset.lk = p.dataset.dk;
+    p.appendChild(b);
+  });
+  document.addEventListener('click', e => {
+    const b = e.target.closest('.bx-lock'); if (!b) return;
+    e.stopPropagation(); lockToggle(b.dataset.lk);
+  }, true);   /* capture: інакше клік дійде до pick() і той запише undefined у S */
+}
+function markAllLocks(){
+  document.querySelectorAll('.bx-lock').forEach(b => {
+    const k = b.dataset.lk, st = lockState(k);
+    b.dataset.st = st;
+    b.setAttribute('aria-label', st === 'off' ? 'Зафіксувати ' + k
+      : st === 'on' ? 'Знято фіксацію ' + k : 'ЛОК ' + LOCKS[k] + ' · зараз ' + S[k]);
+    b.title = b.getAttribute('aria-label');
+    const host = b.closest('.bx-lv') || b.closest('.bx-pick');
+    if (host) host.classList.toggle('is-drift', st === 'drift');
+  });
+  document.querySelectorAll('.bx-lv[data-k]').forEach(r => markLock(r, r.dataset.k));
 }
 
 /* ============ важелі ============ */
@@ -1649,7 +1941,7 @@ function slider(id, fmt, live){
 function syncPicks(){
   document.querySelectorAll('.bx-pick').forEach(p => {
     const key = p.dataset.dk; if (!key) return;
-    p.querySelectorAll('button').forEach(b =>
+    p.querySelectorAll('button:not(.bx-lock)').forEach(b =>
       b.setAttribute('aria-pressed', String(String(S[key]) === b.dataset.v)));
   });
   document.querySelectorAll('#pkThesis button').forEach(b =>
@@ -1659,6 +1951,7 @@ function pick(id, key){
   const el = document.getElementById(id); if (!el) return;
   el.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
+    if (b.classList.contains('bx-lock') || b.dataset.v === undefined) return;
     S[key] = isNaN(+b.dataset.v) ? b.dataset.v : +b.dataset.v;
     if (key === 'srch') srchOpen = false;
     if (key === 'sort'){ SRT.ph.k = S.sort; SRT.eq.k = S.sort; }
@@ -1666,6 +1959,11 @@ function pick(id, key){
     syncPicks(); render();
   });
 }
+/* Порядок обов'язковий: регістр → кнопки → ініціалізація важелів.
+   slider() усередині кличе markLock, а той читає LOCKS — інакше перший малюнок
+   покаже «нема ЛОКу» на залочених рядках і оператор вирішить, що лок не зберігся. */
+lockLoad(); installLocks();
+
 [['dkH',v=>v+'°',1],['dkC',v=>v+'%',1],['dkL',v=>v.toFixed(1)+'%',1],['dkS',v=>'+'+v.toFixed(1),1],
  ['dkR',v=>'+'+v.toFixed(1),1],['dkI',v=>v+'%',1],
  ['wY',v=>v+'px',1],['wB',v=>v+'px',1],['wA',v=>(v/100).toFixed(2),1],['wMixL',v=>v+'%',1],
@@ -1681,7 +1979,7 @@ function pick(id, key){
  ['bH',v=>v+'px',1],['bR',v=>v+'px',1],
  ['nSize',v=>v+'px',1],['nWeight',null,1],['aSize',v=>v+'px',1],['mtSize',v=>v+'px',1],
  ['rowPadY',v=>v+'px',1],['headGap',v=>v+'px',1],
- ['fabS',v=>v+'px',1],['hpTone',v=>(v>0?'+':'')+v,1],['hpBlur',v=>v+'px',1],['hpSat',v=>v+'%',1],['hbSw',v=>(v/10).toFixed(1),1],['hbInk',v=>v+'%',1],['hbSz',v=>v+'px',1],['fabGap',v=>v+'px',1],['fabShA',v=>(v/100).toFixed(2),1],
+ ['fabS',v=>v+'px',1],['ctH',v=>v+'px',1],['ctSize',v=>(v/10).toFixed(1)+'px',1],['ctR',v=>v+'px',1],['ctPx',v=>v+'px',1],['ctRimL',v=>(v/200).toFixed(3),1],['ctRimD',v=>(v/100).toFixed(2),1],['ctFill',v=>v+'',1],['ctInk',v=>v+'%',1],['navH',v=>v+'px',1],['nvSz',v=>v+'px',1],['nvSw',v=>(v/10).toFixed(1),1],['nvLbl',v=>(v/10).toFixed(1)+'px',1],['nvGap',v=>v+'px',1],['bdH',v=>v+'px',1],['bdR',v=>v+'px',1],['bdSize',v=>(v/10).toFixed(1)+'px',1],['bdFillL',v=>(v/100).toFixed(2),1],['bdFillD',v=>(v/100).toFixed(2),1],['ctlOnTintL',v=>(v/100).toFixed(2),1],['ctlOnTintD',v=>(v/100).toFixed(2),1],['ctlOnDep',v=>v+'',1],['ctlOnRim',v=>(v/100).toFixed(2),1],['ctlOnInk',v=>v+'%',1],['hdvIn',v=>v+'px',1],['hdvW',v=>(v/10).toFixed(1)+'px',1],['hdvGap',v=>v+'px',1],['hdvAL',v=>(v/100).toFixed(2),1],['hdvAD',v=>(v/100).toFixed(2),1],['hpToneL',v=>(v>0?'+':'')+v,1],['hpToneD',v=>(v>0?'+':'')+v,1],['hpRimL',v=>(v/200).toFixed(3),1],['hpRimD',v=>(v/100).toFixed(2),1],['hpRidgeL',v=>(v/100).toFixed(2),1],['hpRidgeD',v=>(v/100).toFixed(2),1],['hpElev',v=>v+'px',1],['hpShA',v=>(v/100).toFixed(2),1],['hpBlur',v=>v+'px',1],['hpSat',v=>v+'%',1],['hbSw',v=>(v/10).toFixed(1),1],['hbInk',v=>v+'%',1],['hbSz',v=>v+'px',1],['fabGap',v=>v+'px',1],['fabShA',v=>(v/100).toFixed(2),1],
  ['actW',v=>v+'px',1],['swTrig',v=>v+'px',1],['swSlop',v=>v+'px',1],
  ['n5w1',v=>v+'%',0],['n5w2',v=>v+'%',0],['n5w3',v=>v+'%',0],
  ['aH',v=>v+'°',1],['aS',v=>v+'%',1],['aL',v=>v+'%',1],['aSoft',v=>v+'%',1],
@@ -1700,7 +1998,7 @@ pick('pkBfill','bfill'); pick('pkCity','city'); pick('pkSort','sort'); pick('pkS
 pick('pkCtl','ctl'); pick('pkLocS','locSurf'); pick('pkFabE','fabEdge'); pick('pkAlign','fabAlign'); pick('pkHand','hand'); pick('pkShT','fabShTint'); pick('pkShPos','shPos');
 pick('pkPaint','n5Paint');
 pick('pkHgrp','hgrp'); pick('pkHbare','hbare'); pick('pkHdiv','hdiv');
-pick('pkChip','chipMat'); pick('pkAct','actTone'); pick('pkFabT','fabTone');
+pick('pkChip','chipMat'); pick('pkCtlOn','ctlOn'); pick('pkAct','actTone'); pick('pkFabT','fabTone');
 
 document.getElementById('pkThesis').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -1879,7 +2177,10 @@ document.getElementById('copyBtn').addEventListener('click', () => {
 варіант: phone-single-frame (§2-п.0 — крутиться з телефона)
 девайс: ${frame.classList.contains('p15')?'15 Pro 393x852':'XS 375x812'} · тема: ${themeMode} · таб: ${tab} · дані: ${dataOn?'є':'немає'}
 теза: ${S.thesis} · перебито: ${Object.keys(THESIS[S.thesis]).filter(k=>S[k]!==THESIS[S.thesis][k]).join(', ')||'—'}
-ЛОК-покриття: ${Object.keys(LOCKS).length}/${total}
+ЛОК-покриття: ${Object.keys(LOCKS).length}/${total}${LOCK_MEM?' ⚠ СХОВИЩЕ НЕДОСТУПНЕ — лок лише на цю сесію':''}
+ЗАЛОЧЕНО = ${JSON.stringify(Object.fromEntries(Object.keys(LOCKS).sort().map(k=>[k,LOCKS[k]])))}
+ЗСУНУТО З ЛОКУ: ${Object.keys(LOCKS).filter(k=>String(LOCKS[k])!==String(S[k])).map(k=>`${k} ЛОК ${LOCKS[k]} → ${S[k]}`).join(' · ') || '—'}
+ПРОТУХЛІ ключі сховища (важеля вже немає): ${LOCK_STALE.join(', ') || '—'}
 мертві важелі ВИКЛЮЧЕНО: ${[...d].join(', ') || '—'}
 ⚠ НЕ СУДИЛОСЬ НА ЦІЙ ТЕМІ (потрібен окремий раунд на ${dark?'світлій':'темній'}): ${themeDead.join(' · ') || '—'}
 
@@ -1902,11 +2203,59 @@ CSS · тема ${dark?'темна':'світла'}:${cssDark}
 --accent-ink:${S.aL>56?hsl(S.aH,55,10):'#FFFFFF'};`:''}
 .el-wm{font-size:${S.wSize}px;letter-spacing:${(S.wTrack/10).toFixed(2)}px}
 .el-hbtn{height:${S.bH}px;min-width:${S.bH}px;border-radius:${S.bR}px} /* fill=${S.bfill} */
-.el-hgrp{--hp-bg:тон ${S.hpTone>0?'+':''}${S.hpTone}} /* матеріал ${S.hgrp}${S.hgrp==='glass'?' · blur '+S.hpBlur+'px sat '+S.hpSat+'%':''} */
+.el-hgrp{--hp-bg:тон ${(dark?S.hpToneD:S.hpToneL)>0?'+':''}${dark?S.hpToneD:S.hpToneL}; --hp-rim:${dark?(S.hpRimD/100).toFixed(2):(S.hpRimL/200).toFixed(3)}; блік ${((dark?S.hpRidgeD:S.hpRidgeL)/100).toFixed(2)}${!dark?`; тінь 0 2px ${S.hpElev}px ${(S.hpShA/100).toFixed(2)}`:'; тінь НЕМАЄ (A45: глибина = тон)'}}
+.el-city{h ${S.ctH}px; кегль ${(S.ctSize/10).toFixed(1)}px; r ${S.ctR}px; кант ${dark?(S.ctRimD/100).toFixed(2):(S.ctRimL/200).toFixed(3)}; заливка ${S.ctFill||'нема'}; чорнило ${S.ctInk}%}
+.el-nav{--navH:${S.navH}px; іконка ${S.nvSz}px/${(S.nvSw/10).toFixed(1)}; підпис ${(S.nvLbl/10).toFixed(1)}px; зазор ${S.nvGap}px} /* «+» ${S.fabS}px — пара до navH */
+.el-badge{h ${S.bdH}px; r ${S.bdR}px; кегль ${(S.bdSize/10).toFixed(1)}px; підкладка ${((dark?S.bdFillD:S.bdFillL)/100).toFixed(2)}}
+/* активний стан контролів: ${S.ctlOn}${S.ctlOn==='tint'?' · тінт '+((dark?S.ctlOnTintD:S.ctlOnTintL)/100).toFixed(2):''}${S.ctlOn==='well'?' · глибина '+S.ctlOnDep:''}${S.ctlOn!=='solid'?' · кант '+(dark?(S.ctlOnRim/100).toFixed(2):(S.ctlOnRim/200).toFixed(3))+' · чорнило '+S.ctlOnInk+'%':''} */
+.el-hdiv{width:${(S.hdvW/10).toFixed(1)}px; вріз ${S.hdvIn}px; зазор ${S.hdvGap}px; сила ${dark?(S.hdvAD/100).toFixed(2):(S.hdvAL/100).toFixed(2)}}
+/* матеріал ${S.hgrp}${S.hgrp==='glass'?' · blur '+S.hpBlur+'px sat '+S.hpSat+'%':''}${S.hgrp==='flat'?' · КОНТРОЛЬ: усе те саме, крім blur':''} */
 .el-hbtn svg{width:${S.hbSz}px;stroke-width:${(S.hbSw/10).toFixed(1)}} /* чорнило ${S.hbInk}% */`;
   const out = document.getElementById('out');
   out.hidden = false; out.value = txt; out.select();
   if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(()=>{});
+});
+
+/* ---- ЛОК → тіло EquipLens_head_valuesLOCK.md ----
+   Окрема кнопка, а не рядок у Copy-ALL: паспорт — це ЗРІЗ РАУНДУ (усе живе,
+   разом зі сміттям, яке ще крутиться), а valuesLOCK — тільки вироки.
+   Змішувати їх означає, що в канон поїде половина нерозсудженого. */
+document.getElementById('lockExp').addEventListener('click', () => {
+  const keys = Object.keys(LOCKS).sort();
+  const drift = keys.filter(k => String(LOCKS[k]) !== String(S[k]));
+  const dark = effTheme() === 'dark';
+  const txt =
+`> живе доки: до порту чисел у білд b1 (Ф3) — далі дублює канон і йде в archive/
+
+# EquipLens · head valuesLOCK
+
+**Джерело:** headbench ${LOCK_BUILD} · ${new Date().toISOString().slice(0,10)} ·
+девайс ${frame.classList.contains('p15')?'15 Pro':'XS'} · тема на момент експорту: ${dark?'темна':'світла'}
+
+> ⚠ **Це вироки стенда, не канон.** Канон = device-підтверджений патч у справжньому
+> продукті (wsd). Три стани числа: покручено → залочено (цей файл) → канонізовано.
+> Число з цього файла можна портувати, але не можна цитувати як залочене в продукті.
+
+| ключ | ЛОК | зараз у стенді |
+|---|---|---|
+${keys.map(k => `| \`${k}\` | ${LOCKS[k]} | ${String(LOCKS[k])===String(S[k]) ? '=' : '**'+S[k]+'** ⚠'} |`).join('\n') || '| — | — | — |'}
+
+**Залочено:** ${keys.length} · **зсунуто після фіксації:** ${drift.length}${drift.length?` (${drift.join(', ')})`:''}
+**Протухлі ключі сховища:** ${LOCK_STALE.join(', ') || '—'}
+
+⚠ Теми судяться окремо (wsd 2.8). Ключі, залочені на одній темі, для другої
+не є вироком — експортувати після раунду на КОЖНІЙ темі й звіряти.
+`;
+  const out = document.getElementById('out');
+  out.hidden = false; out.value = txt; out.select();
+  if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(()=>{});
+});
+
+document.getElementById('lockRst').addEventListener('click', () => {
+  const n = Object.keys(LOCKS).length;
+  if (!n && !LOCK_STALE.length){ alert('ЛОК порожній — скидати нічого.'); return; }
+  if (!confirm(`Зняти ${n} фіксацій${LOCK_STALE.length?` і ${LOCK_STALE.length} протухлих ключів`:''}? Дію не відкотити.`)) return;
+  LOCKS = {}; LOCK_STALE = []; lockSave(); markAllLocks(); measure();
 });
 
 const qbtn = document.getElementById('qbtn'), info = document.getElementById('info');
