@@ -78,6 +78,16 @@ svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-l
   font-size:14px;line-height:1.4}
 .bx-frame.xs .screenbox{width:375px;height:812px}
 .bx-frame.p15 .screenbox{width:393px;height:852px}
+/* v17 · К1 · ФОН-АВРОРА — носій.
+   Правило стоїть ОКРЕМО і НИЖЧЕ за джерелом, ніж `.screenbox{background:var(--canvas)}`:
+   скорочення `background` неявно скидає `background-image`, тож зворотний порядок
+   дав би мовчазне обнулення (той самий клас, що `background-clip` у A101 п.3).
+   Чому background-image, а не окремий шар — дві механічні причини:
+   1) позиціонований `::before` малювався б НАД статичним `.el-scr` і накрив би
+      список. Прошарку «під склом, але над полотном» на цій розмітці не існує;
+   2) `background-image` не робить елемент backdrop-root, а шар з `opacity` зробив би
+      і вбив би скло над собою (Ф-3). */
+.screenbox{background-image:var(--bg-aur,none)}
 .bx-cut{position:absolute;left:50%;transform:translateX(-50%);background:#000;z-index:30}
 .bx-frame.xs .bx-cut{top:11px;width:209px;height:30px;border-radius:0 0 19px 19px}
 .bx-frame.p15 .bx-cut{top:22px;width:125px;height:36px;border-radius:99px}
@@ -1027,6 +1037,31 @@ details[open] summary::before{transform:rotate(90deg)}
   </details>
 
   <details>
+    <summary>Ф &middot; фон екрана &mdash; підкладка скла (v17 &middot; К1)</summary>
+    <div class="bx-grp">
+      <div class="bx-pick" id="pkBg" data-dk="bg">
+        <button data-v="sheet" aria-pressed="true">аркуш</button>
+        <button data-v="all">аврора всюди</button>
+        <button data-v="chrome">аврора під хромом</button>
+      </div>
+      <div class="bx-note"><b>Що тут судиться.</b> Не краса фону, а <b>чи є що заломлювати</b>. <code>backdrop-filter</code> не має власного вигляду &mdash; його дає підкладка (<code>A100</code>); на плоскому полотні скло вироджується в напівпрозору заливку. <b>Аркуш</b> = чинний стан. <b>Під хромом</b> = ті самі еліпси, зсунуті в зони острівця й шапки: середина полотна лишається аркушем.<br><b>⚠ Судити в тому режимі списку, який піде в продукт.</b> У <code>картки</code> плитки непрозорі й накривають фон, у <code>ряди</code> &mdash; прозорі. Та сама аврора дасть дві різні картинки, і це не баг, а <code>A100</code>.</div>
+      <div class="bx-lv" data-k="bgH1"><label>еліпс 1 &middot; відтінок <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgH2"><label>еліпс 2 &middot; відтінок <b style="color:#9a9aa8">·теплий у GlassKit</b><i></i></label><input type="range" id="bgH2" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgH3"><label>еліпс 3 &middot; відтінок <b style="color:#9a9aa8">·верх</b><i></i></label><input type="range" id="bgH3" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgA1L"><label>еліпс 1 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA1L" min="0" max="45" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgA2L"><label>еліпс 2 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA2L" min="0" max="45" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgA3L"><label>еліпс 3 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA3L" min="0" max="45" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgA1D"><label>еліпс 1 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA1D" min="0" max="45" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgA2D"><label>еліпс 2 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA2D" min="0" max="45" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgA3D"><label>еліпс 3 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA3D" min="0" max="45" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgSpread"><label>розмах плям <b style="color:#9a9aa8">·% від базового стопу</b><i></i></label><input type="range" id="bgSpread" min="40" max="160" step="5"><output></output></div>
+      <div class="bx-lv" data-k="bgTiltL"><label>нахил яскравості &middot; <b style="color:#9a9aa8">СВІТЛА · 170°, верх світліший</b><i></i></label><input type="range" id="bgTiltL" min="0" max="14" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgTiltD"><label>нахил яскравості &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgTiltD" min="0" max="14" step="1"><output></output></div>
+      <div class="bx-note"><b>Відтінки спільні, сили роздільні.</b> Відтінок несе <b>ідентичність</b> &mdash; він однаковий в обох темах, бо це та сама атмосфера. Сила несе <b>глибину</b> &mdash; вона роздільна за <code>A39</code>. Світлота еліпса теж перемикається темою всередині (світла 70 / темна 55): на темній канві світлий еліпс читався б як засвітка, а не як повітря.<br><b>Числа &mdash; гіпотеза, не лок.</b> Стартові значення конвертовані з <code>FX-5e</code> (GlassKit). Їхня палітра &mdash; петроль і бурштин; бренд EquipLens інший, тому відтінок тут повноцінний важіль, а не константа.</div>
+    </div>
+  </details>
+
+  <details>
     <summary>M &middot; шапка, чіпи, тон дій і кнопки &laquo;+&raquo;</summary>
     <div class="bx-grp">
       <div class="bx-pick" id="pkHgrp" data-dk="hgrp">
@@ -1165,6 +1200,12 @@ const S = {
   ctlOn:'tint', ctlOnTintL:12, ctlOnTintD:18, ctlOnDep:8, ctlOnRim:20, ctlOnInk:80,
   hdvIn:5, hdvW:10, hdvGap:3, hdvAL:14, hdvAD:14,
   hpToneL:8, hpToneD:5, hpRimL:14, hpRimD:10, hpRidgeL:28, hpRidgeD:24, hpElev:8, hpShA:7, hpShY:1, hbSw:18, hbInkL:55, hbInkD:65, hbSz:17,
+  /* v17 · К1 · фон екрана. Дефолт `sheet` = ЧИННИЙ стан: раунд стартує з того,
+     що вже є, а не з чужої гіпотези. Числа нижче — конвертовані з FX-5e
+     (GlassKit) і живуть як СТАРТОВА позиція повзунка, не як лок. */
+  bg:'sheet', bgH1:180, bgH2:34, bgH3:190, bgSpread:100,
+  bgA1L:15, bgA2L:10, bgA3L:12, bgA1D:25, bgA2D:12, bgA3D:18,
+  bgTiltL:0, bgTiltD:0,
   /* анатомія запису */
   nSize:14, nWeight:650, aSize:12.5, mtSize:11.5, rowPadY:11, city:'chip', sort:'need',
   chipMat:'out',
@@ -1649,6 +1690,39 @@ function render(){
 }
 
 /* ---- токени з важелів ---- */
+/* v17 · К1 · ОДНЕ джерело шарів аврори.
+   Функція навмисно спільна для applyVars() і cssPassport(): якби кожен збирав
+   рядок сам, паспорт розійшовся б зі стендом мовчки — рівно той дефект, проти
+   якого cssPassport і став іменованою функцією (v11, §3-Б S8).
+
+   Позиції — це і Є режим, тому вони прибиті, а не важелі:
+   `all`    — розкладка GlassKit: варіація по всій площі;
+   `chrome` — ті самі еліпси, зсунуті в зони хрому (низ + шапка). Середина
+              полотна лишається аркушем, теза MASTER_LOCK §10 не порушується.
+   Третій стовпчик = стоп прозорості у %, його масштабує bgSpread. */
+const AUR = {
+  all:    [[20,40,55],[80,65,50],[50,20,50]],
+  chrome: [[50,97,42],[85,88,34],[50,3,30]]
+};
+function aurLayers(dark){
+  if (S.bg === 'sheet' || !AUR[S.bg]) return '';
+  const hu = [S.bgH1, S.bgH2, S.bgH3];
+  const al = dark ? [S.bgA1D, S.bgA2D, S.bgA3D] : [S.bgA1L, S.bgA2L, S.bgA3L];
+  /* Світлота еліпса роздільна по темах — на темній канві світлий еліпс мусить
+     бути темнішим, інакше він читається як засвітка, а не як атмосфера (A39). */
+  const lt = dark ? 55 : 70, sp = S.bgSpread / 100;
+  const L = AUR[S.bg].map((p, i) =>
+    `radial-gradient(ellipse at ${p[0]}% ${p[1]}%, `
+    + `${hsl(hu[i], 65, lt, (al[i] / 100).toFixed(3))} 0, `
+    + `transparent ${Math.round(p[2] * sp)}%)`);
+  /* Нахил — окремий носій: не пляма, а перепад яскравості по всій площі.
+     Останнім шаром, бо він найглибший (перший шар малюється зверху). */
+  const t = (dark ? S.bgTiltD : S.bgTiltL) / 100;
+  if (t > 0) L.push(`linear-gradient(170deg,rgba(255,255,255,${t.toFixed(3)}) 0%,`
+    + `rgba(255,255,255,0) 55%,rgba(0,0,0,${t.toFixed(3)}) 100%)`);
+  return L.join(',');
+}
+
 function applyVars(){
   const s = sbox.style, dark = effTheme() === 'dark';
   s.setProperty('--msize', S.mSize+'px'); s.setProperty('--msw', S.mSw);
@@ -1864,6 +1938,12 @@ function applyVars(){
     s.setProperty('--well', `inset 0 ${S.wY}px ${S.wB}px rgba(16,16,24,${(S.wA/100).toFixed(2)})`);
     s.setProperty('--well-bg', mixHex('#FFFFFF', '#EFEFF3', S.wMixL/100));
   }
+  /* v17 · К1. removeProperty, а не 'none': порожня змінна лишила б у каскаді
+     недійсне значення, а фолбек `var(--bg-aur,none)` спрацьовує тільки на
+     ВІДСУТНІЙ властивості, не на порожній. */
+  const aur = aurLayers(dark);
+  if (aur) s.setProperty('--bg-aur', aur); else s.removeProperty('--bg-aur');
+
   const a = dark ? [S.aH, S.aS, S.aL] : [S.aHL, S.aSL, S.aLL];
   s.setProperty('--gang', S.gAng+'deg');
   s.setProperty('--g1', hsl(a[0], a[1], a[2]));
@@ -2019,6 +2099,9 @@ function conds(){
     ['Н2 рядок', 'знак = Н2', S.mark==='n2', ['n2Lines','n2Stub']],
     ['Н3 виріз', 'знак = Н3', S.mark==='n3', ['n3W','n3H']],
     ['Н5 лоток', 'знак = Н5', S.mark==='n5', ['n5Cut','n5Gap','n5Tray','n5TrayW','n5Lines','n5Paint']],
+    ['фон · відтінки й розмах', 'фон ≠ аркуш', S.bg!=='sheet', ['bgH1','bgH2','bgH3','bgSpread']],
+    ['фон · сили · св.', 'фон ≠ аркуш і тема = світла', S.bg!=='sheet' && !dark, ['bgA1L','bgA2L','bgA3L','bgTiltL']],
+    ['фон · сили · тем.', 'фон ≠ аркуш і тема = темна', S.bg!=='sheet' && dark, ['bgA1D','bgA2D','bgA3D','bgTiltD']],
     ['кнопки шапки', 'завжди', true, ['bH','bR']],
     ['фон кнопок', 'кнопки окремо або пігулка з фоном', S.hgrp==='none' || !S.hbare, ['bfill']],
     ['пігулка шапки', 'кнопки згруповані', S.hgrp!=='none', ['hbare','hdiv']],
@@ -2211,6 +2294,10 @@ lockLoad(); installLocks();
  ['wSize',v=>v+'px',1],['wEq',null,1],['wLe',null,1],['wTrack',v=>(v/10).toFixed(2),1],
  ['gAng',v=>v+'°',1],['gShift',v=>(v>0?'+':'')+v+'°',1],
  ['bH',v=>v+'px',1],['bR',v=>v+'px',1],
+ ['bgH1',v=>v+'°',1],['bgH2',v=>v+'°',1],['bgH3',v=>v+'°',1],['bgSpread',v=>v+'%',1],
+ ['bgA1L',v=>(v/100).toFixed(2),1],['bgA2L',v=>(v/100).toFixed(2),1],['bgA3L',v=>(v/100).toFixed(2),1],
+ ['bgA1D',v=>(v/100).toFixed(2),1],['bgA2D',v=>(v/100).toFixed(2),1],['bgA3D',v=>(v/100).toFixed(2),1],
+ ['bgTiltL',v=>(v/100).toFixed(2),1],['bgTiltD',v=>(v/100).toFixed(2),1],
  ['nSize',v=>v+'px',1],['nWeight',null,1],['aSize',v=>v+'px',1],['mtSize',v=>v+'px',1],
  ['rowPadY',v=>v+'px',1],['headGap',v=>v+'px',1],
  ['fabS',v=>v+'px',1],['ctH',v=>v+'px',1],['ctSize',v=>(v/10).toFixed(1)+'px',1],['ctR',v=>v+'px',1],['ctPx',v=>v+'px',1],['ctRimL',v=>(v/200).toFixed(3),1],['ctRimD',v=>(v/100).toFixed(2),1],['ctFill',v=>v+'',1],['ctInkL',v=>v+'%',1],['ctInkD',v=>v+'%',1],['navH',v=>v+'px',1],['nvSz',v=>v+'px',1],['nvSw',v=>(v/10).toFixed(1),1],['nvLbl',v=>(v/10).toFixed(1)+'px',1],['nvGap',v=>v+'px',1],['bdH',v=>v+'px',1],['bdR',v=>v+'px',1],['bdSize',v=>(v/10).toFixed(1)+'px',1],['bdFillL',v=>(v/100).toFixed(2),1],['bdFillD',v=>(v/100).toFixed(2),1],['ctlOnTintL',v=>(v/100).toFixed(2),1],['ctlOnTintD',v=>(v/100).toFixed(2),1],['ctlOnDep',v=>v+'',1],['ctlOnRim',v=>(v/100).toFixed(2),1],['ctlOnInk',v=>v+'%',1],['hdvIn',v=>v+'px',1],['hdvW',v=>(v/10).toFixed(1)+'px',1],['hdvGap',v=>v+'px',1],['hdvAL',v=>(v/100).toFixed(2),1],['hdvAD',v=>(v/100).toFixed(2),1],['hpToneL',v=>(v>0?'+':'')+v,1],['hpToneD',v=>(v>0?'+':'')+v,1],['hpRimL',v=>(v/200).toFixed(3),1],['hpRimD',v=>(v/100).toFixed(2),1],['hpRidgeL',v=>(v/100).toFixed(2),1],['hpRidgeD',v=>(v/100).toFixed(2),1],['hpElev',v=>v+'px',1],['hpShA',v=>(v/100).toFixed(2),1],['hpShY',v=>v+'px',1],['hpBlur',v=>v+'px',1],['hpSat',v=>v+'%',1],['hbSw',v=>(v/10).toFixed(1),1],['hbInkL',v=>v+'%',1],['hbInkD',v=>v+'%',1],['hbSz',v=>v+'px',1],['fabGap',v=>v+'px',1],['fabShA',v=>(v/100).toFixed(2),1],
@@ -2238,6 +2325,7 @@ pick('pkCtl','ctl'); pick('pkLocS','locSurf'); pick('pkFabE','fabEdge'); pick('p
 pick('pkPaint','n5Paint');
 pick('pkHgrp','hgrp'); pick('pkHbare','hbare'); pick('pkHdiv','hdiv');
 pick('pkChip','chipMat'); pick('pkCtlOn','ctlOn'); pick('pkAct','actTone'); pick('pkFabT','fabTone');
+pick('pkBg','bg');   /* v17 · К1 */
 
 document.getElementById('pkThesis').addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -2398,7 +2486,13 @@ function cssPassport(dark){
 --well-bg:${hsl(S.dkH,S.dkC*0.92,S.dkL+S.dkS-S.dkS*S.wMixD/100)};` : `
 --well:inset 0 ${S.wY}px ${S.wB}px rgba(16,16,24,${(S.wA/100).toFixed(2)});
 --well-bg:${mixHex('#FFFFFF','#EFEFF3',S.wMixL/100)};`;
-  return `CSS · тема ${dark?'темна':'світла'}:${cssDark}
+  /* v17 · К1 · фон іде в паспорт із aurLayers() — тієї ж функції, що годує стенд.
+     Рукописне дублювання рядка тут і було б новим випадком дефекту, проти
+     якого cssPassport стала іменованою. */
+  const aurCss = aurLayers(dark);
+  const cssBg = S.bg === 'sheet' ? '\n/* фон: аркуш — background-image не ставиться */'
+    : `\n.screenbox{background-image:${aurCss}} /* фон: ${S.bg==='all'?'аврора всюди':'аврора під хромом'} */`;
+  return `CSS · тема ${dark?'темна':'світла'}:${cssDark}${cssBg}
 .el-net{font-size:${S.nSize}px;font-weight:${S.nWeight}}
 .el-addr{font-size:${S.aSize}px}
 .el-meta{font-size:${S.mtSize}px}
