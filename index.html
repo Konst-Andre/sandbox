@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0e">
-<title>EquipLens · headbench v16</title>
+<title>EquipLens · headbench v17_5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -744,7 +744,7 @@ details[open] summary::before{transform:rotate(90deg)}
     <div class="bx-grp">
       <div class="bx-lv" data-k="dkH"><label>відтінок<i></i></label><input type="range" id="dkH" min="0" max="330" step="5"><output></output></div>
       <div class="bx-lv" data-k="dkC"><label>насиченість<i></i></label><input type="range" id="dkC" min="0" max="18" step="1"><output></output></div>
-      <div class="bx-lv" data-k="dkL"><label>світлота канви<i></i></label><input type="range" id="dkL" min="2" max="12" step="0.5"><output></output></div>
+      <div class="bx-lv" data-k="dkL"><label>світлота канви<i></i></label><input type="range" id="dkL" min="2" max="22" step="0.5"><output></output></div>
       <div class="bx-lv" data-k="dkS"><label>&Delta; поверхня<i></i></label><input type="range" id="dkS" min="1" max="14" step="0.5"><output></output></div>
       <div class="bx-lv" data-k="dkR"><label>&Delta; підняте<i></i></label><input type="range" id="dkR" min="2" max="22" step="0.5"><output></output></div>
       <div class="bx-lv" data-k="dkI"><label>підтон чорнила<i></i></label><input type="range" id="dkI" min="0" max="12" step="1"><output></output></div>
@@ -1045,19 +1045,27 @@ details[open] summary::before{transform:rotate(90deg)}
         <button data-v="chrome">аврора під хромом</button>
       </div>
       <div class="bx-note"><b>Що тут судиться.</b> Не краса фону, а <b>чи є що заломлювати</b>. <code>backdrop-filter</code> не має власного вигляду &mdash; його дає підкладка (<code>A100</code>); на плоскому полотні скло вироджується в напівпрозору заливку. <b>Аркуш</b> = чинний стан. <b>Під хромом</b> = ті самі еліпси, зсунуті в зони острівця й шапки: середина полотна лишається аркушем.<br><b>⚠ Судити в тому режимі списку, який піде в продукт.</b> У <code>картки</code> плитки непрозорі й накривають фон, у <code>ряди</code> &mdash; прозорі. Та сама аврора дасть дві різні картинки, і це не баг, а <code>A100</code>.</div>
-      <div class="bx-lv" data-k="bgH1"><label>еліпс 1 &middot; відтінок <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1" min="0" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgH2"><label>еліпс 2 &middot; відтінок <b style="color:#9a9aa8">·теплий у GlassKit</b><i></i></label><input type="range" id="bgH2" min="0" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgH3"><label>еліпс 3 &middot; відтінок <b style="color:#9a9aa8">·верх</b><i></i></label><input type="range" id="bgH3" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-note"><b>⚠ Відтінки роздільні по темах (v17_4 · хід 2).</b> Це не зручність, а <b>фізика</b>: на темній канві пляма <b>світліша</b> за фон — це світіння; на канві 98 % світлішати нікуди, і щоб пляму було видно, вона мусить бути <b>темнішою</b> — це <b>кольорова тінь</b>. Два різні явища не можуть ділити відтінок, як не ділять його тінь і лампа. Правило вибору: не «який колір гарний», а <b>яка тінь буває на папері</b> — тепла (сонце) чи холодна (небо).<br><b>Крутити по одній темі за раз:</b> перемкни тему сегментом і працюй лише з її трійкою — друга гілка в цей момент оголошена мертвою, і сірий колір повзунка не бреше.</div>
+      <div class="bx-lv" data-k="bgH1L"><label>еліпс 1 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1L" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgH2L"><label>еліпс 2 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·теплий у GlassKit</b><i></i></label><input type="range" id="bgH2L" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgH3L"><label>еліпс 3 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·верх</b><i></i></label><input type="range" id="bgH3L" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgH1D"><label>еліпс 1 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1D" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgH2D"><label>еліпс 2 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·теплий у GlassKit</b><i></i></label><input type="range" id="bgH2D" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgH3D"><label>еліпс 3 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·верх</b><i></i></label><input type="range" id="bgH3D" min="0" max="360" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgLtL"><label>світлота еліпса &middot; <b style="color:#9a9aa8">СВІТЛА · &lt; канви = кольорова тінь</b><i></i></label><input type="range" id="bgLtL" min="35" max="95" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgLtD"><label>світлота еліпса &middot; <b style="color:#9a9aa8">ТЕМНА · &gt; канви = світіння</b><i></i></label><input type="range" id="bgLtD" min="25" max="85" step="1"><output></output></div>
+      <div class="bx-lv" data-k="bgSatL"><label>насиченість еліпса &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgSatL" min="0" max="100" step="2"><output></output></div>
+      <div class="bx-lv" data-k="bgSatD"><label>насиченість еліпса &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgSatD" min="0" max="100" step="2"><output></output></div>
       <div class="bx-lv" data-k="bgA1L"><label>еліпс 1 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA1L" min="0" max="45" step="1"><output></output></div>
       <div class="bx-lv" data-k="bgA2L"><label>еліпс 2 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA2L" min="0" max="45" step="1"><output></output></div>
       <div class="bx-lv" data-k="bgA3L"><label>еліпс 3 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA3L" min="0" max="45" step="1"><output></output></div>
       <div class="bx-lv" data-k="bgA1D"><label>еліпс 1 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA1D" min="0" max="45" step="1"><output></output></div>
       <div class="bx-lv" data-k="bgA2D"><label>еліпс 2 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA2D" min="0" max="45" step="1"><output></output></div>
       <div class="bx-lv" data-k="bgA3D"><label>еліпс 3 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA3D" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgSpread"><label>розмах плям <b style="color:#9a9aa8">·% від базового стопу</b><i></i></label><input type="range" id="bgSpread" min="40" max="160" step="5"><output></output></div>
+      <div class="bx-lv" data-k="bgSpread"><label>розмах плям <b style="color:#9a9aa8">·% від базових РАДІУСІВ (v17_5)</b><i></i></label><input type="range" id="bgSpread" min="40" max="160" step="5"><output></output></div>
       <div class="bx-lv" data-k="bgTiltL"><label>нахил яскравості &middot; <b style="color:#9a9aa8">СВІТЛА · 170°, верх світліший</b><i></i></label><input type="range" id="bgTiltL" min="0" max="14" step="1"><output></output></div>
       <div class="bx-lv" data-k="bgTiltD"><label>нахил яскравості &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgTiltD" min="0" max="14" step="1"><output></output></div>
-      <div class="bx-note"><b>Відтінки спільні, сили роздільні.</b> Відтінок несе <b>ідентичність</b> &mdash; він однаковий в обох темах, бо це та сама атмосфера. Сила несе <b>глибину</b> &mdash; вона роздільна за <code>A39</code>. Світлота еліпса теж перемикається темою всередині (світла 70 / темна 55): на темній канві світлий еліпс читався б як засвітка, а не як повітря.<br><b>Числа &mdash; гіпотеза, не лок.</b> Стартові значення конвертовані з <code>FX-5e</code> (GlassKit). Їхня палітра &mdash; петроль і бурштин; бренд EquipLens інший, тому відтінок тут повноцінний важіль, а не константа.</div>
+      <div class="bx-note"><b>Відтінки спільні, сили роздільні.</b> Відтінок несе <b>ідентичність</b> &mdash; він однаковий в обох темах, бо це та сама атмосфера. Сила несе <b>глибину</b> &mdash; вона роздільна за <code>A39</code>. <b>Світлота й насиченість еліпса &mdash; важелі, роздільні за темою</b> (було: константи 70/55 і 65). Підстава фізична, а не смакова: на темній канві пляма <b>світліша</b> за фон &mdash; це світіння; на світлій канві світлішати нікуди, і щоб пляму було видно, вона мусить бути <b>темнішою</b> за канву &mdash; це кольорова тінь. Два різні явища, спільних чисел мати не можуть.<br><b>Числа &mdash; гіпотеза, не лок.</b> Стартові значення конвертовані з <code>FX-5e</code> (GlassKit). Їхня палітра &mdash; петроль і бурштин; бренд EquipLens інший, тому відтінок тут повноцінний важіль, а не константа.</div>
     </div>
   </details>
 
@@ -1203,9 +1211,10 @@ const S = {
   /* v17 · К1 · фон екрана. Дефолт `sheet` = ЧИННИЙ стан: раунд стартує з того,
      що вже є, а не з чужої гіпотези. Числа нижче — конвертовані з FX-5e
      (GlassKit) і живуть як СТАРТОВА позиція повзунка, не як лок. */
-  bg:'sheet', bgH1:180, bgH2:34, bgH3:190, bgSpread:100,
+  bg:'sheet', bgH1L:180, bgH2L:34, bgH3L:190, bgH1D:180, bgH2D:34, bgH3D:190, bgSpread:100,
   bgA1L:15, bgA2L:10, bgA3L:12, bgA1D:25, bgA2D:12, bgA3D:18,
   bgTiltL:0, bgTiltD:0,
+  bgLtL:70, bgLtD:55, bgSatL:65, bgSatD:65,
   /* анатомія запису */
   nSize:14, nWeight:650, aSize:12.5, mtSize:11.5, rowPadY:11, city:'chip', sort:'need',
   chipMat:'out',
@@ -1300,16 +1309,31 @@ function lockLoad(){
    ключа зняті в раунді на світлій темі (ЛОК 33/169, 23.08).
    Одноразовість: мігруємо ТІЛЬКИ якщо цільового ключа ще немає в LOCKS.
    Інакше шим воскрешав би значення, яке оператор уже свідомо переставив. */
-const LOCK_MIGRATE = {shX:'shXL', shY:'shYL', shSpecS:'shSpecSL', shRimB:'shRimBL'};
+/* v17_4 · хід 2 · ціль стала МАСИВОМ. Підстава розходиться з v16 навмисно:
+   геометрія шейдингу судилась НА СВІТЛІЙ темі, тож мігрувала в один двійник.
+   Відтінки аврори були СПІЛЬНИМ числом — вони фізично стояли на екрані в
+   ОБОХ темах, і в обох оператор їх бачив. Мігрувати в одну гілку означало б
+   викинути половину чинного вироку; мігрувати в обидві — успадкувати те, що
+   й так діяло. Слід не губиться: успадковані ключі друкуються в паспорті
+   окремим рядком (LOCK_INHERIT), інакше нова гілка мовчки видала б спадок
+   за власний вирок — це рівно ризик П-2 «нерозсуджене видає себе за рішення». */
+const LOCK_MIGRATE = {shX:['shXL'], shY:['shYL'], shSpecS:['shSpecSL'], shRimB:['shRimBL'],
+  bgH1:['bgH1L','bgH1D'], bgH2:['bgH2L','bgH2D'], bgH3:['bgH3L','bgH3D']};
+let LOCK_INHERIT = [];
 function lockMigrate(){
   let moved = 0;
   Object.keys(LOCK_MIGRATE).forEach(old => {
     const i = LOCK_STALE.indexOf(old);
     if (i < 0) return;
-    const to = LOCK_MIGRATE[old];
-    if (!(to in LOCKS) && (to in S) && o_v_cache && (old in o_v_cache)){
-      LOCKS[to] = o_v_cache[old]; moved++;
-    }
+    /* Поключово, НЕ пакетно: якщо оператор уже переставив одну гілку руками,
+       друга однаково мусить успадкувати. Спільна умова на дві цілі зробила б
+       переставлений ключ причиною мовчазної втрати сусіда. */
+    LOCK_MIGRATE[old].forEach(to => {
+      if (!(to in LOCKS) && (to in S) && o_v_cache && (old in o_v_cache)){
+        LOCKS[to] = o_v_cache[old]; moved++;
+        LOCK_INHERIT.push(`${to} ← ${old} (${o_v_cache[old]})`);
+      }
+    });
     LOCK_STALE.splice(i, 1);            /* знято зі STALE у будь-якому разі:
                                            ключ не протух, він переїхав */
   });
@@ -1699,22 +1723,43 @@ function render(){
    `all`    — розкладка GlassKit: варіація по всій площі;
    `chrome` — ті самі еліпси, зсунуті в зони хрому (низ + шапка). Середина
               полотна лишається аркушем, теза MASTER_LOCK §10 не порушується.
-   Третій стовпчик = стоп прозорості у %, його масштабує bgSpread. */
+   v17_5 · хід 3 · М-2 · П'ЯТЬ чисел: X% · Y% · РАДІУС-X% · РАДІУС-Y% · стоп%.
+   Було три, і форми не існувало: `ellipse at` без розмірів вироджується в
+   farthest-corner, тобто в ~круглу пляму. Наслідок був не косметичний —
+   круглою плямою НЕМОЖЛИВО накрити капсулу, не заливши список під нею,
+   а bgSpread масштабував стоп ІЗОТРОПНО: розширення вшир тягло пляму вниз.
+
+   Радіуси навмисно КОНСТАНТИ, а не повзунки. Підстава та сама, що в позицій:
+   вони описують ЗОНУ ХРОМУ, а зона задана версткою й не судиться оком. Шість
+   нових повзунків (3 еліпси × 2 радіуси) коштували б дорожче за все, що вони
+   дають. Судиться результат, а не кожне число окремо.
+
+   `chrome` — широкі й низькі: смуга під шапкою й під островом, середина
+   полотна лишається аркушем (В-2). `all` — близьке до кола: там варіація по
+   всій площі, інший режим і інша фізика. */
 const AUR = {
-  all:    [[20,40,55],[80,65,50],[50,20,50]],
-  chrome: [[50,97,42],[85,88,34],[50,3,30]]
+  all:    [[20,40, 90, 80,55],[80,65, 85, 75,50],[50,20, 95, 85,50]],
+  chrome: [[50,97, 95, 30,42],[85,88, 90, 28,34],[50, 3, 95, 26,30]]
 };
 function aurLayers(dark){
   if (S.bg === 'sheet' || !AUR[S.bg]) return '';
-  const hu = [S.bgH1, S.bgH2, S.bgH3];
+  /* v17_4 · хід 2 · відтінок роздільний по темах: на світлій аврора — кольорова
+     ТІНЬ, на темній — СВІТІННЯ. Спільне число обслуговувало два різні явища (A39). */
+  const hu = dark ? [S.bgH1D, S.bgH2D, S.bgH3D] : [S.bgH1L, S.bgH2L, S.bgH3L];
   const al = dark ? [S.bgA1D, S.bgA2D, S.bgA3D] : [S.bgA1L, S.bgA2L, S.bgA3L];
   /* Світлота еліпса роздільна по темах — на темній канві світлий еліпс мусить
      бути темнішим, інакше він читається як засвітка, а не як атмосфера (A39). */
-  const lt = dark ? 55 : 70, sp = S.bgSpread / 100;
+  const lt = dark ? S.bgLtD : S.bgLtL, sa = dark ? S.bgSatD : S.bgSatL,
+        sp = S.bgSpread / 100;
+  /* v17_5 · хід 3 · bgSpread масштабує РАДІУСИ, не стоп. Стоп лишається
+     прибитим: він задає м'якість краю плями, а м'якість — властивість
+     матеріалу, не розміру. Масштабувати обидва означало б, що один повзунок
+     міняє дві незалежні речі, і жодну з них не можна судити окремо. */
   const L = AUR[S.bg].map((p, i) =>
-    `radial-gradient(ellipse at ${p[0]}% ${p[1]}%, `
-    + `${hsl(hu[i], 65, lt, (al[i] / 100).toFixed(3))} 0, `
-    + `transparent ${Math.round(p[2] * sp)}%)`);
+    `radial-gradient(ellipse ${Math.round(p[2] * sp)}% ${Math.round(p[3] * sp)}% `
+    + `at ${p[0]}% ${p[1]}%, `
+    + `${hsl(hu[i], sa, lt, (al[i] / 100).toFixed(3))} 0, `
+    + `transparent ${p[4]}%)`);
   /* Нахил — окремий носій: не пляма, а перепад яскравості по всій площі.
      Останнім шаром, бо він найглибший (перший шар малюється зверху). */
   const t = (dark ? S.bgTiltD : S.bgTiltL) / 100;
@@ -2099,9 +2144,11 @@ function conds(){
     ['Н2 рядок', 'знак = Н2', S.mark==='n2', ['n2Lines','n2Stub']],
     ['Н3 виріз', 'знак = Н3', S.mark==='n3', ['n3W','n3H']],
     ['Н5 лоток', 'знак = Н5', S.mark==='n5', ['n5Cut','n5Gap','n5Tray','n5TrayW','n5Lines','n5Paint']],
-    ['фон · відтінки й розмах', 'фон ≠ аркуш', S.bg!=='sheet', ['bgH1','bgH2','bgH3','bgSpread']],
-    ['фон · сили · св.', 'фон ≠ аркуш і тема = світла', S.bg!=='sheet' && !dark, ['bgA1L','bgA2L','bgA3L','bgTiltL']],
-    ['фон · сили · тем.', 'фон ≠ аркуш і тема = темна', S.bg!=='sheet' && dark, ['bgA1D','bgA2D','bgA3D','bgTiltD']],
+    ['фон · розмах', 'фон ≠ аркуш', S.bg!=='sheet', ['bgSpread']],
+    ['фон · відтінки · св.', 'фон ≠ аркуш і тема = світла', S.bg!=='sheet' && !dark, ['bgH1L','bgH2L','bgH3L']],
+    ['фон · сили · св.', 'фон ≠ аркуш і тема = світла', S.bg!=='sheet' && !dark, ['bgA1L','bgA2L','bgA3L','bgTiltL','bgLtL','bgSatL']],
+    ['фон · відтінки · тем.', 'фон ≠ аркуш і тема = темна', S.bg!=='sheet' && dark, ['bgH1D','bgH2D','bgH3D']],
+    ['фон · сили · тем.', 'фон ≠ аркуш і тема = темна', S.bg!=='sheet' && dark, ['bgA1D','bgA2D','bgA3D','bgTiltD','bgLtD','bgSatD']],
     ['кнопки шапки', 'завжди', true, ['bH','bR']],
     ['фон кнопок', 'кнопки окремо або пігулка з фоном', S.hgrp==='none' || !S.hbare, ['bfill']],
     ['пігулка шапки', 'кнопки згруповані', S.hgrp!=='none', ['hbare','hdiv']],
@@ -2294,10 +2341,12 @@ lockLoad(); installLocks();
  ['wSize',v=>v+'px',1],['wEq',null,1],['wLe',null,1],['wTrack',v=>(v/10).toFixed(2),1],
  ['gAng',v=>v+'°',1],['gShift',v=>(v>0?'+':'')+v+'°',1],
  ['bH',v=>v+'px',1],['bR',v=>v+'px',1],
- ['bgH1',v=>v+'°',1],['bgH2',v=>v+'°',1],['bgH3',v=>v+'°',1],['bgSpread',v=>v+'%',1],
+ ['bgH1L',v=>v+'°',1],['bgH2L',v=>v+'°',1],['bgH3L',v=>v+'°',1],
+ ['bgH1D',v=>v+'°',1],['bgH2D',v=>v+'°',1],['bgH3D',v=>v+'°',1],['bgSpread',v=>v+'%',1],
  ['bgA1L',v=>(v/100).toFixed(2),1],['bgA2L',v=>(v/100).toFixed(2),1],['bgA3L',v=>(v/100).toFixed(2),1],
  ['bgA1D',v=>(v/100).toFixed(2),1],['bgA2D',v=>(v/100).toFixed(2),1],['bgA3D',v=>(v/100).toFixed(2),1],
  ['bgTiltL',v=>(v/100).toFixed(2),1],['bgTiltD',v=>(v/100).toFixed(2),1],
+ ['bgLtL',v=>v+'%',1],['bgLtD',v=>v+'%',1],['bgSatL',v=>v+'%',1],['bgSatD',v=>v+'%',1],
  ['nSize',v=>v+'px',1],['nWeight',null,1],['aSize',v=>v+'px',1],['mtSize',v=>v+'px',1],
  ['rowPadY',v=>v+'px',1],['headGap',v=>v+'px',1],
  ['fabS',v=>v+'px',1],['ctH',v=>v+'px',1],['ctSize',v=>(v/10).toFixed(1)+'px',1],['ctR',v=>v+'px',1],['ctPx',v=>v+'px',1],['ctRimL',v=>(v/200).toFixed(3),1],['ctRimD',v=>(v/100).toFixed(2),1],['ctFill',v=>v+'',1],['ctInkL',v=>v+'%',1],['ctInkD',v=>v+'%',1],['navH',v=>v+'px',1],['nvSz',v=>v+'px',1],['nvSw',v=>(v/10).toFixed(1),1],['nvLbl',v=>(v/10).toFixed(1)+'px',1],['nvGap',v=>v+'px',1],['bdH',v=>v+'px',1],['bdR',v=>v+'px',1],['bdSize',v=>(v/10).toFixed(1)+'px',1],['bdFillL',v=>(v/100).toFixed(2),1],['bdFillD',v=>(v/100).toFixed(2),1],['ctlOnTintL',v=>(v/100).toFixed(2),1],['ctlOnTintD',v=>(v/100).toFixed(2),1],['ctlOnDep',v=>v+'',1],['ctlOnRim',v=>(v/100).toFixed(2),1],['ctlOnInk',v=>v+'%',1],['hdvIn',v=>v+'px',1],['hdvW',v=>(v/10).toFixed(1)+'px',1],['hdvGap',v=>v+'px',1],['hdvAL',v=>(v/100).toFixed(2),1],['hdvAD',v=>(v/100).toFixed(2),1],['hpToneL',v=>(v>0?'+':'')+v,1],['hpToneD',v=>(v>0?'+':'')+v,1],['hpRimL',v=>(v/200).toFixed(3),1],['hpRimD',v=>(v/100).toFixed(2),1],['hpRidgeL',v=>(v/100).toFixed(2),1],['hpRidgeD',v=>(v/100).toFixed(2),1],['hpElev',v=>v+'px',1],['hpShA',v=>(v/100).toFixed(2),1],['hpShY',v=>v+'px',1],['hpBlur',v=>v+'px',1],['hpSat',v=>v+'%',1],['hbSw',v=>(v/10).toFixed(1),1],['hbInkL',v=>v+'%',1],['hbInkD',v=>v+'%',1],['hbSz',v=>v+'px',1],['fabGap',v=>v+'px',1],['fabShA',v=>(v/100).toFixed(2),1],
@@ -2524,9 +2573,17 @@ function cssPassport(dark){
 .el-hbtn svg{width:${S.hbSz}px;stroke-width:${(S.hbSw/10).toFixed(1)}} /* чорнило ${dark?S.hbInkD:S.hbInkL}% */`;
 }
 /* Ключі, згадані в тілі cssPassport як S.<ключ>. Добір за ОЗНАКОЮ, не за
-   списком імен: нове ім'я підхоплюється тим самим регулярним виразом. */
+   списком імен: нове ім'я підхоплюється тим самим регулярним виразом.
+
+   v17_3 · К0-б · З-11. Паспорт збирається з ДВОХ функцій: cssPassport пише
+   токени, aurLayers пише фон. Детектор читав лише першу — і стабільно
+   оголошував 10 аврорних важелів непокритими, хоча їхні значення в паспорті
+   Є. Хибний ✗, до того ж завжди на тих самих іменах: така десятка швидко
+   починає читатись як фон, і наступний СПРАВЖНІЙ пропуск у ній тоне.
+   Джерелом стає «усе, з чого генерується паспорт», а не одна функція. */
 function cssCovered(){
-  const out=new Set(), re=/S\.([A-Za-z0-9_]+)/g, src=cssPassport.toString();
+  const out=new Set(), re=/S\.([A-Za-z0-9_]+)/g,
+        src=cssPassport.toString() + aurLayers.toString();
   let m; while((m=re.exec(src))) out.add(m[1]);
   return out;
 }
@@ -2564,6 +2621,8 @@ document.getElementById('copyBtn').addEventListener('click', () => {
 ЗАЛОЧЕНО = ${JSON.stringify(Object.fromEntries(Object.keys(LOCKS).sort().map(k=>[k,LOCKS[k]])))}
 ЗСУНУТО З ЛОКУ: ${Object.keys(LOCKS).filter(k=>String(LOCKS[k])!==String(S[k])).map(k=>`${k} ЛОК ${LOCKS[k]} → ${S[k]}`).join(' · ') || '—'}
 ПРОТУХЛІ ключі сховища (важеля вже немає): ${LOCK_STALE.join(', ') || '—'}
+УСПАДКОВАНО зі спільного ключа (НЕ судилось на цій гілці окремо): ${LOCK_INHERIT.join(' · ') || '—'}
+${('bgSpread' in LOCKS) ? '⚠ bgSpread ЗАЛОЧЕНО ДО v17_5: тоді він масштабував СТОП, тепер РАДІУСИ. Ключ той самий, підстава інша — лок переглянути оком, LOCK_STALE цього не ловить.' : ''}
 мертві важелі ВИКЛЮЧЕНО: ${[...d].join(', ') || '—'}
 CSS-СЕКЦІЯ НЕ ПОКРИВАЄ ${cssGap(live).length} живих важелів: ${cssGap(live).join(', ') || '—'}
 ⚠ НЕ СУДИЛОСЬ НА ЦІЙ ТЕМІ (потрібен окремий раунд на ${dark?'світлій':'темній'}): ${themeDead.join(' · ') || '—'}
