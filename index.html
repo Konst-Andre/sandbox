@@ -107,11 +107,33 @@ svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-l
 .bx-panel{flex:none;max-height:46dvh;overflow:auto;padding:0 9px 14px;border-top:1px solid #1c1c23;
   background:#0d0d11}
 .bx-panel[hidden]{display:none}
-.bx-thesis{position:sticky;top:0;z-index:3;background:#0d0d11;padding:8px 0 7px;
-  display:flex;align-items:center;gap:7px;border-bottom:1px solid #1c1c23}
+/* ===== v17_10 · К21 · два рівні панелі =====
+   Теза втратила ВЛАСНИЙ sticky не тому, що він був зайвий, а тому, що липнути
+   мусять ТЕПЕР ДВОЄ — теза й рейка. Два sticky-сусіди липнуть кожен до свого
+   top і накладаються; один sticky-батько тримає обох одним блоком. */
+.bx-phead{position:sticky;top:0;z-index:3;background:#0d0d11}
+.bx-thesis{padding:7px 0 6px;display:flex;align-items:center;gap:6px}
+/* v17_11 · В-21 ПЕРЕГОЛОСОВАНО ДЕВАЙСОМ (12.9). Два ряди коштували ~40px
+   постійної вертикалі + розтягнутий останній таб на всю ширину (flex:1 1 auto
+   при wrap). Ставка «скрол ховає таби» не справдилась: сім підписів = 38
+   символів, при 9.5px вони вкладаються в ширину XS із запасом, тобто скрол
+   НЕ вмикається взагалі. Він лишається СТРАХОВКОЮ на вужчий екран — там ряд
+   поїде, а не зламається. flex:0 0 auto — щоб ПАЛІТРА більше не розтягувалась. */
+.bx-rail{display:flex;flex-wrap:nowrap;gap:3px;padding:0 0 7px;
+  border-bottom:1px solid #1c1c23;overflow-x:auto;scrollbar-width:none;
+  -webkit-overflow-scrolling:touch}
+.bx-rail::-webkit-scrollbar{display:none}
+.bx-rail button{flex:0 0 auto;padding:6px 8px;border-radius:8px;white-space:nowrap;
+  background:#17171d;border:1px solid #23232c;color:#9a9aa8;
+  font-size:9.5px;font-weight:800;letter-spacing:.2px}
+.bx-rail button[aria-pressed="true"]{background:#E4005A;border-color:#E4005A;color:#fff}
+.bx-tab[hidden]{display:none}
 .bx-thesis b{font-size:9px;font-weight:800;color:#6e6e7e;text-transform:uppercase;letter-spacing:.5px;flex:none}
-.bx-thesis .bx-tsw{flex:1;display:flex;gap:3px;padding:3px;background:#17171d;border-radius:10px}
-.bx-thesis .bx-tsw button{flex:1;padding:9px;border-radius:8px;font-size:12.5px;font-weight:750;color:#9a9aa8}
+/* v17_11 · теза стиснута до висоти рейки. Вона НЕ таб — судить обидві гілки
+   з будь-якого таба, тому лишається над рейкою; але 60px постійної вертикалі
+   за два слова панель не окупає. Кегль і padding зрівняні з .bx-rail. */
+.bx-thesis .bx-tsw{flex:1;display:flex;gap:3px;padding:2px;background:#17171d;border-radius:9px}
+.bx-thesis .bx-tsw button{flex:1;padding:5px;border-radius:7px;font-size:10.5px;font-weight:800;color:#9a9aa8}
 .bx-thesis .bx-tsw button[aria-pressed="true"]{background:#E4005A;color:#fff}
 .bx-meter{flex:none;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;padding:5px 11px;
   font-size:11px;color:#9a9aa8;font-weight:600;border-top:1px solid #1c1c23;background:#0d0d11}
@@ -130,10 +152,17 @@ summary{list-style:none;padding:9px 11px;font-size:12px;font-weight:800;color:#c
 summary::-webkit-details-marker{display:none}
 summary::before{content:"\203A";font-size:15px;color:#6e6e7e;transition:transform .15s}
 details[open] summary::before{transform:rotate(90deg)}
-.bx-grp{padding:2px 11px 11px;display:flex;flex-direction:column;gap:8px}
+.bx-grp{padding:2px 11px 11px;display:flex;flex-direction:column;gap:7px}
+/* v17_11 · ЗАМІРЯНО: медіана підпису важеля — 20.5 символів, 55% довші за 18,
+   найдовший 62. У колонці 88px із line-height за замовчуванням (~1.45) це 3-4
+   рядки НА КОЖЕН із 172 важелів. Хром панелі платиться раз, це — 172 рази,
+   отже тут і був пожирач, а не рейка.
+   Лік у двох безризикових важелях: колонка 88 -> 104 (слайдер віддає 16px зі
+   ~180 і лишається керованим) і line-height 1.45 -> 1.15. Кегль НЕ чіпаю:
+   11px на підписі — межа читабельності на XS, і вона вже судилась. */
 .bx-lv{display:flex;align-items:center;gap:8px;font-size:11px;color:#9a9aa8;font-weight:600}
-.bx-lv label{flex:0 0 88px;display:flex;flex-direction:column;gap:1px}
-.bx-lv label i{font-style:normal;font-size:9px;color:#5c5c6b;font-weight:700}
+.bx-lv label{flex:0 0 104px;display:flex;flex-direction:column;gap:0;line-height:1.15}
+.bx-lv label i{font-style:normal;font-size:8.5px;color:#5c5c6b;font-weight:700;line-height:1.15}
 .bx-lv input[type=range]{flex:1;min-width:0;height:22px;accent-color:#E4005A;background:none}
 .bx-lv output{flex:0 0 46px;text-align:right;color:#e8e8ee;font-weight:800;font-variant-numeric:tabular-nums}
 .bx-pick{display:flex;flex-wrap:wrap;gap:5px}
@@ -518,6 +547,50 @@ details[open] summary::before{transform:rotate(90deg)}
    повзунку: 1 на шкалі дав би 2px на екрані (wsd 2.6).
    `.open` тримає межу ТІННЮ, не кантом: кант, що з'являється на відкритті,
    зсунув би рядок на 1px під пальцем — рух, якого ніхто не замовляв (A22). */
+/* ===== v17_13 · К10' · КРАЙ АРКУША =====
+   Обидва ефекти живуть у псевдоелементах .el-list, бо носія межі аркуша НЕ
+   ІСНУВАЛО: --sheet лежить на КОЖНОМУ рядку окремо, а .el-list не має ні фону,
+   ні канта, ні тіні. На темній цього не видно — тіло рядка світліше за канву,
+   і тон працює замість межі (A45). На світлій тіло 100% на канві 98%: тону
+   нема, а межі не було ніколи. Звідси «аркуш розчиняється».
+
+   inset:4px 14px 0 — не косметика. .el-list має padding:4px 14px 0, а absolute
+   рахується від PADDING-BOX, тому без компенсації обидва ефекти виїхали б за
+   край екрана на ті самі 14px. */
+.el-list{position:relative}
+.el-list::before,.el-list::after{content:'';position:absolute;inset:4px 14px 0;
+  pointer-events:none;display:none}
+
+/* Е-5 · стос: край ДРУГОГО аркуша з-під першого. Єдиний варіант каталогу, що
+   влучає в семантику: список аптек = стос листів, товщина читається як «тут
+   багато» без числа. z-index:-1 кладе його ПІД рядки — при shtA<100 він
+   просвічуватиме крізь полотно як виворіт, і це судиться, а не вирішується. */
+/* v17_13-б · стос малюється КАНТОМ, не тоном. Перша редакція давала йому
+   background:var(--sheet) — тобто той самий колір, що й перший аркуш, зсунутий
+   на 3px. На темній це ще читалось тоном (A45), на світлій — ні: полотно при
+   shtAL 75 напівпрозоре, крізь нього видно ту саму канву, і другий аркуш
+   виявився невидимим за побудовою. Той самий діагноз, що й для аркуша в цілому:
+   НА СВІТЛІЙ МЕЖУ НЕСЕ КАНТ, А НЕ ТОН (З-43). Кант стосу бере ту саму силу, що
+   Е-7, тому «нема / Е-5 / Е-7» перестають бути схожими між собою. */
+.el-list[data-edge~="stack"]::before{display:block;z-index:-1;
+  background:var(--sheet);border-radius:inherit;
+  border:1px solid hsl(var(--edgeH,220) 30% var(--edgeL,50%) / var(--edgeA,.16));
+  transform:translate(var(--edgeX,3px),var(--edgeY,3px));
+  box-shadow:0 2px 6px hsl(0 0% 0% / .10)}
+
+/* Е-7 · кант, що дихає: волосинка бокового краю з вертикальним градієнтом —
+   яскравіша там, де під нею пляма аврори. Межа перестає бути обведенням і стає
+   реакцією на світло. border-image НЕ дружить із border-radius, тому кант
+   живе тільки на гілках без заокруглення (рядок/щілина) — на «картці» межу
+   вже несе власний border .el-item. */
+.el-list[data-edge~="rim"]::after{display:block;
+  border-left:1px solid transparent;border-right:1px solid transparent;
+  border-image:linear-gradient(180deg,
+    hsl(var(--edgeH,220) 30% var(--edgeL,50%) / 0),
+    hsl(var(--edgeH,220) 30% var(--edgeL,50%) / var(--edgeA,.16)) var(--edgeStop,50%),
+    hsl(var(--edgeH,220) 30% var(--edgeL,50%) / 0)) 1}
+.el-list[data-row="card"]::after{display:none}
+
 .el-list[data-row="slit"]{gap:var(--slitW,1px)}
 .el-list[data-row="slit"] .el-sw{border:none;border-radius:0;box-shadow:none}
 .el-list[data-row="slit"] .el-sw.open{border-radius:var(--r-card);box-shadow:var(--lift)}
@@ -789,460 +862,499 @@ details[open] summary::before{transform:rotate(90deg)}
 
 <div class="bx-panel" id="panel">
 
-  <div class="bx-thesis">
-    <b>теза</b>
-    <div class="bx-tsw" id="pkThesis">
-      <button data-v="panel">панель</button>
-      <button data-v="sheet" aria-pressed="true">аркуш</button>
+  <div class="bx-phead">
+    <div class="bx-thesis">
+      <b>теза</b>
+      <div class="bx-tsw" id="pkThesis" data-dk="thesis">
+        <button data-v="panel">панель</button>
+        <button data-v="sheet" aria-pressed="true">аркуш</button>
+      </div>
+    </div>
+    <div class="bx-rail" id="panRail">
+      <button data-t="bg" aria-pressed="true">ФОН</button>
+      <button data-t="sheet">АРКУШ</button>
+      <button data-t="zone">ЗОНА</button>
+      <button data-t="chrome">ХРОМ</button>
+      <button data-t="fab">БУЛЬБАШКА</button>
+      <button data-t="mark">ЗНАК</button>
+      <button data-t="pal">ПАЛІТРА</button>
     </div>
   </div>
 
-  <details open>
-    <summary>A &middot; ґрунт — тон темної теми (В-2)</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="dkH"><label>відтінок<i></i></label><input type="range" id="dkH" min="0" max="330" step="5"><output></output></div>
-      <div class="bx-lv" data-k="dkC"><label>насиченість<i></i></label><input type="range" id="dkC" min="0" max="18" step="1"><output></output></div>
-      <div class="bx-lv" data-k="dkL"><label>світлота канви<i></i></label><input type="range" id="dkL" min="2" max="22" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="dkS"><label>&Delta; поверхня<i></i></label><input type="range" id="dkS" min="1" max="14" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="dkR"><label>&Delta; підняте<i></i></label><input type="range" id="dkR" min="2" max="22" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="dkI"><label>підтон чорнила<i></i></label><input type="range" id="dkI" min="0" max="12" step="1"><output></output></div>
-      <div class="bx-lv" data-k="valL"><label>чорнило головне<i></i></label><input type="range" id="valL" min="80" max="100" step="1"><output></output></div>
-      <div class="bx-lv" data-k="mutL"><label>чорнило тихе<i></i></label><input type="range" id="mutL" min="45" max="85" step="1"><output></output></div>
-      <div class="bx-note"><b>К13 · І-4.</b> Ці два живуть тут, а крутяться в парі з <b>альфою полотна</b> (блок B): альфа з'їдає контраст, і число альфи без чорнила в тому ж кадрі не є вироком. Правило «одна змінна за раз» (14.14) тут <b>не діє</b> — альфа й чорнило одне явище. <code>--ink-3</code> веде <code>--ink-2</code> із прибитим розривом <b>19</b>: це ієрархія, не два кольори.</div>
-      <div class="bx-note">Діагноз В-2: <code>#08080B</code> — сажа без відтінку, і поверхня на 5&nbsp;% світліше теж без відтінку. Ці важелі дають канві <b>підтон</b>, а не просто «світліше». Живі лише при темній темі.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary>B &middot; матеріал поля — well &harr; lift</summary>
-    <div class="bx-grp">
-      <div class="bx-pick" id="pkMat" data-dk="mat">
-        <button data-v="lift">lift (піднято)</button>
-        <button data-v="well" aria-pressed="true">well (втоплено)</button>
-        <button data-v="plain">plain (без тіла)</button>
+  <div class="bx-tab" data-tab="bg">
+    <details open>
+      <summary>ФОН &middot; аврора</summary>
+      <div class="bx-grp">
+        <div class="bx-pick" id="pkBg" data-dk="bg">
+        <button data-v="sheet" aria-pressed="true">аркуш</button>
+        <button data-v="all">аврора всюди</button>
+        <button data-v="chrome">аврора під хромом</button>
+        </div>
+        <div class="bx-note"><b>Що тут судиться.</b> Не краса фону, а <b>чи є що заломлювати</b>. <code>backdrop-filter</code> не має власного вигляду &mdash; його дає підкладка (<code>A100</code>); на плоскому полотні скло вироджується в напівпрозору заливку. <b>Аркуш</b> = чинний стан. <b>Під хромом</b> = ті самі еліпси, зсунуті в зони острівця й шапки: середина полотна лишається аркушем.<br><b>⚠ Судити в тому режимі списку, який піде в продукт.</b> У <code>картки</code> плитки непрозорі й накривають фон, у <code>ряди</code> &mdash; прозорі. Та сама аврора дасть дві різні картинки, і це не баг, а <code>A100</code>.</div>
+        <div class="bx-note"><b>⚠ Відтінки роздільні по темах (v17_4 · хід 2).</b> Це не зручність, а <b>фізика</b>: на темній канві пляма <b>світліша</b> за фон — це світіння; на канві 98 % світлішати нікуди, і щоб пляму було видно, вона мусить бути <b>темнішою</b> — це <b>кольорова тінь</b>. Два різні явища не можуть ділити відтінок, як не ділять його тінь і лампа. Правило вибору: не «який колір гарний», а <b>яка тінь буває на папері</b> — тепла (сонце) чи холодна (небо).<br><b>Крутити по одній темі за раз:</b> перемкни тему сегментом і працюй лише з її трійкою — друга гілка в цей момент оголошена мертвою, і сірий колір повзунка не бреше.</div>
+        <div class="bx-lv" data-k="bgH1L"><label>еліпс 1 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1L" min="0" max="360" step="2"><output></output></div>
+        <div class="bx-lv" data-k="bgH2L"><label>еліпс 2 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·теплий у GlassKit</b><i></i></label><input type="range" id="bgH2L" min="0" max="360" step="2"><output></output></div>
+        <div class="bx-lv" data-k="bgH3L"><label>еліпс 3 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·верх</b><i></i></label><input type="range" id="bgH3L" min="0" max="360" step="2"><output></output></div>
+        <div class="bx-lv" data-k="bgH1D"><label>еліпс 1 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1D" min="0" max="360" step="2"><output></output></div>
+        <div class="bx-lv" data-k="bgH2D"><label>еліпс 2 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·теплий у GlassKit</b><i></i></label><input type="range" id="bgH2D" min="0" max="360" step="2"><output></output></div>
+        <div class="bx-lv" data-k="bgH3D"><label>еліпс 3 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·верх</b><i></i></label><input type="range" id="bgH3D" min="0" max="360" step="2"><output></output></div>
+        <div class="bx-lv" data-k="bgLtL"><label>світлота еліпса &middot; <b style="color:#9a9aa8">СВІТЛА · &lt; канви = кольорова тінь</b><i></i></label><input type="range" id="bgLtL" min="35" max="95" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgLtD"><label>світлота еліпса &middot; <b style="color:#9a9aa8">ТЕМНА · &gt; канви = світіння</b><i></i></label><input type="range" id="bgLtD" min="25" max="85" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgSatL"><label>насиченість еліпса &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgSatL" min="0" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="bgSatD"><label>насиченість еліпса &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgSatD" min="0" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="bgA1L"><label>еліпс 1 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA1L" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgA2L"><label>еліпс 2 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA2L" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgA3L"><label>еліпс 3 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA3L" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgA1D"><label>еліпс 1 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA1D" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgA2D"><label>еліпс 2 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA2D" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgA3D"><label>еліпс 3 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA3D" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgSpread"><label>розмах плям <b style="color:#9a9aa8">·% від базових РАДІУСІВ (v17_5)</b><i></i></label><input type="range" id="bgSpread" min="40" max="160" step="5"><output></output></div>
+        <div class="bx-lv" data-k="bgTiltL"><label>нахил яскравості &middot; <b style="color:#9a9aa8">СВІТЛА · 170°, верх світліший</b><i></i></label><input type="range" id="bgTiltL" min="0" max="14" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bgTiltD"><label>нахил яскравості &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgTiltD" min="0" max="14" step="1"><output></output></div>
+        <div class="bx-note"><b>Відтінки спільні, сили роздільні.</b> Відтінок несе <b>ідентичність</b> &mdash; він однаковий в обох темах, бо це та сама атмосфера. Сила несе <b>глибину</b> &mdash; вона роздільна за <code>A39</code>. <b>Світлота й насиченість еліпса &mdash; важелі, роздільні за темою</b> (було: константи 70/55 і 65). Підстава фізична, а не смакова: на темній канві пляма <b>світліша</b> за фон &mdash; це світіння; на світлій канві світлішати нікуди, і щоб пляму було видно, вона мусить бути <b>темнішою</b> за канву &mdash; це кольорова тінь. Два різні явища, спільних чисел мати не можуть.<br><b>Числа &mdash; гіпотеза, не лок.</b> Стартові значення конвертовані з <code>FX-5e</code> (GlassKit). Їхня палітра &mdash; петроль і бурштин; бренд EquipLens інший, тому відтінок тут повноцінний важіль, а не константа.</div>
       </div>
-      <div class="bx-pick" id="pkRow" data-dk="row">
+    </details>
+    <details>
+      <summary>ФОН &middot; ґрунт і чорнило темної</summary>
+      <div class="bx-grp">
+        <div class="bx-lv" data-k="dkH"><label>відтінок<i></i></label><input type="range" id="dkH" min="0" max="330" step="5"><output></output></div>
+        <div class="bx-lv" data-k="dkC"><label>насиченість<i></i></label><input type="range" id="dkC" min="0" max="18" step="1"><output></output></div>
+        <div class="bx-lv" data-k="dkL"><label>світлота канви<i></i></label><input type="range" id="dkL" min="2" max="22" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="dkS"><label>&Delta; поверхня<i></i></label><input type="range" id="dkS" min="1" max="14" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="dkR"><label>&Delta; підняте<i></i></label><input type="range" id="dkR" min="2" max="22" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="dkI"><label>підтон чорнила<i></i></label><input type="range" id="dkI" min="0" max="12" step="1"><output></output></div>
+        <div class="bx-lv" data-k="valL"><label>чорнило головне<i></i></label><input type="range" id="valL" min="80" max="100" step="1"><output></output></div>
+        <div class="bx-lv" data-k="mutL"><label>чорнило тихе<i></i></label><input type="range" id="mutL" min="45" max="85" step="1"><output></output></div>
+        <div class="bx-note"><b>К13 · І-4.</b> Ці два живуть тут, а крутяться в парі з <b>альфою полотна</b> (блок B): альфа з'їдає контраст, і число альфи без чорнила в тому ж кадрі не є вироком. Правило «одна змінна за раз» (14.14) тут <b>не діє</b> — альфа й чорнило одне явище. <code>--ink-3</code> веде <code>--ink-2</code> із прибитим розривом <b>19</b>: це ієрархія, не два кольори.</div>
+        <div class="bx-note">Діагноз В-2: <code>#08080B</code> — сажа без відтінку, і поверхня на 5&nbsp;% світліше теж без відтінку. Ці важелі дають канві <b>підтон</b>, а не просто «світліше». Живі лише при темній темі.</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="bx-tab" data-tab="sheet">
+    <details open>
+      <summary>АРКУШ &middot; полотно</summary>
+      <div class="bx-grp">
+        <div class="bx-pick" id="pkRow" data-dk="row">
         <button data-v="card">картка</button>
         <button data-v="row" aria-pressed="true">рядок на аркуші</button>
         <button data-v="slit">щілина</button>
+        </div>
+        <div class="bx-lv" data-k="slitW"><label>ширина щілини<i></i></label><input type="range" id="slitW" min="0" max="6" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="shtAL"><label>полотно α · св.<i></i></label><input type="range" id="shtAL" min="50" max="100" step="2.5"><output></output></div>
+        <div class="bx-pick" id="pkEdge" data-dk="pkEdge">
+        <button data-v="none" aria-pressed="true">край: нема</button>
+        <button data-v="stack">Е-5 стос</button>
+        <button data-v="rim">Е-7 кант</button>
+        <button data-v="both">Е-5+Е-7</button>
+        </div>
+        <div class="bx-note">Носія межі аркуша не існувало: <b>--sheet</b> лежить на кожному рядку окремо. На темній це ховає тон (A45), на світлій — ні.</div>
+        <div class="bx-lv" data-k="edgeX"><label>стос: зсув &rarr;<i></i></label><input type="range" id="edgeX" min="0" max="8" step="1"><output></output></div>
+        <div class="bx-lv" data-k="edgeY"><label>стос: зсув &darr;<i></i></label><input type="range" id="edgeY" min="0" max="8" step="1"><output></output></div>
+        <div class="bx-lv" data-k="edgeAL"><label>кант α &middot; св.<i></i></label><input type="range" id="edgeAL" min="0" max="60" step="2"><output></output></div>
+        <div class="bx-lv" data-k="edgeAD"><label>кант α &middot; тем.<i></i></label><input type="range" id="edgeAD" min="0" max="60" step="2"><output></output></div>
+        <div class="bx-lv" data-k="edgeStop"><label>кант: пік градієнта<i></i></label><input type="range" id="edgeStop" min="10" max="90" step="5"><output></output></div>
+        <div class="bx-lv" data-k="shtAD"><label>полотно α · тем.<i></i></label><input type="range" id="shtAD" min="50" max="100" step="2.5"><output></output></div>
       </div>
-      <div class="bx-lv" data-k="slitW"><label>ширина щілини<i></i></label><input type="range" id="slitW" min="0" max="6" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="shtAL"><label>полотно α · св.<i></i></label><input type="range" id="shtAL" min="50" max="100" step="2.5"><output></output></div>
-      <div class="bx-lv" data-k="shtAD"><label>полотно α · тем.<i></i></label><input type="range" id="shtAD" min="50" max="100" step="2.5"><output></output></div>
-      <div class="bx-note"><b>К13 · І-4.</b> Аркуш був <b>непрозорим прямокутником кольору фону</b> поверх аврори — аврора жила тільки в бокових полях 14&nbsp;px (<b>З-31</b>). Тепер полотно пропускає її наскрізь. <b>Стеля 50 вбудована у шкалу, не в код:</b> нижче — це вже <code>tzFill=none</code>, і девайс на нього відповів (<b>З-24</b>); важіль не пропонує відхилене. Крутити разом із чорнилом (блок A): α до втрати читабельності → чорнило назад до порогу → α ще раз. Картки не чіпає — прозора картка це вже не картка.</div>
-      <div class="bx-note"><b>К9' · І-1.</b> «Щілина» — <b>гілка</b>, не заміна «рядка»: суд між лінією і щілиною — на девайсі. У гілці кант <code>.el-sw</code> знято, тож ширину несе <b>один</b> носій — <code>gap</code>. У «рядку» той кант <code>1px solid transparent</code> уже пропускає аврору невидимо, впритул до волосинки (<b>З-36</b>) — лишити його означало б 1 на шкалі й 2&nbsp;px на екрані.</div>
-      <div class="bx-note">Ці два піки теза й перебиває. Перебитий підсвічується малиновою рамкою, а лічильник друкує <b>перебито N</b>. Світла тема — набір <b>well</b>, темна — набір <b>deboss</b> (§8.6: різні набори, не різні значення одного).</div>
-      <div class="bx-lv" data-k="wY"><label>well Y &middot; світла<i></i></label><input type="range" id="wY" min="0" max="4" step="1"><output></output></div>
-      <div class="bx-lv" data-k="wB"><label>well blur<i></i></label><input type="range" id="wB" min="0" max="8" step="1"><output></output></div>
-      <div class="bx-lv" data-k="wA"><label>well alpha<i></i></label><input type="range" id="wA" min="0" max="20" step="1"><output></output></div>
-      <div class="bx-lv" data-k="wMixL"><label>ложе &middot; світла<i></i></label><input type="range" id="wMixL" min="0" max="100" step="5"><output></output></div>
-      <div class="bx-lv" data-k="dY"><label>deboss Y &middot; темна<i></i></label><input type="range" id="dY" min="0" max="4" step="1"><output></output></div>
-      <div class="bx-lv" data-k="dB"><label>deboss blur<i></i></label><input type="range" id="dB" min="0" max="10" step="1"><output></output></div>
-      <div class="bx-lv" data-k="dA"><label>deboss alpha<i></i></label><input type="range" id="dA" min="0" max="90" step="5"><output></output></div>
-      <div class="bx-lv" data-k="hA"><label>блік знизу<i></i></label><input type="range" id="hA" min="0" max="16" step="1"><output></output></div>
-      <div class="bx-lv" data-k="wMixD"><label>ложе &middot; темна<i></i></label><input type="range" id="wMixD" min="0" max="100" step="5"><output></output></div>
-      <div class="bx-pick" id="pkWb" data-dk="wb"><button data-v="1" aria-pressed="true">з обведенням</button><button data-v="0">без обведення</button></div>
-    </div>
-  </details>
-
-  <details>
-    <summary>C &middot; склад верхньої зони (+В4)</summary>
-    <div class="bx-grp">
-      <div class="bx-pick" id="pkComp" data-dk="comp">
-        <button data-v="v1">В1 lockup + великий</button>
-        <button data-v="v2">В2 знак + inline</button>
-        <button data-v="v3" aria-pressed="true">В3 без бренду</button>
-        <button data-v="v4">В4 без заголовка</button>
-      </div>
-      <div class="bx-pick" id="pkScroll" data-dk="scroll"><button data-v="0">шапка нерухома</button><button data-v="1" aria-pressed="true">колапс на скролі</button></div>
-      <div class="bx-note">В4 — прямий наслідок тези: таб-бар уже сказав, де ти; «Аптеки» в шапці при активному табі «Аптеки» — дубль.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary>D &middot; знак (Н1&ndash;Н4)</summary>
-    <div class="bx-grp">
-      <div class="bx-pick" id="pkMark" data-dk="mark">
-        <button data-v="n1" aria-pressed="true">Н1 пружина</button>
-        <button data-v="n2">Н2 незаповнений рядок</button>
-        <button data-v="n3">Н3 виріз</button>
-        <button data-v="none">Н4 без знака</button>
-        <button data-v="n5" aria-pressed="true">Н5 аркуш у лотку</button>
-      </div>
-      <div class="bx-lv" data-k="mSize"><label>розмір<i></i></label><input type="range" id="mSize" min="22" max="42" step="1"><output></output></div>
-      <div class="bx-lv" data-k="mSw"><label>штрих<i></i></label><input type="range" id="mSw" min="1.2" max="3.2" step="0.1"><output></output></div>
-      <div class="bx-lv" data-k="mGap"><label>зазор &harr; wm<i></i></label><input type="range" id="mGap" min="0" max="14" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hSize"><label>герой<i></i></label><input type="range" id="hSize" min="64" max="128" step="4"><output></output></div>
-      <div class="bx-lv" data-k="pRad"><label>радіус аркуша<i></i></label><input type="range" id="pRad" min="0" max="5" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="n1Holes"><label>Н1 отворів<i></i></label><input type="range" id="n1Holes" min="2" max="5" step="1"><output></output></div>
-      <div class="bx-lv" data-k="n1R"><label>Н1 радіус отв.<i></i></label><input type="range" id="n1R" min="0.8" max="2.6" step="0.1"><output></output></div>
-      <div class="bx-lv" data-k="n2Lines"><label>Н2 ліній<i></i></label><input type="range" id="n2Lines" min="2" max="4" step="1"><output></output></div>
-      <div class="bx-lv" data-k="n2Stub"><label>Н2 обрив<i></i></label><input type="range" id="n2Stub" min="15" max="90" step="5"><output></output></div>
-      <div class="bx-lv" data-k="n3W"><label>Н3 виріз Ш<i></i></label><input type="range" id="n3W" min="4" max="12" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="n3H"><label>Н3 виріз В<i></i></label><input type="range" id="n3H" min="3" max="10" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="n5Cut"><label>Н5 загин кута<i></i></label><input type="range" id="n5Cut" min="2.5" max="6.5" step="0.2"><output></output></div>
-      <div class="bx-lv" data-k="n5Gap"><label>Н5 зазор<i></i></label><input type="range" id="n5Gap" min="0.2" max="3" step="0.2"><output></output></div>
-      <div class="bx-lv" data-k="n5Tray"><label>Н5 глибина лотка<i></i></label><input type="range" id="n5Tray" min="2.4" max="7" step="0.2"><output></output></div>
-      <div class="bx-lv" data-k="n5TrayW"><label>Н5 виступ лотка<i></i></label><input type="range" id="n5TrayW" min="0" max="2" step="0.2"><output></output></div>
-      <div class="bx-lv" data-k="n5Lines"><label>Н5 ліній<i></i></label><input type="range" id="n5Lines" min="0" max="3" step="1"><output></output></div>
-      <div class="bx-lv" data-k="n5w1"><label>Н5 довж. 1-ї<i></i></label><input type="range" id="n5w1" min="25" max="100" step="5"><output></output></div>
-      <div class="bx-lv" data-k="n5w2"><label>Н5 довж. 2-ї<i></i></label><input type="range" id="n5w2" min="25" max="100" step="5"><output></output></div>
-      <div class="bx-lv" data-k="n5w3"><label>Н5 довж. 3-ї<i></i></label><input type="range" id="n5w3" min="25" max="100" step="5"><output></output></div>
-      <div class="bx-pick" id="pkPaint" data-dk="n5Paint">
-        <button data-v="accent" aria-pressed="true">лоток акцентом</button>
-        <button data-v="ink">нейтральний</button>
-        <button data-v="grad">градієнтом</button>
-      </div>
-      <div class="bx-note">Н5 знято з наданого SVG: штрих 7.3&nbsp;% ширини, загин 12.6&nbsp;%, зазор 4&nbsp;%, лоток 30&nbsp;%, <b>стінки лотка збігаються з бортами аркуша</b>. Сам SVG не вставлявся — там немає жодної кривої (лише <code>L</code>) і немає <code>stroke</code>, тож важіль штриха був би неможливий.</div>
-      <div class="bx-note">Н4 — контроль. <b>Прецеденту немає</b> (П-4): у Drive Lens знак відсутній через зупинку проєкту, не за рішенням.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary>E &middot; wordmark + колір Equip</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="wSize"><label>кегль<i></i></label><input type="range" id="wSize" min="14" max="22" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="wEq"><label>вага Equip<i></i></label><input type="range" id="wEq" min="500" max="800" step="100"><output></output></div>
-      <div class="bx-lv" data-k="wLe"><label>вага Lens<i></i></label><input type="range" id="wLe" min="300" max="800" step="100"><output></output></div>
-      <div class="bx-lv" data-k="wTrack"><label>трекінг<i></i></label><input type="range" id="wTrack" min="-14" max="4" step="1"><output></output></div>
-      <div class="bx-pick" id="pkEqL" data-dk="eqL"><button data-v="ink" aria-pressed="true">світла: ink</button><button data-v="accent">accent</button><button data-v="grad">градієнт</button></div>
-      <div class="bx-pick" id="pkEqD" data-dk="eqD"><button data-v="ink" aria-pressed="true">темна: ink</button><button data-v="accent">accent</button><button data-v="grad">градієнт</button></div>
-      <div class="bx-lv" data-k="gAng"><label>кут градієнта<i></i></label><input type="range" id="gAng" min="0" max="180" step="10"><output></output></div>
-      <div class="bx-lv" data-k="gShift"><label>зсув відтінку<i></i></label><input type="range" id="gShift" min="-80" max="80" step="5"><output></output></div>
-      <div class="bx-note"><code>Lens</code> лишається нейтральним завжди — конструкція та сама, що <code>QR</code><b>Lens</b>.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary>F &middot; форма двох кнопок шапки (В-5)</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="bH"><label>висота<i></i></label><input type="range" id="bH" min="28" max="40" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bR"><label>радіус<i></i></label><input type="range" id="bR" min="6" max="20" step="1"><output></output></div>
-      <div class="bx-pick" id="pkBfill" data-dk="bfill">
-        <button data-v="surf" aria-pressed="true">на поверхні</button>
-        <button data-v="out">обведення</button>
-        <button data-v="bare">без фону</button>
-      </div>
-      <div class="bx-note">Схема залочена (перемикач теми + «•••»), судиться <b>форма</b>. Тягнути вигляд зі StockCheck 1:1 заборонено (В-5).</div>
-    </div>
-  </details>
-
-  <details>
-    <summary>H &middot; анатомія запису</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="nSize"><label>кегль назви<i></i></label><input type="range" id="nSize" min="13" max="20" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="nWeight"><label>вага назви<i></i></label><input type="range" id="nWeight" min="500" max="800" step="50"><output></output></div>
-      <div class="bx-lv" data-k="aSize"><label>кегль адреси<i></i></label><input type="range" id="aSize" min="10" max="15" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="mtSize"><label>кегль мета<i></i></label><input type="range" id="mtSize" min="9.5" max="14" step="0.5"><output></output></div>
-      <div class="bx-lv" data-k="rowPadY"><label>ритм рядка<i></i></label><input type="range" id="rowPadY" min="7" max="20" step="1"><output></output></div>
-      <div class="bx-pick" id="pkCity" data-dk="city">
+    </details>
+    <details>
+      <summary>АРКУШ &middot; анатомія запису</summary>
+      <div class="bx-grp">
+        <div class="bx-lv" data-k="nSize"><label>кегль назви<i></i></label><input type="range" id="nSize" min="13" max="20" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="nWeight"><label>вага назви<i></i></label><input type="range" id="nWeight" min="500" max="800" step="50"><output></output></div>
+        <div class="bx-lv" data-k="aSize"><label>кегль адреси<i></i></label><input type="range" id="aSize" min="10" max="15" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="mtSize"><label>кегль мета<i></i></label><input type="range" id="mtSize" min="9.5" max="14" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="rowPadY"><label>ритм рядка<i></i></label><input type="range" id="rowPadY" min="7" max="20" step="1"><output></output></div>
+        <div class="bx-pick" id="pkCity" data-dk="city">
         <button data-v="filter" aria-pressed="true">місто: коли фільтр не активний</button>
         <button data-v="meta">завжди в адресі</button>
         <button data-v="chip">пігулкою біля назви</button>
         <button data-v="never">ніколи</button>
-      </div>
-      <div class="bx-pick" id="pkSort" data-dk="sort">
+        </div>
+        <div class="bx-pick" id="pkSort" data-dk="sort">
         <button data-v="need" aria-pressed="true">за потребами</button>
         <button data-v="age">за віком</button>
         <button data-v="abc">за абеткою</button>
+        </div>
+        <div class="bx-note">Тавтологію «Дніпро &hellip; Дніпро» на скрінах давав <b>зсув індексу</b>, не анатомія (Ф1). Тепер це важіль: місто ховається, коли ти вже стоїш у фільтрі міста.</div>
       </div>
-      <div class="bx-note">Тавтологію «Дніпро &hellip; Дніпро» на скрінах давав <b>зсув індексу</b>, не анатомія (Ф1). Тепер це важіль: місто ховається, коли ти вже стоїш у фільтрі міста.</div>
-    </div>
-  </details>
+    </details>
+    <details>
+      <summary>АРКУШ &middot; свайп A22</summary>
+      <div class="bx-grp">
+        <div class="bx-lv" data-k="actW"><label>ширина дії<i></i></label><input type="range" id="actW" min="56" max="96" step="2"><output></output></div>
+        <div class="bx-lv" data-k="swTrig"><label>SW_TRIG<i></i></label><input type="range" id="swTrig" min="24" max="80" step="2"><output></output></div>
+        <div class="bx-lv" data-k="swSlop"><label>SW_SLOP<i></i></label><input type="range" id="swSlop" min="4" max="24" step="1"><output></output></div>
+        <div class="bx-note">Жест <b>end-only</b>: рішення на <code>touchend</code>, axis-lock у перші <code>SW_SLOP</code> px, <code>preventDefault()</code> лише на осі <b>x</b>. Канон A22, device-валідовано на XS PWA. Зсув == <b>2&times;</b>ширини дії — одна точка зв'язку. Пороги перераховуються під поточний зум.</div>
+      </div>
+    </details>
+  </div>
 
-  <details>
-    <summary>I &middot; верхня зона: відступ і поява пошуку</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="headGap"><label>шапка &harr; пошук<i></i></label><input type="range" id="headGap" min="0" max="20" step="1"><output></output></div>
-      <div class="bx-pick" id="pkSrch" data-dk="srch">
+  <div class="bx-tab" data-tab="zone">
+    <details open>
+      <summary>ЗОНА &middot; поле пошуку &middot; скло</summary>
+      <div class="bx-grp">
+        <div class="bx-lv" data-k="headGap"><label>шапка &harr; пошук<i></i></label><input type="range" id="headGap" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-pick" id="pkSrch" data-dk="srch">
         <button data-v="always" aria-pressed="true">пошук завжди</button>
         <button data-v="pull">потягнути вниз</button>
         <button data-v="icon">кнопка-лупа</button>
-      </div>
-      <div class="bx-pick" id="pkTzFill" data-dk="tzFill">
+        </div>
+        <div class="bx-pick" id="pkTzFill" data-dk="tzFill">
         <button data-v="canvas" aria-pressed="true">заливка канвою</button>
         <button data-v="none">прозоро</button>
         <button data-v="blur">скло (Apple soft)</button>
         <button data-v="body">тіло під контролами</button>
+        </div>
+        <div class="bx-note">v17_6 · К7-а · <b>З-20</b>: «заливка канвою» перекриває верхню аврору на всю ширину зони (на «Потребах» це 23&nbsp;% висоти). «Прозоро» відкриває її — і водночас показує, чи потрібне <b>тіло ряду</b> (К7) чи <b>маска</b> (К8): sticky лишається, тому текст поїде поверх рядків при скролі. Це очікуваний стан, а не дефект.</div>
+        <div class="bx-note">v17_7 · К7-б · <b>З-24</b>: «прозоро» лишається як <b>контр-зразок</b>, а не кандидат — на девайсі текст фільтрів ріже назви аптек. Дві нові гілки — дві різні відповіді на те саме: <b>скло</b> обробляє те, що під зоною (Apple <code>scroll edge soft</code>), <b>тіло</b> дає підкладку тільки контролам і лишає решту зони прозорою. ⚠ Блюр масштабується зумом стенда — <b>вирок тільки на&nbsp;1:1</b>.</div>
+        <div class="bx-lv" data-k="tzBlur"><label>скло зони: блюр<i></i></label><input type="range" id="tzBlur" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="tzSat"><label>скло зони: насиченість<i></i></label><input type="range" id="tzSat" min="100" max="220" step="5"><output></output></div>
+        <div class="bx-lv" data-k="tzAL"><label>скло зони: alpha канви &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="tzAL" min="0" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="tzAD"><label>скло зони: alpha канви &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="tzAD" min="0" max="100" step="2"><output></output></div>
+        <div class="bx-note"><b>Alpha роздільна по темах, блюр і насиченість спільні</b> — <code>В-7</code>: розщеплюємо те, що описує <b>явище</b> (скільки канви лишилось), спільним лишається те, що описує <b>зону</b> (оптика скла, <code>В-5</code>). Калібрувати за <code>A100</code> на <b>гіршій</b> підкладці: темна тема при <code>фон=аркуш</code>, де аврори немає й під зоною самі рядки.</div>
+        <div class="bx-note">«Потягнути» знімає ~48px верхньої зони = +1 запис на екран, але додає жест на кожен пошук. Судити на <b>1:1</b>: під зумом відстань жесту буде не та.</div>
+        <div class="bx-pick" id="pkComp" data-dk="comp">
+        <button data-v="v1">В1 lockup + великий</button>
+        <button data-v="v2">В2 знак + inline</button>
+        <button data-v="v3" aria-pressed="true">В3 без бренду</button>
+        <button data-v="v4">В4 без заголовка</button>
+        </div>
+        <div class="bx-pick" id="pkScroll" data-dk="scroll"><button data-v="0">шапка нерухома</button><button data-v="1" aria-pressed="true">колапс на скролі</button></div>
+        <div class="bx-note">В4 — прямий наслідок тези: таб-бар уже сказав, де ти; «Аптеки» в шапці при активному табі «Аптеки» — дубль.</div>
       </div>
-      <div class="bx-note">v17_6 · К7-а · <b>З-20</b>: «заливка канвою» перекриває верхню аврору на всю ширину зони (на «Потребах» це 23&nbsp;% висоти). «Прозоро» відкриває її — і водночас показує, чи потрібне <b>тіло ряду</b> (К7) чи <b>маска</b> (К8): sticky лишається, тому текст поїде поверх рядків при скролі. Це очікуваний стан, а не дефект.</div>
-      <div class="bx-note">v17_7 · К7-б · <b>З-24</b>: «прозоро» лишається як <b>контр-зразок</b>, а не кандидат — на девайсі текст фільтрів ріже назви аптек. Дві нові гілки — дві різні відповіді на те саме: <b>скло</b> обробляє те, що під зоною (Apple <code>scroll edge soft</code>), <b>тіло</b> дає підкладку тільки контролам і лишає решту зони прозорою. ⚠ Блюр масштабується зумом стенда — <b>вирок тільки на&nbsp;1:1</b>.</div>
-      <div class="bx-lv" data-k="tzBlur"><label>скло зони: блюр<i></i></label><input type="range" id="tzBlur" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="tzSat"><label>скло зони: насиченість<i></i></label><input type="range" id="tzSat" min="100" max="220" step="5"><output></output></div>
-      <div class="bx-lv" data-k="tzAL"><label>скло зони: alpha канви &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="tzAL" min="0" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="tzAD"><label>скло зони: alpha канви &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="tzAD" min="0" max="100" step="2"><output></output></div>
-      <div class="bx-note"><b>Alpha роздільна по темах, блюр і насиченість спільні</b> — <code>В-7</code>: розщеплюємо те, що описує <b>явище</b> (скільки канви лишилось), спільним лишається те, що описує <b>зону</b> (оптика скла, <code>В-5</code>). Калібрувати за <code>A100</code> на <b>гіршій</b> підкладці: темна тема при <code>фон=аркуш</code>, де аврори немає й під зоною самі рядки.</div>
-      <div class="bx-note">«Потягнути» знімає ~48px верхньої зони = +1 запис на екран, але додає жест на кожен пошук. Судити на <b>1:1</b>: під зумом відстань жесту буде не та.</div>
-    </div>
-  </details>
-
-  <details open>
-    <summary>O &middot; скло бульбашки + виріз (v7 &middot; КРОК 3)</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="fabAL"><label>світла: alpha фону <b style="color:#E4005A">·35–45 скло</b><i></i></label><input type="range" id="fabAL" min="20" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabAD"><label>темна: alpha фону <b style="color:#9a9aa8">·не судилось</b><i></i></label><input type="range" id="fabAD" min="20" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabBlur"><label>блюр &Delta; до острівця<i></i></label><input type="range" id="fabBlur" min="-10" max="20" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabSat"><label>насиченість &Delta;<i></i></label><input type="range" id="fabSat" min="-40" max="60" step="5"><output></output></div>
-      <div class="bx-lv" data-k="fabRimAL"><label>кант &middot; <b style="color:#9a9aa8">СВІТЛА</b> (темний по склу)<i></i></label><input type="range" id="fabRimAL" min="0" max="60" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabRimAD"><label>кант &middot; <b style="color:#9a9aa8">ТЕМНА</b> (білий по склу)<i></i></label><input type="range" id="fabRimAD" min="0" max="60" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabRimW"><label>кант: товщина <b style="color:#9a9aa8">·0 = зняти зовсім</b><i></i></label><input type="range" id="fabRimW" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabElev"><label>елевація <b style="color:#9a9aa8">·при alpha≈.4 важка від 16</b><i></i></label><input type="range" id="fabElev" min="0" max="40" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabGap"><label>зазор до острівця<i></i></label><input type="range" id="fabGap" min="6" max="24" step="1"><output></output></div>
-      <div class="bx-pick" id="pkAlign" data-dk="fabAlign">
-        <button data-v="mid" aria-pressed="true">по центру острівця</button>
-        <button data-v="base">по нижньому ребру</button>
+    </details>
+    <details>
+      <summary>ЗОНА &middot; ложе поля &middot; well &harr; deboss</summary>
+      <div class="bx-grp">
+        <div class="bx-pick" id="pkMat" data-dk="mat">
+        <button data-v="lift">lift (піднято)</button>
+        <button data-v="well" aria-pressed="true">well (втоплено)</button>
+        <button data-v="plain">plain (без тіла)</button>
+        </div>
+        <div class="bx-note"><b>К13 · І-4.</b> Аркуш був <b>непрозорим прямокутником кольору фону</b> поверх аврори — аврора жила тільки в бокових полях 14&nbsp;px (<b>З-31</b>). Тепер полотно пропускає її наскрізь. <b>Стеля 50 вбудована у шкалу, не в код:</b> нижче — це вже <code>tzFill=none</code>, і девайс на нього відповів (<b>З-24</b>); важіль не пропонує відхилене. Крутити разом із чорнилом (блок A): α до втрати читабельності → чорнило назад до порогу → α ще раз. Картки не чіпає — прозора картка це вже не картка.</div>
+        <div class="bx-note"><b>К9' · І-1.</b> «Щілина» — <b>гілка</b>, не заміна «рядка»: суд між лінією і щілиною — на девайсі. У гілці кант <code>.el-sw</code> знято, тож ширину несе <b>один</b> носій — <code>gap</code>. У «рядку» той кант <code>1px solid transparent</code> уже пропускає аврору невидимо, впритул до волосинки (<b>З-36</b>) — лишити його означало б 1 на шкалі й 2&nbsp;px на екрані.</div>
+        <div class="bx-note">Ці два піки теза й перебиває. Перебитий підсвічується малиновою рамкою, а лічильник друкує <b>перебито N</b>. Світла тема — набір <b>well</b>, темна — набір <b>deboss</b> (§8.6: різні набори, не різні значення одного).</div>
+        <div class="bx-lv" data-k="wY"><label>well Y &middot; світла<i></i></label><input type="range" id="wY" min="0" max="4" step="1"><output></output></div>
+        <div class="bx-lv" data-k="wB"><label>well blur<i></i></label><input type="range" id="wB" min="0" max="8" step="1"><output></output></div>
+        <div class="bx-lv" data-k="wA"><label>well alpha<i></i></label><input type="range" id="wA" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="wMixL"><label>ложе &middot; світла<i></i></label><input type="range" id="wMixL" min="0" max="100" step="5"><output></output></div>
+        <div class="bx-lv" data-k="dY"><label>deboss Y &middot; темна<i></i></label><input type="range" id="dY" min="0" max="4" step="1"><output></output></div>
+        <div class="bx-lv" data-k="dB"><label>deboss blur<i></i></label><input type="range" id="dB" min="0" max="10" step="1"><output></output></div>
+        <div class="bx-lv" data-k="dA"><label>deboss alpha<i></i></label><input type="range" id="dA" min="0" max="90" step="5"><output></output></div>
+        <div class="bx-lv" data-k="hA"><label>блік знизу<i></i></label><input type="range" id="hA" min="0" max="16" step="1"><output></output></div>
+        <div class="bx-lv" data-k="wMixD"><label>ложе &middot; темна<i></i></label><input type="range" id="wMixD" min="0" max="100" step="5"><output></output></div>
+        <div class="bx-pick" id="pkWb" data-dk="wb"><button data-v="1" aria-pressed="true">з обведенням</button><button data-v="0">без обведення</button></div>
       </div>
-      <div class="bx-pick" id="pkHand" data-dk="hand">
-        <button data-v="right" aria-pressed="true">рука: права</button>
-        <button data-v="left">рука: ліва</button>
-      </div>
-      <div class="bx-pick" id="pkShT" data-dk="fabShTint">
-        <button data-v="none" aria-pressed="true">тінь: нейтральна</button>
-        <button data-v="accent">тінь: у тон акценту</button>
-      </div>
-      <div class="bx-lv" data-k="fabShA"><label>дальня тінь: сила<i></i></label><input type="range" id="fabShA" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabShY"><label>дальня тінь: зсув &darr; <b style="color:#9a9aa8">·0 = рівно по діаметру</b><i></i></label><input type="range" id="fabShY" min="0" max="20" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabShS"><label>дальня тінь: spread <b style="color:#9a9aa8">·&minus; стискає до краю</b><i></i></label><input type="range" id="fabShS" min="-16" max="4" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabShCY"><label>контактна: зсув &darr; <b style="color:#9a9aa8">·світла</b><i></i></label><input type="range" id="fabShCY" min="0" max="6" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabShCB"><label>контактна: розмиття <b style="color:#9a9aa8">·світла</b><i></i></label><input type="range" id="fabShCB" min="0" max="12" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabShCA"><label>контактна: сила <b style="color:#9a9aa8">·світла · 0 = вимкнено</b><i></i></label><input type="range" id="fabShCA" min="0" max="35" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabShCS"><label>контактна: spread <b style="color:#9a9aa8">·світла</b><i></i></label><input type="range" id="fabShCS" min="-4" max="4" step="1"><output></output></div>
-      <div class="bx-pick" id="pkShOrd" data-dk="fabShOrd">
-        <button data-v="over" aria-pressed="true">контактна над ореолом</button>
-        <button data-v="under">під ореолом</button>
-      </div>
-      <div class="bx-note"><b>Spread стискає, blur розмазує.</b> На колі мале розмиття не дає щільності: кожна точка периметра дивиться в свій бік, тінь розповзається дугою. Щільність під бульбашкою дає <b>від'ємний spread</b>, а не менший blur. Порядок шарів вирішує, чи контактна лягає поверх білого ореолу, чи під ним — на світлій це різні характери, тому важіль, а не константа.</div>
-      <div class="bx-note"><b>Тінь у тон — важіль СВІТЛОЇ теми.</b> На темній вона примусово нейтральна: <code>A45</code> — темна елевація це тон, не drop-shadow, а кольорове світіння на OLED дасть неон. Перемикач на темній стоїть у таблиці мертвих.</div>
-      <div class="bx-note"><b>Рука дзеркалить КНОПКУ, не застосунок.</b> Свайп-дії рядка й бейджі лишаються праворуч — це свідомий компроміс, а не недоробка.</div>
-      <div class="bx-note" style="border-color:#E4005A55"><b>ШЕЙДИНГ ТІЛА (v13 · 5в-1).</b> Тінь позаду тіла повідомляє <i>висоту</i>. Форму — опуклість, яку хочеться вдавити — повідомляє тільки світлотінь <i>по самому тілу</i>: градієнт заливки, блік і відбите знизу світло. Важелі сили розчеплені по темах з першого дня; спільними лишились тільки <b>X/Y</b> — напрямок світла у сцені один, це фізика, а не сприйняття.</div>
-      <div class="bx-pick" id="pkShWho" data-dk="shWho">
-        <button data-v="off" aria-pressed="true">шейдинг: вимк</button>
-        <button data-v="fab">лише «+»</button>
-        <button data-v="fabnav">«+» і острівець</button>
-        <button data-v="all">усі три</button>
-      </div>
-      <div class="bx-lv" data-k="shXL"><label>джерело світла: X &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shXL" min="0" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="shYL"><label>джерело світла: Y &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shYL" min="0" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="shXD"><label>джерело світла: X &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shXD" min="0" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="shYD"><label>джерело світла: Y &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shYD" min="0" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="shTopL"><label>світло тіла &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shTopL" min="0" max="60" step="1"><output></output></div>
-      <div class="bx-lv" data-k="shTopD"><label>світло тіла &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shTopD" min="0" max="60" step="1"><output></output></div>
-      <div class="bx-lv" data-k="shBotL"><label>затемнення низу &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shBotL" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="shBotD"><label>затемнення низу &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shBotD" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="shSpecSL"><label>блік: радіус &middot; <b style="color:#9a9aa8">СВІТЛА &middot; px, не %</b><i></i></label><input type="range" id="shSpecSL" min="2" max="40" step="1"><output></output></div>
-      <div class="bx-lv" data-k="shSpecSD"><label>блік: радіус &middot; <b style="color:#9a9aa8">ТЕМНА &middot; px, не %</b><i></i></label><input type="range" id="shSpecSD" min="2" max="40" step="1"><output></output></div>
-      <div class="bx-lv" data-k="shSpecL"><label>блік: сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shSpecL" min="0" max="80" step="2"><output></output></div>
-      <div class="bx-lv" data-k="shSpecD"><label>блік: сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shSpecD" min="0" max="80" step="2"><output></output></div>
-      <div class="bx-lv" data-k="shRimBL"><label>rim знизу: розтяг &middot; <b style="color:#9a9aa8">СВІТЛА &middot; тільки «+»</b><i></i></label><input type="range" id="shRimBL" min="0" max="20" step="1"><output></output></div>
-      <div class="bx-lv" data-k="shRimBD"><label>rim знизу: розтяг &middot; <b style="color:#9a9aa8">ТЕМНА &middot; тільки «+»</b><i></i></label><input type="range" id="shRimBD" min="0" max="20" step="1"><output></output></div>
-      <div class="bx-lv" data-k="shRimL"><label>rim знизу: сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shRimL" min="0" max="60" step="2"><output></output></div>
-      <div class="bx-lv" data-k="shRimD"><label>rim знизу: сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shRimD" min="0" max="60" step="2"><output></output></div>
-      <div class="bx-note">&#128295; <b>v16 · геометрія шейдингу розщеплена по темах.</b> До v15 роздільними були тільки <b>сили</b> (<code>shTop/shBot/shSpec/shRim</code>), а <b>полюс</b> (<code>X·Y</code>), радіус бліка й розтяг rim лишались спільними. Це A39 у новому місці: рух полюса на темній мовчки ламав світлу, і судити було неможливо. Тепер світло на світлій імітує <b>зовнішнє</b> освітлення, на темній &mdash; <b>джерело в товщі скла</b>; це дві різні задачі, а не одна з коефіцієнтом.</div>
-      <div class="bx-note"><b>Rim живе тільки на бульбашці</b> &mdash; і це оголошено, а не забуто. Відбите знизу світло має сенс на <i>дузі</i>; у капсули й острівця нижня кромка пряма, і там ту саму роботу вже робить власний блік (<code>hpRidge</code>). Дві мови на одну задачу дали б подвійний суд.</div>
-      <div class="bx-pick" id="pkFabE" data-dk="fabEdge">
-        <button data-v="none" aria-pressed="true">край: голий</button>
-        <button data-v="ring">внутр. кільце</button>
-        <button data-v="halo">ореол</button>
-        <button data-v="both">обидва</button>
-      </div>
-      <div class="bx-lv" data-k="fabRingAL"><label>кільце: сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="fabRingAL" min="0" max="40" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabRingAD"><label>кільце: сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="fabRingAD" min="0" max="40" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabRingW"><label>кільце: товщина <b style="color:#9a9aa8">·ВИДИМА, після канта</b><i></i></label><input type="range" id="fabRingW" min="0" max="40" step="1"><output></output></div>
-      <div class="bx-note">&#128295; <b>v15 · кант більше не з'їдає кільце.</b> Обидва &mdash; суцільні <code>inset</code> від кромки всередину, і кант малюється <b>зверху</b> (перший шар <code>box-shadow</code> = верхній). Доки кільце відлічувалось від тієї ж кромки, воно було видиме лише у просвіті <code>кільце &minus; кант</code>, а при стелях 3.0px / 4.0px запас складав <b>1px</b>: посилення канта гасило кільце арифметично, не на смак. Тепер важіль задає <b>видиму</b> товщину, а повна рахується як <code>кант + кільце</code> &mdash; кант штовхає кільце вглиб замість того, щоб його їсти.</div>
-      <div class="bx-lv" data-k="fabHaloSL"><label>ореол СВІТЛА: розтяг<i></i></label><input type="range" id="fabHaloSL" min="0" max="30" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabHaloAL"><label>ореол СВІТЛА: сила<i></i></label><input type="range" id="fabHaloAL" min="0" max="35" step="1"><output></output></div>
-      <div class="bx-lv" data-k="fabHaloSD"><label>ореол ТЕМНА: розтяг<i></i></label><input type="range" id="fabHaloSD" min="0" max="30" step="2"><output></output></div>
-      <div class="bx-lv" data-k="fabHaloAD"><label>ореол ТЕМНА: сила<i></i></label><input type="range" id="fabHaloAD" min="0" max="35" step="1"><output></output></div>
-      <div class="bx-pick" id="pkShPos" data-dk="shPos">
-        <button data-v="screen" aria-pressed="true">шіт: від низу екрана</button>
-        <button data-v="island">на кромці острівця</button>
-      </div>
-      <div class="bx-note"><b>Прозорість &mdash; це alpha фону, НЕ <code>opacity</code>.</b> <code>opacity&lt;1</code> зробило б бульбашку backdrop-root і вбило б її ж blur (Ф-3 розвідки 21.08). Важеля <code>opacity</code> тут немає навмисно &mdash; він був би не просто мертвим, а шкідливим.</div>
-      <div class="bx-note"><b>Блюр &mdash; дельта, не абсолют.</b> Острівець блюрить 12px. Два скла впритул із різними радіусами дають видимий шов на кромці вирізу, тож судиться саме різниця. <code>&Delta;=0</code> &mdash; одне скло на двох тілах.</div>
-      <div class="bx-note">⚠️ <b>WebKit 158807:</b> <code>-webkit-backdrop-filter</code> лишає артефакти на заокруглених рамках. Коло + кант + скло &mdash; найризикованіша форма з можливих. Якщо на кромці видно брудну облямівку &mdash; це платформа, і лікується зняттям канта або перенесенням його в псевдоелемент поверх.</div>
-      <div class="bx-note"><b>Ореол &ne; кільце</b> (Cookbook <b>A88</b>). Кільце (<code>inset</code>) додає чіткості <b>формі</b> &mdash; всередині, від фону не залежить, на скролі не дихає. Ореол (зовнішній) додає <b>відділення від контенту</b> &mdash; від фону залежить повністю.</div>
-      <div class="bx-note">&#128308; <b>Виправлено у v8.</b> До v7 ореол малювався <code>rgba(20,20,30)</code> на <b>обох</b> темах: на світлій це була друга тінь під першою &mdash; читалось як бруд, не як відділення. Тепер ореол <b>білий на обох темах</b>, а важелі розтягу й сили &mdash; <b>роздільні</b>. Спільний важіль на дві теми не давав судити взагалі: тюн світлої псував темну (<b>A39</b>).</div>
-      <div class="bx-note">Темного ореолу на світлій темі немає й важеля під нього не буде: за <b>A88</b> на світлій ореол або білий, або відсутній. &laquo;Відсутній&raquo; вже дає перемикач <b>край: голий / внутр. кільце</b> &mdash; окремий важіль лише повертав би закрите рішення.</div>
-    </div>
-  </details>
-
-  <details open>
-    <summary>N &middot; рядок керування (v6 &mdash; фільтр &perp; сорт)</summary>
-    <div class="bx-grp">
-      <div class="bx-pick" id="pkCtl" data-dk="ctl">
+    </details>
+    <details>
+      <summary>ЗОНА &middot; ряд керування &middot; чіпи</summary>
+      <div class="bx-grp">
+        <div class="bx-pick" id="pkCtl" data-dk="ctl">
         <button data-v="chips">ряд чіпів (control)</button>
         <button data-v="v6" aria-pressed="true">три контроли</button>
-      </div>
-      <div class="bx-pick" id="pkLocS" data-dk="locSurf">
+        </div>
+        <div class="bx-pick" id="pkLocS" data-dk="locSurf">
         <button data-v="pop" aria-pressed="true">локація: поповер</button>
         <button data-v="sheet">нижній шіт</button>
+        </div>
+        <div class="bx-lv" data-k="ctlGap"><label>зазор контролів<i></i></label><input type="range" id="ctlGap" min="4" max="14" step="1"><output></output></div>
+        <div class="bx-note"><b>Граматика знаків.</b> <code>&#8964;</code> = відкриє поверхню поверх екрана &middot; <code>&darr;&uarr;</code> = перемкне тут же &middot; <code>&#10005;</code> = зняти активний вибір &middot; <b>заливка</b> = і тільки вона означає &laquo;фільтр активний&raquo;. Три однакові на вигляд чіпи з трьома різними дієсловами &mdash; те, що лікується саме тут.</div>
+        <div class="bx-note"><b>Фільтр &perp; сорт.</b> Зміна фільтра НЕ скидає сортування: фільтр &mdash; запит, сорт &mdash; перевага читання. Перевір це руками: постав <code>Потреби &uarr;</code>, тоді обери місто &mdash; напрям мусить вижити.</div>
+        <div class="bx-note">⚠️ У режимі <b>три контроли</b> зник фільтр <b>&laquo;З потребами&raquo;</b> &mdash; його роботу тепер здебільшого робить сорт за потребами (нулі йдуть униз). Якщо на девайсі його бракує &mdash; це вирок, і він оборотний.</div>
+        <div class="bx-note"><b>Поверхня.</b> &le;5 варіантів + прив'язка до контрола &rarr; поповер; &gt;5 або потрібен пошук усередині &rarr; шіт. Міст у продукті стане більше &mdash; важіль тут саме щоб побачити, де поріг.</div>
+        <div class="bx-pick" id="pkChip" data-dk="chipMat">
+        <button data-v="out" aria-pressed="true">чіпи обведені</button>
+        <button data-v="surf">на поверхні</button>
+        <button data-v="fill">залиті</button>
+        </div>
+        <div class="bx-lv" data-k="ctH"><label>місто: висота <b style='color:#9a9aa8'>·кегль назви + 6</b><i></i></label><input type="range" id="ctH" min="16" max="26" step="1"><output></output></div>
+        <div class="bx-lv" data-k="ctSize"><label>місто: кегль<i></i></label><input type="range" id="ctSize" min="90" max="130" step="5"><output></output></div>
+        <div class="bx-lv" data-k="ctR"><label>місто: радіус <b style='color:#9a9aa8'>·0 = мітка · 16 = капсула</b><i></i></label><input type="range" id="ctR" min="0" max="16" step="1"><output></output></div>
+        <div class="bx-lv" data-k="ctPx"><label>місто: бічні поля<i></i></label><input type="range" id="ctPx" min="4" max="12" step="1"><output></output></div>
+        <div class="bx-lv" data-k="ctRimL"><label>місто: кант · СВІТЛА<i></i></label><input type="range" id="ctRimL" min="0" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="ctRimD"><label>місто: кант · ТЕМНА<i></i></label><input type="range" id="ctRimD" min="0" max="60" step="2"><output></output></div>
+        <div class="bx-lv" data-k="ctFill"><label>місто: заливка <b style='color:#9a9aa8'>·0 = форму несе кант</b><i></i></label><input type="range" id="ctFill" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="ctInkL"><label>місто: чорнило &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="ctInkL" min="0" max="100" step="5"><output></output></div>
+        <div class="bx-lv" data-k="ctInkD"><label>місто: чорнило &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="ctInkD" min="0" max="100" step="5"><output></output></div>
+        <div class="bx-note"><b>Це той самий бейдж, яким судиться тінт активного чіпа.</b> Акцент в «аркуші» має одну роботу — числа потреб. Якщо після будь-якої правки бейдж перестав бути найгучнішим на екрані, програла правка, а не бейдж.</div>
+        <div class="bx-pick" id="pkCtlOn" data-dk="ctlOn">
+        <button data-v="solid" aria-pressed="true">активний: суцільний</button>
+        <button data-v="tint">тінт</button>
+        <button data-v="well">втоплений</button>
+        <button data-v="mark">мітка</button>
+        </div>
+        <div class="bx-lv" data-k="ctlOnTintL"><label>тінт: насиченість · СВІТЛА<i></i></label><input type="range" id="ctlOnTintL" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="ctlOnTintD"><label>тінт: насиченість · ТЕМНА<i></i></label><input type="range" id="ctlOnTintD" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="ctlOnDep"><label>втоплення: глибина<i></i></label><input type="range" id="ctlOnDep" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="ctlOnRim"><label>активний: кант<i></i></label><input type="range" id="ctlOnRim" min="0" max="60" step="2"><output></output></div>
+        <div class="bx-lv" data-k="ctlOnInk"><label>активний: чорнило <b style="color:#9a9aa8">·0=приглушене · 100=основне</b><i></i></label><input type="range" id="ctlOnInk" min="0" max="100" step="5"><output></output></div>
+        <div class="bx-note"><b>Чому «суцільний» читався як ніякий.</b> Інверсна заливка — не рівень гучності, а її максимум: градації в неї немає, тому й судити нема що. Три інші варіанти дають стану <b>матеріал</b>, а не яскравість.<br><b>Ризик тінту, який треба тримати в голові.</b> За тезою «аркуш» акцент має <b>одну роботу</b>, і вона вже витрачена — малинові числа потреб. Тінт дає акценту другу роботу; якщо після нього бейдж перестає бути найгучнішим на екрані, варіант програв, хай яким гарним він здається зблизька.</div>
+        <div class="bx-pick" id="pkAct" data-dk="actTone">
+        <button data-v="signal">дії: сигнальні</button>
+        <button data-v="neutral" aria-pressed="true">нейтральні</button>
+        <button data-v="quiet">приглушені</button>
+        </div>
       </div>
-      <div class="bx-lv" data-k="ctlGap"><label>зазор контролів<i></i></label><input type="range" id="ctlGap" min="4" max="14" step="1"><output></output></div>
-      <div class="bx-note"><b>Граматика знаків.</b> <code>&#8964;</code> = відкриє поверхню поверх екрана &middot; <code>&darr;&uarr;</code> = перемкне тут же &middot; <code>&#10005;</code> = зняти активний вибір &middot; <b>заливка</b> = і тільки вона означає &laquo;фільтр активний&raquo;. Три однакові на вигляд чіпи з трьома різними дієсловами &mdash; те, що лікується саме тут.</div>
-      <div class="bx-note"><b>Фільтр &perp; сорт.</b> Зміна фільтра НЕ скидає сортування: фільтр &mdash; запит, сорт &mdash; перевага читання. Перевір це руками: постав <code>Потреби &uarr;</code>, тоді обери місто &mdash; напрям мусить вижити.</div>
-      <div class="bx-note">⚠️ У режимі <b>три контроли</b> зник фільтр <b>&laquo;З потребами&raquo;</b> &mdash; його роботу тепер здебільшого робить сорт за потребами (нулі йдуть униз). Якщо на девайсі його бракує &mdash; це вирок, і він оборотний.</div>
-      <div class="bx-note"><b>Поверхня.</b> &le;5 варіантів + прив'язка до контрола &rarr; поповер; &gt;5 або потрібен пошук усередині &rarr; шіт. Міст у продукті стане більше &mdash; важіль тут саме щоб побачити, де поріг.</div>
-    </div>
-  </details>
+    </details>
+  </div>
 
-  <details>
-    <summary>J &middot; кнопка &laquo;+&raquo; — головна дія</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="fabS"><label>діаметр<i></i></label><input type="range" id="fabS" min="46" max="70" step="2"><output></output></div>
-    </div>
-  </details>
-
-  <details>
-    <summary>K &middot; свайп рядка (A22, порт із Drive Lens)</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="actW"><label>ширина дії<i></i></label><input type="range" id="actW" min="56" max="96" step="2"><output></output></div>
-      <div class="bx-lv" data-k="swTrig"><label>SW_TRIG<i></i></label><input type="range" id="swTrig" min="24" max="80" step="2"><output></output></div>
-      <div class="bx-lv" data-k="swSlop"><label>SW_SLOP<i></i></label><input type="range" id="swSlop" min="4" max="24" step="1"><output></output></div>
-      <div class="bx-note">Жест <b>end-only</b>: рішення на <code>touchend</code>, axis-lock у перші <code>SW_SLOP</code> px, <code>preventDefault()</code> лише на осі <b>x</b>. Канон A22, device-валідовано на XS PWA. Зсув == <b>2&times;</b>ширини дії — одна точка зв'язку. Пороги перераховуються під поточний зум.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary>L &middot; акцент темної теми (В-2, знахідка device-раунду)</summary>
-    <div class="bx-grp">
-      <div class="bx-lv" data-k="aH"><label>відтінок<i></i></label><input type="range" id="aH" min="300" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="aS"><label>насиченість<i></i></label><input type="range" id="aS" min="55" max="100" step="1"><output></output></div>
-      <div class="bx-lv" data-k="aL"><label>світлота<i></i></label><input type="range" id="aL" min="40" max="76" step="1"><output></output></div>
-      <div class="bx-lv" data-k="aSoft"><label>підкладка &alpha;<i></i></label><input type="range" id="aSoft" min="6" max="34" step="1"><output></output></div>
-      <div class="bx-lv" data-k="aHL"><label>відтінок &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="aHL" min="300" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="aSL"><label>насиченість &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="aSL" min="55" max="100" step="1"><output></output></div>
-      <div class="bx-lv" data-k="aLL"><label>світлота &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="aLL" min="30" max="60" step="1"><output></output></div>
-      <div class="bx-lv" data-k="aSoftL"><label>підкладка &alpha; &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="aSoftL" min="4" max="30" step="1"><output></output></div>
-      <div class="bx-note">Діагноз «вицвіле»: <code>#FF5C93</code> = <b>L&nbsp;68&nbsp;%</b>. На OLED високе L читається як пастель, а не як сигнал. Лікується <b>насиченістю</b>, не підйомом яскравості (S2: S — домінантний важіль неону на темному). Стартова ставка для проби: <b>L&nbsp;58&ndash;62 · S&nbsp;92&ndash;100</b>. Керує акцентом усюди: бейдж, дії свайпу, кнопка «+», лоток знака, градієнт.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary>Ф &middot; фон екрана &mdash; підкладка скла (v17 &middot; К1)</summary>
-    <div class="bx-grp">
-      <div class="bx-pick" id="pkBg" data-dk="bg">
-        <button data-v="sheet" aria-pressed="true">аркуш</button>
-        <button data-v="all">аврора всюди</button>
-        <button data-v="chrome">аврора під хромом</button>
-      </div>
-      <div class="bx-note"><b>Що тут судиться.</b> Не краса фону, а <b>чи є що заломлювати</b>. <code>backdrop-filter</code> не має власного вигляду &mdash; його дає підкладка (<code>A100</code>); на плоскому полотні скло вироджується в напівпрозору заливку. <b>Аркуш</b> = чинний стан. <b>Під хромом</b> = ті самі еліпси, зсунуті в зони острівця й шапки: середина полотна лишається аркушем.<br><b>⚠ Судити в тому режимі списку, який піде в продукт.</b> У <code>картки</code> плитки непрозорі й накривають фон, у <code>ряди</code> &mdash; прозорі. Та сама аврора дасть дві різні картинки, і це не баг, а <code>A100</code>.</div>
-      <div class="bx-note"><b>⚠ Відтінки роздільні по темах (v17_4 · хід 2).</b> Це не зручність, а <b>фізика</b>: на темній канві пляма <b>світліша</b> за фон — це світіння; на канві 98 % світлішати нікуди, і щоб пляму було видно, вона мусить бути <b>темнішою</b> — це <b>кольорова тінь</b>. Два різні явища не можуть ділити відтінок, як не ділять його тінь і лампа. Правило вибору: не «який колір гарний», а <b>яка тінь буває на папері</b> — тепла (сонце) чи холодна (небо).<br><b>Крутити по одній темі за раз:</b> перемкни тему сегментом і працюй лише з її трійкою — друга гілка в цей момент оголошена мертвою, і сірий колір повзунка не бреше.</div>
-      <div class="bx-lv" data-k="bgH1L"><label>еліпс 1 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1L" min="0" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgH2L"><label>еліпс 2 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·теплий у GlassKit</b><i></i></label><input type="range" id="bgH2L" min="0" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgH3L"><label>еліпс 3 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·верх</b><i></i></label><input type="range" id="bgH3L" min="0" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgH1D"><label>еліпс 1 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1D" min="0" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgH2D"><label>еліпс 2 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·теплий у GlassKit</b><i></i></label><input type="range" id="bgH2D" min="0" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgH3D"><label>еліпс 3 &middot; відтінок <b style="color:#8aa8c8">·ТЕМНА</b> <b style="color:#9a9aa8">·верх</b><i></i></label><input type="range" id="bgH3D" min="0" max="360" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgLtL"><label>світлота еліпса &middot; <b style="color:#9a9aa8">СВІТЛА · &lt; канви = кольорова тінь</b><i></i></label><input type="range" id="bgLtL" min="35" max="95" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgLtD"><label>світлота еліпса &middot; <b style="color:#9a9aa8">ТЕМНА · &gt; канви = світіння</b><i></i></label><input type="range" id="bgLtD" min="25" max="85" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgSatL"><label>насиченість еліпса &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgSatL" min="0" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgSatD"><label>насиченість еліпса &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgSatD" min="0" max="100" step="2"><output></output></div>
-      <div class="bx-lv" data-k="bgA1L"><label>еліпс 1 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA1L" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgA2L"><label>еліпс 2 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA2L" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgA3L"><label>еліпс 3 &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="bgA3L" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgA1D"><label>еліпс 1 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA1D" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgA2D"><label>еліпс 2 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA2D" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgA3D"><label>еліпс 3 &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgA3D" min="0" max="45" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgSpread"><label>розмах плям <b style="color:#9a9aa8">·% від базових РАДІУСІВ (v17_5)</b><i></i></label><input type="range" id="bgSpread" min="40" max="160" step="5"><output></output></div>
-      <div class="bx-lv" data-k="bgTiltL"><label>нахил яскравості &middot; <b style="color:#9a9aa8">СВІТЛА · 170°, верх світліший</b><i></i></label><input type="range" id="bgTiltL" min="0" max="14" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bgTiltD"><label>нахил яскравості &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="bgTiltD" min="0" max="14" step="1"><output></output></div>
-      <div class="bx-note"><b>Відтінки спільні, сили роздільні.</b> Відтінок несе <b>ідентичність</b> &mdash; він однаковий в обох темах, бо це та сама атмосфера. Сила несе <b>глибину</b> &mdash; вона роздільна за <code>A39</code>. <b>Світлота й насиченість еліпса &mdash; важелі, роздільні за темою</b> (було: константи 70/55 і 65). Підстава фізична, а не смакова: на темній канві пляма <b>світліша</b> за фон &mdash; це світіння; на світлій канві світлішати нікуди, і щоб пляму було видно, вона мусить бути <b>темнішою</b> за канву &mdash; це кольорова тінь. Два різні явища, спільних чисел мати не можуть.<br><b>Числа &mdash; гіпотеза, не лок.</b> Стартові значення конвертовані з <code>FX-5e</code> (GlassKit). Їхня палітра &mdash; петроль і бурштин; бренд EquipLens інший, тому відтінок тут повноцінний важіль, а не константа.</div>
-    </div>
-  </details>
-
-  <details>
-    <summary>M &middot; шапка, чіпи, тон дій і кнопки &laquo;+&raquo;</summary>
-    <div class="bx-grp">
-      <div class="bx-pick" id="pkHgrp" data-dk="hgrp">
+  <div class="bx-tab" data-tab="chrome">
+    <details open>
+      <summary>ХРОМ &middot; капсула &middot; тіло і скло</summary>
+      <div class="bx-grp">
+        <div class="bx-lv" data-k="bH"><label>висота<i></i></label><input type="range" id="bH" min="28" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bR"><label>радіус<i></i></label><input type="range" id="bR" min="6" max="20" step="1"><output></output></div>
+        <div class="bx-pick" id="pkBfill" data-dk="bfill">
+        <button data-v="surf" aria-pressed="true">на поверхні</button>
+        <button data-v="out">обведення</button>
+        <button data-v="bare">без фону</button>
+        </div>
+        <div class="bx-note">Схема залочена (перемикач теми + «•••»), судиться <b>форма</b>. Тягнути вигляд зі StockCheck 1:1 заборонено (В-5).</div>
+        <div class="bx-pick" id="pkHgrp" data-dk="hgrp">
         <button data-v="none">кнопки окремо</button>
         <button data-v="surf" aria-pressed="true">пігулка на поверхні</button>
         <button data-v="well">пігулка втоплена</button>
         <button data-v="float">пігулка плаває</button>
         <button data-v="glass">скло</button>
         <button data-v="flat">контроль: заливка</button>
+        </div>
+        <div class="bx-pick" id="pkHbare" data-dk="hbare"><button data-v="1" aria-pressed="true">пігулка без фону</button><button data-v="0">з фоном</button></div>
+        <div class="bx-lv" data-k="hpToneL"><label>тон · СВІТЛА <b style="color:#9a9aa8">·&minus; темніше · + світліше</b><i></i></label><input type="range" id="hpToneL" min="-25" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpToneD"><label>тон · ТЕМНА <b style="color:#9a9aa8">·+ = tone-lift (A45)</b><i></i></label><input type="range" id="hpToneD" min="-25" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpRimL"><label>кант · СВІТЛА <b style="color:#9a9aa8">·темний</b><i></i></label><input type="range" id="hpRimL" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpRimD"><label>кант · ТЕМНА <b style="color:#9a9aa8">·світлий</b><i></i></label><input type="range" id="hpRimD" min="0" max="60" step="2"><output></output></div>
+        <div class="bx-lv" data-k="hpRidgeL"><label>блік верх · СВІТЛА<i></i></label><input type="range" id="hpRidgeL" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpRidgeD"><label>блік верх · ТЕМНА<i></i></label><input type="range" id="hpRidgeD" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpElev"><label>тінь: розмиття <b style="color:#9a9aa8">·тільки світла</b><i></i></label><input type="range" id="hpElev" min="0" max="28" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpShA"><label>тінь: сила <b style="color:#9a9aa8">·тільки світла</b><i></i></label><input type="range" id="hpShA" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpShY"><label>тінь: зсув &darr; <b style="color:#9a9aa8">·світла · мале розмиття + зсув 1 = контактна</b><i></i></label><input type="range" id="hpShY" min="0" max="8" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpBlur"><label>скло: blur<i></i></label><input type="range" id="hpBlur" min="0" max="24" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hpSat"><label>скло: saturate<i></i></label><input type="range" id="hpSat" min="100" max="220" step="5"><output></output></div>
       </div>
-      <div class="bx-pick" id="pkHbare" data-dk="hbare"><button data-v="1" aria-pressed="true">пігулка без фону</button><button data-v="0">з фоном</button></div>
-      <div class="bx-lv" data-k="hpToneL"><label>тон · СВІТЛА <b style="color:#9a9aa8">·&minus; темніше · + світліше</b><i></i></label><input type="range" id="hpToneL" min="-25" max="40" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpToneD"><label>тон · ТЕМНА <b style="color:#9a9aa8">·+ = tone-lift (A45)</b><i></i></label><input type="range" id="hpToneD" min="-25" max="40" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpRimL"><label>кант · СВІТЛА <b style="color:#9a9aa8">·темний</b><i></i></label><input type="range" id="hpRimL" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpRimD"><label>кант · ТЕМНА <b style="color:#9a9aa8">·світлий</b><i></i></label><input type="range" id="hpRimD" min="0" max="60" step="2"><output></output></div>
-      <div class="bx-lv" data-k="hpRidgeL"><label>блік верх · СВІТЛА<i></i></label><input type="range" id="hpRidgeL" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpRidgeD"><label>блік верх · ТЕМНА<i></i></label><input type="range" id="hpRidgeD" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpElev"><label>тінь: розмиття <b style="color:#9a9aa8">·тільки світла</b><i></i></label><input type="range" id="hpElev" min="0" max="28" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpShA"><label>тінь: сила <b style="color:#9a9aa8">·тільки світла</b><i></i></label><input type="range" id="hpShA" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpShY"><label>тінь: зсув &darr; <b style="color:#9a9aa8">·світла · мале розмиття + зсув 1 = контактна</b><i></i></label><input type="range" id="hpShY" min="0" max="8" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpBlur"><label>скло: blur<i></i></label><input type="range" id="hpBlur" min="0" max="24" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hpSat"><label>скло: saturate<i></i></label><input type="range" id="hpSat" min="100" max="220" step="5"><output></output></div>
-      <div class="bx-note"><b>Що роздільне і чому.</b> Тон, кант, блік і тінь несуть <b>глибину</b> — вони роздільні по темах (A39). <code>blur</code> і <code>saturate</code> несуть <b>оптику</b> й лишились спільними: радіус розмиття геометричний, а не тональний. Якщо девайс покаже розходження — розділити окремим кроком.<br><b>Контроль лишається контролем:</b> <code>заливка</code> отримує тон, кант, блік і тінь ті самі, що й <code>скло</code>. Різниця між ними рівно одна — <code>blur</code>. Інакше вирок §0-2 недійсний.</div>
-      <div class="bx-lv" data-k="hdvIn"><label>роздільник: вріз <b style="color:#9a9aa8">·0 = на всю висоту</b><i></i></label><input type="range" id="hdvIn" min="0" max="14" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hdvW"><label>роздільник: товщина<i></i></label><input type="range" id="hdvW" min="5" max="20" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hdvGap"><label>роздільник: зазор з боків<i></i></label><input type="range" id="hdvGap" min="0" max="10" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hdvAL"><label>роздільник: сила · СВІТЛА<i></i></label><input type="range" id="hdvAL" min="0" max="60" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hdvAD"><label>роздільник: сила · ТЕМНА<i></i></label><input type="range" id="hdvAD" min="0" max="60" step="1"><output></output></div>
-      <div class="bx-note"><b>Вріз, не висота.</b> Роздільник тягнеться на всю висоту пігулки, а <code>вріз</code> підрізає його зверху й знизу симетрично — тому число не треба перераховувати щоразу, коли зміниться висота кнопок (<code>bH</code>). При <code>вріз 0</code> лінія йде від краю до краю й читається як шов, а не як пауза.</div>
-      <div class="bx-lv" data-k="hbSw"><label>іконки: вага штриха<i></i></label><input type="range" id="hbSw" min="14" max="26" step="1"><output></output></div>
-      <div class="bx-lv" data-k="hbInkL"><label>іконки: тон &middot; <b style="color:#9a9aa8">СВІТЛА · 0=приглушені · 100=основне</b><i></i></label><input type="range" id="hbInkL" min="0" max="100" step="5"><output></output></div>
-      <div class="bx-lv" data-k="hbInkD"><label>іконки: тон &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="hbInkD" min="0" max="100" step="5"><output></output></div>
-      <div class="bx-lv" data-k="hbSz"><label>іконки: розмір<i></i></label><input type="range" id="hbSz" min="14" max="22" step="1"><output></output></div>
-      <div class="bx-note"><b>Тон працює при БУДЬ-ЯКОМУ матеріалі.</b> «На поверхні» і «плаває» різняться лише тінню — якщо пігулка кричить, причина майже завжди в тоні, а не в глибині.</div>
-      <div class="bx-note"><b>Скло ⟂ контроль.</b> Під статичною шапкою немає скрол-контенту, тож блюрити нічого (<code>FINDINGS §1</code>). Порівняй <code>скло</code> з <code>контроль: заливка</code> при тому самому тоні: якщо різниці немає — лок «скло тільки внизу» підтверджено, і питання закрите.</div>
-      <div class="bx-note"><b>Іконки судити ПІСЛЯ матеріалу</b> (2.8): скло піднімає локальну яскравість і з'їдає контраст гліфа. Крутити разом = брудний вирок.</div>
-      <div class="bx-pick" id="pkHdiv" data-dk="hdiv">
+    </details>
+    <details>
+      <summary>ХРОМ &middot; капсула &middot; роздільник та іконки</summary>
+      <div class="bx-grp">
+        <div class="bx-note"><b>Що роздільне і чому.</b> Тон, кант, блік і тінь несуть <b>глибину</b> — вони роздільні по темах (A39). <code>blur</code> і <code>saturate</code> несуть <b>оптику</b> й лишились спільними: радіус розмиття геометричний, а не тональний. Якщо девайс покаже розходження — розділити окремим кроком.<br><b>Контроль лишається контролем:</b> <code>заливка</code> отримує тон, кант, блік і тінь ті самі, що й <code>скло</code>. Різниця між ними рівно одна — <code>blur</code>. Інакше вирок §0-2 недійсний.</div>
+        <div class="bx-lv" data-k="hdvIn"><label>роздільник: вріз <b style="color:#9a9aa8">·0 = на всю висоту</b><i></i></label><input type="range" id="hdvIn" min="0" max="14" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hdvW"><label>роздільник: товщина<i></i></label><input type="range" id="hdvW" min="5" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hdvGap"><label>роздільник: зазор з боків<i></i></label><input type="range" id="hdvGap" min="0" max="10" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hdvAL"><label>роздільник: сила · СВІТЛА<i></i></label><input type="range" id="hdvAL" min="0" max="60" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hdvAD"><label>роздільник: сила · ТЕМНА<i></i></label><input type="range" id="hdvAD" min="0" max="60" step="1"><output></output></div>
+        <div class="bx-note"><b>Тон працює при БУДЬ-ЯКОМУ матеріалі.</b> «На поверхні» і «плаває» різняться лише тінню — якщо пігулка кричить, причина майже завжди в тоні, а не в глибині.</div>
+        <div class="bx-note"><b>Скло ⟂ контроль.</b> Під статичною шапкою немає скрол-контенту, тож блюрити нічого (<code>FINDINGS §1</code>). Порівняй <code>скло</code> з <code>контроль: заливка</code> при тому самому тоні: якщо різниці немає — лок «скло тільки внизу» підтверджено, і питання закрите.</div>
+        <div class="bx-note"><b>Іконки судити ПІСЛЯ матеріалу</b> (2.8): скло піднімає локальну яскравість і з'їдає контраст гліфа. Крутити разом = брудний вирок.</div>
+        <div class="bx-pick" id="pkHdiv" data-dk="hdiv">
         <button data-v="1" aria-pressed="true">роздільник перед &laquo;&hellip;&raquo;</button>
         <button data-v="0">без роздільника</button>
+        </div>
+        <div class="bx-note"><b>Вріз, не висота.</b> Роздільник тягнеться на всю висоту пігулки, а <code>вріз</code> підрізає його зверху й знизу симетрично — тому число не треба перераховувати щоразу, коли зміниться висота кнопок (<code>bH</code>). При <code>вріз 0</code> лінія йде від краю до краю й читається як шов, а не як пауза.</div>
+        <div class="bx-lv" data-k="hbSw"><label>іконки: вага штриха<i></i></label><input type="range" id="hbSw" min="14" max="26" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hbInkL"><label>іконки: тон &middot; <b style="color:#9a9aa8">СВІТЛА · 0=приглушені · 100=основне</b><i></i></label><input type="range" id="hbInkL" min="0" max="100" step="5"><output></output></div>
+        <div class="bx-lv" data-k="hbInkD"><label>іконки: тон &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="hbInkD" min="0" max="100" step="5"><output></output></div>
+        <div class="bx-lv" data-k="hbSz"><label>іконки: розмір<i></i></label><input type="range" id="hbSz" min="14" max="22" step="1"><output></output></div>
       </div>
-      <div class="bx-pick" id="pkChip" data-dk="chipMat">
-        <button data-v="out" aria-pressed="true">чіпи обведені</button>
-        <button data-v="surf">на поверхні</button>
-        <button data-v="fill">залиті</button>
+    </details>
+    <details>
+      <summary>ХРОМ &middot; острівець і бейдж</summary>
+      <div class="bx-grp">
+        <div class="bx-note"><b>Висоту вести від кегля назви, не від абсолюту:</b> робоча прив'язка <code>висота = кегль назви + 6</code>, вилка ±2. При <code>nSize 14</code> це 20px. Інакше пропорція злітає щоразу, коли рухається назва.<br><b>Радіус — це вибір мови, не смаку.</b> Капсула (16) — мова <i>контролів</i>: рівно такий радіус мають фільтр-чіпи над списком, і око читає «це можна натиснути». Мітка (0–6) лишає пігулку в контенті. За тезою «аркуш» ставка на мітку, але судиш ти.</div>
+        <div class="bx-lv" data-k="navH"><label>низ: висота острівця <b style='color:#9a9aa8'>·пара до «+»</b><i></i></label><input type="range" id="navH" min="48" max="76" step="1"><output></output></div>
+        <div class="bx-lv" data-k="nvSz"><label>низ: розмір іконки<i></i></label><input type="range" id="nvSz" min="15" max="24" step="1"><output></output></div>
+        <div class="bx-lv" data-k="nvSw"><label>низ: вага штриха<i></i></label><input type="range" id="nvSw" min="14" max="26" step="1"><output></output></div>
+        <div class="bx-lv" data-k="nvLbl"><label>низ: кегль підпису<i></i></label><input type="range" id="nvLbl" min="80" max="130" step="5"><output></output></div>
+        <div class="bx-lv" data-k="nvGap"><label>низ: зазор іконка↔підпис<i></i></label><input type="range" id="nvGap" min="0" max="8" step="1"><output></output></div>
+        <div class="bx-note"><b>Острівець і «+» — одна підсистема.</b> Три робочі відношення: <b>рівні</b> (<code>navH = fabS</code>) — читаються як одна система; <b>підпорядковане</b> (<code>fabS = navH − 8…10</code>) — «+» другорядний; <b>домінантне</b> (<code>fabS &gt; navH</code>) — «+» найгучніший об'єкт екрана, що для нотатника хибно. Поточні 60/56 — це <code>navH − 4</code>: не рівне і не явно менше, око бачить не ієрархію, а неточність. Рухати по одному (2.8).</div>
+        <div class="bx-lv" data-k="bdH"><label>бейдж: висота<i></i></label><input type="range" id="bdH" min="20" max="34" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bdR"><label>бейдж: радіус <b style='color:#9a9aa8'>·17 = капсула</b><i></i></label><input type="range" id="bdR" min="4" max="17" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bdSize"><label>бейдж: кегль<i></i></label><input type="range" id="bdSize" min="110" max="170" step="5"><output></output></div>
+        <div class="bx-lv" data-k="bdFillL"><label>бейдж: підкладка · СВІТЛА<i></i></label><input type="range" id="bdFillL" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="bdFillD"><label>бейдж: підкладка · ТЕМНА<i></i></label><input type="range" id="bdFillD" min="0" max="30" step="1"><output></output></div>
       </div>
-      <div class="bx-lv" data-k="ctH"><label>місто: висота <b style='color:#9a9aa8'>·кегль назви + 6</b><i></i></label><input type="range" id="ctH" min="16" max="26" step="1"><output></output></div>
-      <div class="bx-lv" data-k="ctSize"><label>місто: кегль<i></i></label><input type="range" id="ctSize" min="90" max="130" step="5"><output></output></div>
-      <div class="bx-lv" data-k="ctR"><label>місто: радіус <b style='color:#9a9aa8'>·0 = мітка · 16 = капсула</b><i></i></label><input type="range" id="ctR" min="0" max="16" step="1"><output></output></div>
-      <div class="bx-lv" data-k="ctPx"><label>місто: бічні поля<i></i></label><input type="range" id="ctPx" min="4" max="12" step="1"><output></output></div>
-      <div class="bx-lv" data-k="ctRimL"><label>місто: кант · СВІТЛА<i></i></label><input type="range" id="ctRimL" min="0" max="40" step="1"><output></output></div>
-      <div class="bx-lv" data-k="ctRimD"><label>місто: кант · ТЕМНА<i></i></label><input type="range" id="ctRimD" min="0" max="60" step="2"><output></output></div>
-      <div class="bx-lv" data-k="ctFill"><label>місто: заливка <b style='color:#9a9aa8'>·0 = форму несе кант</b><i></i></label><input type="range" id="ctFill" min="0" max="20" step="1"><output></output></div>
-      <div class="bx-lv" data-k="ctInkL"><label>місто: чорнило &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="ctInkL" min="0" max="100" step="5"><output></output></div>
-      <div class="bx-lv" data-k="ctInkD"><label>місто: чорнило &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="ctInkD" min="0" max="100" step="5"><output></output></div>
-      <div class="bx-note"><b>Висоту вести від кегля назви, не від абсолюту:</b> робоча прив'язка <code>висота = кегль назви + 6</code>, вилка ±2. При <code>nSize 14</code> це 20px. Інакше пропорція злітає щоразу, коли рухається назва.<br><b>Радіус — це вибір мови, не смаку.</b> Капсула (16) — мова <i>контролів</i>: рівно такий радіус мають фільтр-чіпи над списком, і око читає «це можна натиснути». Мітка (0–6) лишає пігулку в контенті. За тезою «аркуш» ставка на мітку, але судиш ти.</div>
-      <div class="bx-lv" data-k="navH"><label>низ: висота острівця <b style='color:#9a9aa8'>·пара до «+»</b><i></i></label><input type="range" id="navH" min="48" max="76" step="1"><output></output></div>
-      <div class="bx-lv" data-k="nvSz"><label>низ: розмір іконки<i></i></label><input type="range" id="nvSz" min="15" max="24" step="1"><output></output></div>
-      <div class="bx-lv" data-k="nvSw"><label>низ: вага штриха<i></i></label><input type="range" id="nvSw" min="14" max="26" step="1"><output></output></div>
-      <div class="bx-lv" data-k="nvLbl"><label>низ: кегль підпису<i></i></label><input type="range" id="nvLbl" min="80" max="130" step="5"><output></output></div>
-      <div class="bx-lv" data-k="nvGap"><label>низ: зазор іконка↔підпис<i></i></label><input type="range" id="nvGap" min="0" max="8" step="1"><output></output></div>
-      <div class="bx-note"><b>Острівець і «+» — одна підсистема.</b> Три робочі відношення: <b>рівні</b> (<code>navH = fabS</code>) — читаються як одна система; <b>підпорядковане</b> (<code>fabS = navH − 8…10</code>) — «+» другорядний; <b>домінантне</b> (<code>fabS &gt; navH</code>) — «+» найгучніший об'єкт екрана, що для нотатника хибно. Поточні 60/56 — це <code>navH − 4</code>: не рівне і не явно менше, око бачить не ієрархію, а неточність. Рухати по одному (2.8).</div>
-      <div class="bx-lv" data-k="bdH"><label>бейдж: висота<i></i></label><input type="range" id="bdH" min="20" max="34" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bdR"><label>бейдж: радіус <b style='color:#9a9aa8'>·17 = капсула</b><i></i></label><input type="range" id="bdR" min="4" max="17" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bdSize"><label>бейдж: кегль<i></i></label><input type="range" id="bdSize" min="110" max="170" step="5"><output></output></div>
-      <div class="bx-lv" data-k="bdFillL"><label>бейдж: підкладка · СВІТЛА<i></i></label><input type="range" id="bdFillL" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="bdFillD"><label>бейдж: підкладка · ТЕМНА<i></i></label><input type="range" id="bdFillD" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-note"><b>Це той самий бейдж, яким судиться тінт активного чіпа.</b> Акцент в «аркуші» має одну роботу — числа потреб. Якщо після будь-якої правки бейдж перестав бути найгучнішим на екрані, програла правка, а не бейдж.</div>
-      <div class="bx-pick" id="pkCtlOn" data-dk="ctlOn">
-        <button data-v="solid" aria-pressed="true">активний: суцільний</button>
-        <button data-v="tint">тінт</button>
-        <button data-v="well">втоплений</button>
-        <button data-v="mark">мітка</button>
-      </div>
-      <div class="bx-lv" data-k="ctlOnTintL"><label>тінт: насиченість · СВІТЛА<i></i></label><input type="range" id="ctlOnTintL" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="ctlOnTintD"><label>тінт: насиченість · ТЕМНА<i></i></label><input type="range" id="ctlOnTintD" min="0" max="30" step="1"><output></output></div>
-      <div class="bx-lv" data-k="ctlOnDep"><label>втоплення: глибина<i></i></label><input type="range" id="ctlOnDep" min="0" max="20" step="1"><output></output></div>
-      <div class="bx-lv" data-k="ctlOnRim"><label>активний: кант<i></i></label><input type="range" id="ctlOnRim" min="0" max="60" step="2"><output></output></div>
-      <div class="bx-lv" data-k="ctlOnInk"><label>активний: чорнило <b style="color:#9a9aa8">·0=приглушене · 100=основне</b><i></i></label><input type="range" id="ctlOnInk" min="0" max="100" step="5"><output></output></div>
-      <div class="bx-note"><b>Чому «суцільний» читався як ніякий.</b> Інверсна заливка — не рівень гучності, а її максимум: градації в неї немає, тому й судити нема що. Три інші варіанти дають стану <b>матеріал</b>, а не яскравість.<br><b>Ризик тінту, який треба тримати в голові.</b> За тезою «аркуш» акцент має <b>одну роботу</b>, і вона вже витрачена — малинові числа потреб. Тінт дає акценту другу роботу; якщо після нього бейдж перестає бути найгучнішим на екрані, варіант програв, хай яким гарним він здається зблизька.</div>
-      <div class="bx-pick" id="pkAct" data-dk="actTone">
-        <button data-v="signal">дії: сигнальні</button>
-        <button data-v="neutral" aria-pressed="true">нейтральні</button>
-        <button data-v="quiet">приглушені</button>
-      </div>
-      <div class="bx-pick" id="pkFabT" data-dk="fabTone">
+    </details>
+  </div>
+
+  <div class="bx-tab" data-tab="fab">
+    <details open>
+      <summary>БУЛЬБАШКА &middot; матеріал і кант</summary>
+      <div class="bx-grp">
+        <div class="bx-lv" data-k="fabS"><label>діаметр<i></i></label><input type="range" id="fabS" min="46" max="70" step="2"><output></output></div>
+        <div class="bx-pick" id="pkFabT" data-dk="fabTone">
         <button data-v="accent" aria-pressed="true">«+» акцентом</button>
         <button data-v="neutral">нейтральна</button>
         <button data-v="glass">скляна</button>
+        </div>
+        <div class="bx-note">Чіпи більше <b>не залежать від тези побічно</b> — це третій ключ пакета, і його теж видно в лічильнику «перебито».</div>
+        <div class="bx-lv" data-k="fabAL"><label>світла: alpha фону <b style="color:#E4005A">·35–45 скло</b><i></i></label><input type="range" id="fabAL" min="20" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabAD"><label>темна: alpha фону <b style="color:#9a9aa8">·не судилось</b><i></i></label><input type="range" id="fabAD" min="20" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabBlur"><label>блюр &Delta; до острівця<i></i></label><input type="range" id="fabBlur" min="-10" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabSat"><label>насиченість &Delta;<i></i></label><input type="range" id="fabSat" min="-40" max="60" step="5"><output></output></div>
+        <div class="bx-lv" data-k="fabRimAL"><label>кант &middot; <b style="color:#9a9aa8">СВІТЛА</b> (темний по склу)<i></i></label><input type="range" id="fabRimAL" min="0" max="60" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabRimAD"><label>кант &middot; <b style="color:#9a9aa8">ТЕМНА</b> (білий по склу)<i></i></label><input type="range" id="fabRimAD" min="0" max="60" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabRimW"><label>кант: товщина <b style="color:#9a9aa8">·0 = зняти зовсім</b><i></i></label><input type="range" id="fabRimW" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabElev"><label>елевація <b style="color:#9a9aa8">·при alpha≈.4 важка від 16</b><i></i></label><input type="range" id="fabElev" min="0" max="40" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabGap"><label>зазор до острівця<i></i></label><input type="range" id="fabGap" min="6" max="24" step="1"><output></output></div>
+        <div class="bx-pick" id="pkAlign" data-dk="fabAlign">
+        <button data-v="mid" aria-pressed="true">по центру острівця</button>
+        <button data-v="base">по нижньому ребру</button>
+        </div>
+        <div class="bx-pick" id="pkHand" data-dk="hand">
+        <button data-v="right" aria-pressed="true">рука: права</button>
+        <button data-v="left">рука: ліва</button>
+        </div>
+        <div class="bx-note">&#128295; <b>v16 · геометрія шейдингу розщеплена по темах.</b> До v15 роздільними були тільки <b>сили</b> (<code>shTop/shBot/shSpec/shRim</code>), а <b>полюс</b> (<code>X·Y</code>), радіус бліка й розтяг rim лишались спільними. Це A39 у новому місці: рух полюса на темній мовчки ламав світлу, і судити було неможливо. Тепер світло на світлій імітує <b>зовнішнє</b> освітлення, на темній &mdash; <b>джерело в товщі скла</b>; це дві різні задачі, а не одна з коефіцієнтом.</div>
+        <div class="bx-note"><b>Rim живе тільки на бульбашці</b> &mdash; і це оголошено, а не забуто. Відбите знизу світло має сенс на <i>дузі</i>; у капсули й острівця нижня кромка пряма, і там ту саму роботу вже робить власний блік (<code>hpRidge</code>). Дві мови на одну задачу дали б подвійний суд.</div>
+        <div class="bx-pick" id="pkFabE" data-dk="fabEdge">
+        <button data-v="none" aria-pressed="true">край: голий</button>
+        <button data-v="ring">внутр. кільце</button>
+        <button data-v="halo">ореол</button>
+        <button data-v="both">обидва</button>
+        </div>
+        <div class="bx-lv" data-k="fabRingAL"><label>кільце: сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="fabRingAL" min="0" max="40" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabRingAD"><label>кільце: сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="fabRingAD" min="0" max="40" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabRingW"><label>кільце: товщина <b style="color:#9a9aa8">·ВИДИМА, після канта</b><i></i></label><input type="range" id="fabRingW" min="0" max="40" step="1"><output></output></div>
       </div>
-      <div class="bx-note">Чіпи більше <b>не залежать від тези побічно</b> — це третій ключ пакета, і його теж видно в лічильнику «перебито».</div>
-    </div>
-  </details>
+    </details>
+    <details>
+      <summary>БУЛЬБАШКА &middot; тінь і ореол</summary>
+      <div class="bx-grp">
+        <div class="bx-pick" id="pkShT" data-dk="fabShTint">
+        <button data-v="none" aria-pressed="true">тінь: нейтральна</button>
+        <button data-v="accent">тінь: у тон акценту</button>
+        </div>
+        <div class="bx-lv" data-k="fabShA"><label>дальня тінь: сила<i></i></label><input type="range" id="fabShA" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabShY"><label>дальня тінь: зсув &darr; <b style="color:#9a9aa8">·0 = рівно по діаметру</b><i></i></label><input type="range" id="fabShY" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabShS"><label>дальня тінь: spread <b style="color:#9a9aa8">·&minus; стискає до краю</b><i></i></label><input type="range" id="fabShS" min="-16" max="4" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabShCY"><label>контактна: зсув &darr; <b style="color:#9a9aa8">·світла</b><i></i></label><input type="range" id="fabShCY" min="0" max="6" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabShCB"><label>контактна: розмиття <b style="color:#9a9aa8">·світла</b><i></i></label><input type="range" id="fabShCB" min="0" max="12" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabShCA"><label>контактна: сила <b style="color:#9a9aa8">·світла · 0 = вимкнено</b><i></i></label><input type="range" id="fabShCA" min="0" max="35" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabShCS"><label>контактна: spread <b style="color:#9a9aa8">·світла</b><i></i></label><input type="range" id="fabShCS" min="-4" max="4" step="1"><output></output></div>
+        <div class="bx-pick" id="pkShOrd" data-dk="fabShOrd">
+        <button data-v="over" aria-pressed="true">контактна над ореолом</button>
+        <button data-v="under">під ореолом</button>
+        </div>
+        <div class="bx-note">&#128295; <b>v15 · кант більше не з'їдає кільце.</b> Обидва &mdash; суцільні <code>inset</code> від кромки всередину, і кант малюється <b>зверху</b> (перший шар <code>box-shadow</code> = верхній). Доки кільце відлічувалось від тієї ж кромки, воно було видиме лише у просвіті <code>кільце &minus; кант</code>, а при стелях 3.0px / 4.0px запас складав <b>1px</b>: посилення канта гасило кільце арифметично, не на смак. Тепер важіль задає <b>видиму</b> товщину, а повна рахується як <code>кант + кільце</code> &mdash; кант штовхає кільце вглиб замість того, щоб його їсти.</div>
+        <div class="bx-lv" data-k="fabHaloSL"><label>ореол СВІТЛА: розтяг<i></i></label><input type="range" id="fabHaloSL" min="0" max="30" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabHaloAL"><label>ореол СВІТЛА: сила<i></i></label><input type="range" id="fabHaloAL" min="0" max="35" step="1"><output></output></div>
+        <div class="bx-lv" data-k="fabHaloSD"><label>ореол ТЕМНА: розтяг<i></i></label><input type="range" id="fabHaloSD" min="0" max="30" step="2"><output></output></div>
+        <div class="bx-lv" data-k="fabHaloAD"><label>ореол ТЕМНА: сила<i></i></label><input type="range" id="fabHaloAD" min="0" max="35" step="1"><output></output></div>
+        <div class="bx-pick" id="pkShPos" data-dk="shPos">
+        <button data-v="screen" aria-pressed="true">шіт: від низу екрана</button>
+        <button data-v="island">на кромці острівця</button>
+        </div>
+        <div class="bx-note"><b>Прозорість &mdash; це alpha фону, НЕ <code>opacity</code>.</b> <code>opacity&lt;1</code> зробило б бульбашку backdrop-root і вбило б її ж blur (Ф-3 розвідки 21.08). Важеля <code>opacity</code> тут немає навмисно &mdash; він був би не просто мертвим, а шкідливим.</div>
+        <div class="bx-note"><b>Блюр &mdash; дельта, не абсолют.</b> Острівець блюрить 12px. Два скла впритул із різними радіусами дають видимий шов на кромці вирізу, тож судиться саме різниця. <code>&Delta;=0</code> &mdash; одне скло на двох тілах.</div>
+        <div class="bx-note">⚠️ <b>WebKit 158807:</b> <code>-webkit-backdrop-filter</code> лишає артефакти на заокруглених рамках. Коло + кант + скло &mdash; найризикованіша форма з можливих. Якщо на кромці видно брудну облямівку &mdash; це платформа, і лікується зняттям канта або перенесенням його в псевдоелемент поверх.</div>
+        <div class="bx-note"><b>Ореол &ne; кільце</b> (Cookbook <b>A88</b>). Кільце (<code>inset</code>) додає чіткості <b>формі</b> &mdash; всередині, від фону не залежить, на скролі не дихає. Ореол (зовнішній) додає <b>відділення від контенту</b> &mdash; від фону залежить повністю.</div>
+        <div class="bx-note">&#128308; <b>Виправлено у v8.</b> До v7 ореол малювався <code>rgba(20,20,30)</code> на <b>обох</b> темах: на світлій це була друга тінь під першою &mdash; читалось як бруд, не як відділення. Тепер ореол <b>білий на обох темах</b>, а важелі розтягу й сили &mdash; <b>роздільні</b>. Спільний важіль на дві теми не давав судити взагалі: тюн світлої псував темну (<b>A39</b>).</div>
+        <div class="bx-note">Темного ореолу на світлій темі немає й важеля під нього не буде: за <b>A88</b> на світлій ореол або білий, або відсутній. &laquo;Відсутній&raquo; вже дає перемикач <b>край: голий / внутр. кільце</b> &mdash; окремий важіль лише повертав би закрите рішення.</div>
+      </div>
+    </details>
+    <details>
+      <summary>БУЛЬБАШКА &middot; DARK-шейдинг тіла (К2)</summary>
+      <div class="bx-grp">
+        <div class="bx-note"><b>Spread стискає, blur розмазує.</b> На колі мале розмиття не дає щільності: кожна точка периметра дивиться в свій бік, тінь розповзається дугою. Щільність під бульбашкою дає <b>від'ємний spread</b>, а не менший blur. Порядок шарів вирішує, чи контактна лягає поверх білого ореолу, чи під ним — на світлій це різні характери, тому важіль, а не константа.</div>
+        <div class="bx-note"><b>Тінь у тон — важіль СВІТЛОЇ теми.</b> На темній вона примусово нейтральна: <code>A45</code> — темна елевація це тон, не drop-shadow, а кольорове світіння на OLED дасть неон. Перемикач на темній стоїть у таблиці мертвих.</div>
+        <div class="bx-note"><b>Рука дзеркалить КНОПКУ, не застосунок.</b> Свайп-дії рядка й бейджі лишаються праворуч — це свідомий компроміс, а не недоробка.</div>
+        <div class="bx-note" style="border-color:#E4005A55"><b>ШЕЙДИНГ ТІЛА (v13 · 5в-1).</b> Тінь позаду тіла повідомляє <i>висоту</i>. Форму — опуклість, яку хочеться вдавити — повідомляє тільки світлотінь <i>по самому тілу</i>: градієнт заливки, блік і відбите знизу світло. Важелі сили розчеплені по темах з першого дня; спільними лишились тільки <b>X/Y</b> — напрямок світла у сцені один, це фізика, а не сприйняття.</div>
+        <div class="bx-pick" id="pkShWho" data-dk="shWho">
+        <button data-v="off" aria-pressed="true">шейдинг: вимк</button>
+        <button data-v="fab">лише «+»</button>
+        <button data-v="fabnav">«+» і острівець</button>
+        <button data-v="all">усі три</button>
+        </div>
+        <div class="bx-lv" data-k="shXL"><label>джерело світла: X &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shXL" min="0" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="shYL"><label>джерело світла: Y &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shYL" min="0" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="shXD"><label>джерело світла: X &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shXD" min="0" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="shYD"><label>джерело світла: Y &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shYD" min="0" max="100" step="2"><output></output></div>
+        <div class="bx-lv" data-k="shTopL"><label>світло тіла &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shTopL" min="0" max="60" step="1"><output></output></div>
+        <div class="bx-lv" data-k="shTopD"><label>світло тіла &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shTopD" min="0" max="60" step="1"><output></output></div>
+        <div class="bx-lv" data-k="shBotL"><label>затемнення низу &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shBotL" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="shBotD"><label>затемнення низу &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shBotD" min="0" max="45" step="1"><output></output></div>
+        <div class="bx-lv" data-k="shSpecSL"><label>блік: радіус &middot; <b style="color:#9a9aa8">СВІТЛА &middot; px, не %</b><i></i></label><input type="range" id="shSpecSL" min="2" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="shSpecSD"><label>блік: радіус &middot; <b style="color:#9a9aa8">ТЕМНА &middot; px, не %</b><i></i></label><input type="range" id="shSpecSD" min="2" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="shSpecL"><label>блік: сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shSpecL" min="0" max="80" step="2"><output></output></div>
+        <div class="bx-lv" data-k="shSpecD"><label>блік: сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shSpecD" min="0" max="80" step="2"><output></output></div>
+        <div class="bx-lv" data-k="shRimBL"><label>rim знизу: розтяг &middot; <b style="color:#9a9aa8">СВІТЛА &middot; тільки «+»</b><i></i></label><input type="range" id="shRimBL" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="shRimBD"><label>rim знизу: розтяг &middot; <b style="color:#9a9aa8">ТЕМНА &middot; тільки «+»</b><i></i></label><input type="range" id="shRimBD" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="shRimL"><label>rim знизу: сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="shRimL" min="0" max="60" step="2"><output></output></div>
+        <div class="bx-lv" data-k="shRimD"><label>rim знизу: сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="shRimD" min="0" max="60" step="2"><output></output></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="bx-tab" data-tab="mark">
+    <details open>
+      <summary>ЗНАК &middot; силует</summary>
+      <div class="bx-grp">
+        <div class="bx-pick" id="pkMark" data-dk="mark">
+        <button data-v="n1" aria-pressed="true">Н1 пружина</button>
+        <button data-v="n2">Н2 незаповнений рядок</button>
+        <button data-v="n3">Н3 виріз</button>
+        <button data-v="none">Н4 без знака</button>
+        <button data-v="n5" aria-pressed="true">Н5 аркуш у лотку</button>
+        </div>
+        <div class="bx-lv" data-k="mSize"><label>розмір<i></i></label><input type="range" id="mSize" min="22" max="42" step="1"><output></output></div>
+        <div class="bx-lv" data-k="mSw"><label>штрих<i></i></label><input type="range" id="mSw" min="1.2" max="3.2" step="0.1"><output></output></div>
+        <div class="bx-lv" data-k="mGap"><label>зазор &harr; wm<i></i></label><input type="range" id="mGap" min="0" max="14" step="1"><output></output></div>
+        <div class="bx-lv" data-k="hSize"><label>герой<i></i></label><input type="range" id="hSize" min="64" max="128" step="4"><output></output></div>
+        <div class="bx-lv" data-k="pRad"><label>радіус аркуша<i></i></label><input type="range" id="pRad" min="0" max="5" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="n1Holes"><label>Н1 отворів<i></i></label><input type="range" id="n1Holes" min="2" max="5" step="1"><output></output></div>
+        <div class="bx-lv" data-k="n1R"><label>Н1 радіус отв.<i></i></label><input type="range" id="n1R" min="0.8" max="2.6" step="0.1"><output></output></div>
+        <div class="bx-lv" data-k="n2Lines"><label>Н2 ліній<i></i></label><input type="range" id="n2Lines" min="2" max="4" step="1"><output></output></div>
+        <div class="bx-lv" data-k="n2Stub"><label>Н2 обрив<i></i></label><input type="range" id="n2Stub" min="15" max="90" step="5"><output></output></div>
+        <div class="bx-lv" data-k="n3W"><label>Н3 виріз Ш<i></i></label><input type="range" id="n3W" min="4" max="12" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="n3H"><label>Н3 виріз В<i></i></label><input type="range" id="n3H" min="3" max="10" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="n5Cut"><label>Н5 загин кута<i></i></label><input type="range" id="n5Cut" min="2.5" max="6.5" step="0.2"><output></output></div>
+        <div class="bx-lv" data-k="n5Gap"><label>Н5 зазор<i></i></label><input type="range" id="n5Gap" min="0.2" max="3" step="0.2"><output></output></div>
+        <div class="bx-lv" data-k="n5Tray"><label>Н5 глибина лотка<i></i></label><input type="range" id="n5Tray" min="2.4" max="7" step="0.2"><output></output></div>
+        <div class="bx-lv" data-k="n5TrayW"><label>Н5 виступ лотка<i></i></label><input type="range" id="n5TrayW" min="0" max="2" step="0.2"><output></output></div>
+        <div class="bx-lv" data-k="n5Lines"><label>Н5 ліній<i></i></label><input type="range" id="n5Lines" min="0" max="3" step="1"><output></output></div>
+        <div class="bx-lv" data-k="n5w1"><label>Н5 довж. 1-ї<i></i></label><input type="range" id="n5w1" min="25" max="100" step="5"><output></output></div>
+        <div class="bx-lv" data-k="n5w2"><label>Н5 довж. 2-ї<i></i></label><input type="range" id="n5w2" min="25" max="100" step="5"><output></output></div>
+        <div class="bx-lv" data-k="n5w3"><label>Н5 довж. 3-ї<i></i></label><input type="range" id="n5w3" min="25" max="100" step="5"><output></output></div>
+        <div class="bx-pick" id="pkPaint" data-dk="n5Paint">
+        <button data-v="accent" aria-pressed="true">лоток акцентом</button>
+        <button data-v="ink">нейтральний</button>
+        <button data-v="grad">градієнтом</button>
+        </div>
+        <div class="bx-note">Н5 знято з наданого SVG: штрих 7.3&nbsp;% ширини, загин 12.6&nbsp;%, зазор 4&nbsp;%, лоток 30&nbsp;%, <b>стінки лотка збігаються з бортами аркуша</b>. Сам SVG не вставлявся — там немає жодної кривої (лише <code>L</code>) і немає <code>stroke</code>, тож важіль штриха був би неможливий.</div>
+        <div class="bx-note">Н4 — контроль. <b>Прецеденту немає</b> (П-4): у Drive Lens знак відсутній через зупинку проєкту, не за рішенням.</div>
+      </div>
+    </details>
+    <details>
+      <summary>ЗНАК &middot; wordmark</summary>
+      <div class="bx-grp">
+        <div class="bx-lv" data-k="wSize"><label>кегль<i></i></label><input type="range" id="wSize" min="14" max="22" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="wEq"><label>вага Equip<i></i></label><input type="range" id="wEq" min="500" max="800" step="100"><output></output></div>
+        <div class="bx-lv" data-k="wLe"><label>вага Lens<i></i></label><input type="range" id="wLe" min="300" max="800" step="100"><output></output></div>
+        <div class="bx-lv" data-k="wTrack"><label>трекінг<i></i></label><input type="range" id="wTrack" min="-14" max="4" step="1"><output></output></div>
+        <div class="bx-pick" id="pkEqL" data-dk="eqL"><button data-v="ink" aria-pressed="true">світла: ink</button><button data-v="accent">accent</button><button data-v="grad">градієнт</button></div>
+        <div class="bx-pick" id="pkEqD" data-dk="eqD"><button data-v="ink" aria-pressed="true">темна: ink</button><button data-v="accent">accent</button><button data-v="grad">градієнт</button></div>
+        <div class="bx-lv" data-k="gAng"><label>кут градієнта<i></i></label><input type="range" id="gAng" min="0" max="180" step="10"><output></output></div>
+        <div class="bx-lv" data-k="gShift"><label>зсув відтінку<i></i></label><input type="range" id="gShift" min="-80" max="80" step="5"><output></output></div>
+        <div class="bx-note"><code>Lens</code> лишається нейтральним завжди — конструкція та сама, що <code>QR</code><b>Lens</b>.</div>
+      </div>
+    </details>
+  </div>
+
+  <div class="bx-tab" data-tab="pal">
+    <details open>
+      <summary>ПАЛІТРА &middot; акцент обох тем</summary>
+      <div class="bx-grp">
+        <div class="bx-lv" data-k="aH"><label>відтінок<i></i></label><input type="range" id="aH" min="300" max="360" step="2"><output></output></div>
+        <div class="bx-lv" data-k="aS"><label>насиченість<i></i></label><input type="range" id="aS" min="55" max="100" step="1"><output></output></div>
+        <div class="bx-lv" data-k="aL"><label>світлота<i></i></label><input type="range" id="aL" min="40" max="76" step="1"><output></output></div>
+        <div class="bx-lv" data-k="aSoft"><label>підкладка &alpha;<i></i></label><input type="range" id="aSoft" min="6" max="34" step="1"><output></output></div>
+        <div class="bx-lv" data-k="aHL"><label>відтінок &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="aHL" min="300" max="360" step="2"><output></output></div>
+        <div class="bx-lv" data-k="aSL"><label>насиченість &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="aSL" min="55" max="100" step="1"><output></output></div>
+        <div class="bx-lv" data-k="aLL"><label>світлота &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="aLL" min="30" max="60" step="1"><output></output></div>
+        <div class="bx-lv" data-k="aSoftL"><label>підкладка &alpha; &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="aSoftL" min="4" max="30" step="1"><output></output></div>
+        <div class="bx-note">Діагноз «вицвіле»: <code>#FF5C93</code> = <b>L&nbsp;68&nbsp;%</b>. На OLED високе L читається як пастель, а не як сигнал. Лікується <b>насиченістю</b>, не підйомом яскравості (S2: S — домінантний важіль неону на темному). Стартова ставка для проби: <b>L&nbsp;58&ndash;62 · S&nbsp;92&ndash;100</b>. Керує акцентом усюди: бейдж, дії свайпу, кнопка «+», лоток знака, градієнт.</div>
+      </div>
+    </details>
+  </div>
 
   <details>
     <summary>G &middot; мертві важелі (8.7)</summary>
@@ -1251,6 +1363,7 @@ details[open] summary::before{transform:rotate(90deg)}
 
   <button class="bx-hold" id="holdBtn">&#8689; утримувати — показати P0 (control)</button>
   <button class="bx-copy" id="copyBtn">&#128203; Copy-ALL — живі важелі + CSS</button>
+  <button class="bx-copy" id="betBtn">&#8634; ставка &mdash; повернути дефолти стенда</button>
   <div class="bx-lockrow">
     <button class="bx-lock2" id="lockExp">ЛОК &rarr; valuesLOCK.md</button>
     <button class="bx-lock2 warn" id="lockRst">скинути ЛОК</button>
@@ -1273,6 +1386,11 @@ const S = {
   /* v17_9 · К13. Дефолти 100/100/95/68 = ТОЧНІ поточні числа: стенд після патча
      відкривається байт-у-байт як v17_8. Крок дає доступ, не вирок. */
   shtAL:100, shtAD:100,
+  /* v17_13 · К10' · край аркуша (§8, Е-5 стос + Е-7 кант, що дихає).
+     Дефолт 'none': ефект, який змінює силует продукту, не вмикається сам —
+     він мусить бути вибраний, інакше наступний device-раунд судитиме його
+     мовчки як частину тла (той самий клас, що bg='sheet' до К13-3). */
+  pkEdge:'none', edgeX:3, edgeY:3, edgeAL:16, edgeAD:22, edgeStop:50,
   /* ґрунт темної */
   dkH:250, dkC:7, dkL:6, dkS:5, dkR:9, dkI:6, valL:95, mutL:68,
   /* склад */
@@ -1291,14 +1409,14 @@ const S = {
   bdH:28, bdR:16, bdSize:145, bdFillL:12, bdFillD:18,
   ctlOn:'tint', ctlOnTintL:12, ctlOnTintD:18, ctlOnDep:8, ctlOnRim:20, ctlOnInk:80,
   hdvIn:5, hdvW:10, hdvGap:3, hdvAL:14, hdvAD:14,
-  hpToneL:8, hpToneD:5, hpRimL:14, hpRimD:10, hpRidgeL:28, hpRidgeD:24, hpElev:8, hpShA:7, hpShY:1, hbSw:18, hbInkL:55, hbInkD:65, hbSz:17,
+  hpToneL:8, hpToneD:5, hpRimL:14, hpRimD:15, hpRidgeL:28, hpRidgeD:29, hpElev:8, hpShA:7, hpShY:1, hbSw:18, hbInkL:55, hbInkD:65, hbSz:17,
   /* v17 · К1 · фон екрана. Дефолт `sheet` = ЧИННИЙ стан: раунд стартує з того,
      що вже є, а не з чужої гіпотези. Числа нижче — конвертовані з FX-5e
      (GlassKit) і живуть як СТАРТОВА позиція повзунка, не як лок. */
-  bg:'sheet', bgH1L:180, bgH2L:34, bgH3L:190, bgH1D:180, bgH2D:34, bgH3D:190, bgSpread:100,
-  bgA1L:15, bgA2L:10, bgA3L:12, bgA1D:25, bgA2D:12, bgA3D:18,
+  bg:'all', bgH1L:212, bgH2L:232, bgH3L:196, bgH1D:212, bgH2D:276, bgH3D:194, bgSpread:100,
+  bgA1L:10, bgA2L:6, bgA3L:8, bgA1D:28, bgA2D:14, bgA3D:8,
   bgTiltL:0, bgTiltD:0,
-  bgLtL:70, bgLtD:55, bgSatL:65, bgSatD:65,
+  bgLtL:58, bgLtD:55, bgSatL:32, bgSatD:64,
   /* анатомія запису */
   nSize:14, nWeight:650, aSize:12.5, mtSize:11.5, rowPadY:11, slitW:1, city:'chip', sort:'need',
   chipMat:'out',
@@ -1375,6 +1493,14 @@ const REF = {wSize:'v2.1: 17px', wEq:'v2.1: 800', wLe:'v2.1: 500', wTrack:'v2.1:
      мовчки: LOCK_STALE друкується окремим рядком у паспорті. Мовчазне підхоплення
      чужих чисел — рівно той клас провалу, проти якого писався §8.7-в. */
 const LOCK_KEY = 'EL_LOCK', LOCK_BUILD = 'v16';
+/* v17_12 · К13-3 · ЗНІМОК ДЕФОЛТІВ.
+   Знімається тут, а не всередині кнопки: кнопка виконується ПІСЛЯ того, як
+   оператор уже крутив важелі, і взяла б за «дефолт» поточний стан. Знімок —
+   об'єкт, а не посилання, інакше S0 мутуватиме разом із S і кнопка повертатиме
+   в те саме, звідки натиснута (клас §8.7-в: працює, не робить нічого).
+   ЛОК тут не заважає: lockLoad() пише в LOCKS, у S не пише жодного разу. */
+const S0 = Object.assign({}, S);
+
 let LOCKS = {}, LOCK_STALE = [], LOCK_MEM = false, o_v_cache = null;
 function lockLoad(){
   let raw = null;
@@ -1446,6 +1572,10 @@ const BOUND = {topMin:120, topMax:320, searchMax:48};
 const hx = h => { const n = parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; };
 const rh = a => '#' + a.map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
 const mixHex = (a,b,t) => rh(hx(a).map((v,i) => v + (hx(b)[i]-v)*t));
+/* v17_13 · К10' · пікер → набір ознак. Мапа, а не рядок умов: гілка «обидва»
+   інакше довелась би повторити обидві перевірки, і додавання Е-1 зажадало б
+   правити ТРИ місця. ~= у CSS читає саме список через пробіл. */
+const EDGE = {none:'', stack:'stack', rim:'rim', both:'stack rim'};
 const hsl = (h,s,l,a) => a==null ? `hsl(${h} ${s}% ${l}%)` : `hsl(${h} ${s}% ${l}% / ${a})`;
 /* v17_9 · К13. Альфа на hex-константу. `color-mix(…,transparent)` НЕ вживається (З-37):
    він домішує прозоре ЧОРНЕ, тобто разом з альфою тягне тон униз — два явища на
@@ -1725,7 +1855,7 @@ function rec(r){
       <div class="el-meta">${meta}</div>
     </div><div class="el-badge ${r.need?'':'zero'}">${r.need || ''}</div></div></div>`;
 }
-const listOf = rows => `<div class="el-list" data-row="${S.row}">${sortRows(rows).map(rec).join('')}</div>`;
+const listOf = rows => `<div class="el-list" data-row="${S.row}" data-edge="${EDGE[S.pkEdge]}">${sortRows(rows).map(rec).join('')}</div>`;
 
 function screenEmpty(){
   const hero = S.mark === 'none' ? '' : `<div class="el-hero">${ico(MARKS[S.mark](),24)}</div>`;
@@ -1884,6 +2014,17 @@ function applyVars(){
      `var(--slitW,1px)` спрацьовує лише на ВІДСУТНІЙ змінній, і умовне
      setProperty дало б важіль, що діє через раз (той самий клас, що З-20). */
   s.setProperty('--slitW', S.slitW+'px');
+  /* v17_13 · К10'. Ставиться ЗАВЖДИ — з тієї ж підстави, що --slitW вище:
+     CSS-фолбек спрацьовує лише на ВІДСУТНІЙ змінній, умовне setProperty дало б
+     важіль, що діє через раз (З-20). Кант бере відтінок від ЛІВОГО еліпса
+     аврори: межа, що «дихає під плямою», мусить бути з нею одного роду, інакше
+     це просто друга кольорова лінія (А103 — не ділити кут з акцентом). */
+  s.setProperty('--edgeX', S.edgeX+'px');
+  s.setProperty('--edgeY', S.edgeY+'px');
+  s.setProperty('--edgeStop', S.edgeStop+'%');
+  s.setProperty('--edgeH', dark ? S.bgH1D : S.bgH1L);
+  s.setProperty('--edgeL', (dark ? 72 : 42)+'%');
+  s.setProperty('--edgeA', ((dark ? S.edgeAD : S.edgeAL)/100).toFixed(3));
   /* тон пігулки: накладка на полотно. + світліше (на темній це tone-lift, A45), − темніше. */
   /* v10 · КРОК 2 · пігулка шапки роздільна по темах (A39).
      Розділяється те, що несе ГЛИБИНУ (тон, кант, блік, тінь); спільним лишається
@@ -2216,6 +2357,16 @@ function conds(){
     ['deboss · темна', 'тема = темна і матеріал = well', dark && S.mat==='well', ['dY','dB','dA','hA','wMixD']],
     ['обведення поля', 'well і поле видно', S.mat==='well' && hasHead && srchVisible(), ['wb']],
     ['матеріал · рядок', 'таб має список', hasHead, ['mat','row']],
+    /* v17_13 · К10'. Три різні підстави, не одна:
+       · пікер живий, поки взагалі є список;
+       · стос — лише коли обрано гілку зі 'stack';
+       · кант — коли обрано 'rim' І гілка не «картка»: border-image не дружить
+         із border-radius, тому на картці ефект вимкнений СТИЛЕМ, і без цього
+         рядка два важелі вважались би живими, керуючи нічим (§8.7-в). */
+    ['край аркуша', 'таб має список', hasHead, ['pkEdge']],
+    ['стос Е-5', "край = стос або обидва", hasHead && EDGE[S.pkEdge].includes('stack'), ['edgeX','edgeY']],
+    ['кант Е-7', "край = кант або обидва, і рядок ≠ картка",
+      hasHead && EDGE[S.pkEdge].includes('rim') && S.row !== 'card', ['edgeAL','edgeAD','edgeStop']],
     /* v17_8 · К9'. Важіль живий ТІЛЬКИ в гілці slit: у «рядку» щілини немає
        за версткою, у «картці» її роль грає gap:9px, прибитий константою.
        Без цього рядка slitW вважався б вічно живим і осів би в щілині
@@ -2505,10 +2656,16 @@ lockLoad(); installLocks();
  ['shSpecL',v=>(v/100).toFixed(2),1],['shSpecD',v=>(v/100).toFixed(2),1],
  ['shRimBL',v=>v+'px',1],['shRimBD',v=>v+'px',1],['shRimL',v=>(v/100).toFixed(2),1],['shRimD',v=>(v/100).toFixed(2),1],
  ['fabHaloSL',v=>v+'px',1],['fabHaloAL',v=>(v/100).toFixed(2),1],
- ['fabHaloSD',v=>v+'px',1],['fabHaloAD',v=>(v/100).toFixed(2),1]
+ ['fabHaloSD',v=>v+'px',1],['fabHaloAD',v=>(v/100).toFixed(2),1],
+ /* v17_13-б · К10'. Пропуск цього рядка і був причиною «важелі мертві»:
+    повзунок існував, data-k збігався з ключем S, паритет К20 давав ✓ —
+    але обробника не було, тому <output> лишався порожнім, а кручення
+    не робило нічого. Паритет судить ОГОЛОШЕННЯ важеля, не його ПІДКЛЮЧЕННЯ. */
+ ['edgeX',v=>v+'px',1],['edgeY',v=>v+'px',1],['edgeStop',v=>v+'%',1],
+ ['edgeAL',v=>(v/100).toFixed(2),1],['edgeAD',v=>(v/100).toFixed(2),1]
 ].forEach(([id,fmt,live]) => slider(id, fmt, !!live));
 
-pick('pkMat','mat'); pick('pkRow','row'); pick('pkWb','wb'); pick('pkComp','comp');
+pick('pkMat','mat'); pick('pkRow','row'); pick('pkEdge','pkEdge'); pick('pkWb','wb'); pick('pkComp','comp');
 pick('pkScroll','scroll'); pick('pkMark','mark'); pick('pkEqL','eqL'); pick('pkEqD','eqD');
 pick('pkBfill','bfill'); pick('pkCity','city'); pick('pkSort','sort'); pick('pkSrch','srch');
 pick('pkTzFill','tzFill');   /* v17_6 · К7-а */
@@ -2717,7 +2874,10 @@ function cssPassport(dark){
 /* активний стан контролів: ${S.ctlOn}${S.ctlOn==='tint'?' · тінт '+((dark?S.ctlOnTintD:S.ctlOnTintL)/100).toFixed(2):''}${S.ctlOn==='well'?' · глибина '+S.ctlOnDep:''}${S.ctlOn!=='solid'?' · кант '+(dark?(S.ctlOnRim/100).toFixed(2):(S.ctlOnRim/200).toFixed(3))+' · чорнило '+S.ctlOnInk+'%':''} */
 .el-hdiv{width:${(S.hdvW/10).toFixed(1)}px; вріз ${S.hdvIn}px; зазор ${S.hdvGap}px; сила ${dark?(S.hdvAD/100).toFixed(2):(S.hdvAL/100).toFixed(2)}}
 /* матеріал ${S.hgrp}${S.hgrp==='glass'?' · blur '+S.hpBlur+'px sat '+S.hpSat+'%':''}${S.hgrp==='flat'?' · КОНТРОЛЬ: усе те саме, крім blur':''} */
-.el-hbtn svg{width:${S.hbSz}px;stroke-width:${(S.hbSw/10).toFixed(1)}} /* чорнило ${dark?S.hbInkD:S.hbInkL}% */`;
+.el-hbtn svg{width:${S.hbSz}px;stroke-width:${(S.hbSw/10).toFixed(1)}} /* чорнило ${dark?S.hbInkD:S.hbInkL}% */
+/* К10' · край аркуша: ${S.pkEdge} */${S.pkEdge==='none' ? '\n.el-list::before,.el-list::after{display:none}' : `
+.el-list[data-edge~="stack"]::before{inset:4px 14px 0;background:var(--sheet);transform:translate(${S.edgeX}px,${S.edgeY}px);z-index:-1}
+.el-list[data-edge~="rim"]::after{inset:4px 14px 0;border-inline:1px solid transparent;border-image:linear-gradient(180deg,transparent,hsl(${dark?S.bgH1D:S.bgH1L} 30% ${dark?72:42}% / ${((dark?S.edgeAD:S.edgeAL)/100).toFixed(3)}) ${S.edgeStop}%,transparent) 1}`}`;
 }
 /* Ключі, згадані в тілі cssPassport як S.<ключ>. Добір за ОЗНАКОЮ, не за
    списком імен: нове ім'я підхоплюється тим самим регулярним виразом.
@@ -2818,6 +2978,18 @@ ${keys.map(k => `| \`${k}\` | ${LOCKS[k]} | ${String(LOCKS[k])===String(S[k]) ? 
   if (navigator.clipboard) navigator.clipboard.writeText(txt).catch(()=>{});
 });
 
+/* v17_12 · К13-3 · «ставка» повертає S до дефолтів стенда і НЕ ЧІПАЄ ЛОК.
+   Окремого набору «ставкових» значень не заводжу: ставки §19 покладені прямо
+   в дефолт, тож другий набір був би другим екземпляром тих самих чисел, який
+   розійдеться мовчки. ЛОК лишається цілим свідомо — він реєстр вироків
+   оператора, а не стан; після повернення розбіжність чесно друкується як
+   «ЛОК X · зараз Y», і жодна фіксація не згорає (В-17, поправка S25). */
+document.getElementById('betBtn').addEventListener('click', () => {
+  if (!confirm('Повернути ВСІ важелі до дефолтів стенда? ЛОК не постраждає.')) return;
+  Object.assign(S, S0);
+  syncPicks(); render(); measure();
+});
+
 document.getElementById('lockRst').addEventListener('click', () => {
   const n = Object.keys(LOCKS).length;
   if (!n && !LOCK_STALE.length){ alert('ЛОК порожній — скидати нічого.'); return; }
@@ -2832,10 +3004,34 @@ qbtn.addEventListener('click', () => {
   if (zMode==='fit') requestAnimationFrame(applyZoom);
 });
 
+/* ===== v17_10 · К21 · рейка табів панелі =====
+   Стан таба НЕ зберігається в localStorage свідомо: там живе лише ЛОК, а тема,
+   таб продукту й dataOn перезавантаження не переживають. Дати панелі власне
+   сховище означало б завести ДРУГИЙ механізм стану поруч із першим (спека §5
+   вимагає «той самий», а той самий тут — його відсутність). */
+let panTab = 'bg';
+function panSwitch(t){
+  panTab = t;
+  document.querySelectorAll('#panRail button').forEach(b =>
+    b.setAttribute('aria-pressed', String(b.dataset.t === t)));
+  document.querySelectorAll('.bx-tab').forEach(w => { w.hidden = (w.dataset.tab !== t); });
+}
+document.getElementById('panRail').addEventListener('click', e => {
+  const b = e.target.closest('button[data-t]');
+  if (b) panSwitch(b.dataset.t);
+});
+panSwitch('bg');
+
+/* Акордеон звужений до активного таба. Глобальний варіант лишав би відкритим
+   блок у ТОМУ ТАБІ, ЯКОГО ВЖЕ НЕ ВИДНО: оператор перемикає таб, повертається —
+   і бачить чужий стан. :scope > details бере лише РІДНИХ сусідів, тому блок G
+   (лежить прямо в .bx-panel, поза рейкою) нікого не закриває й нікому не
+   заважає — він діагностика і мусить бути видний з будь-якого таба (§3). */
 document.querySelectorAll('.bx-panel details').forEach(d =>
   d.addEventListener('toggle', () => {
     if (!d.open) return;
-    document.querySelectorAll('.bx-panel details').forEach(o => { if (o!==d) o.open = false; });
+    const scope = d.closest('.bx-tab') || d.parentElement;
+    scope.querySelectorAll(':scope > details').forEach(o => { if (o!==d) o.open = false; });
   }));
 
 ['gesturestart','gesturechange','gestureend'].forEach(ev =>
