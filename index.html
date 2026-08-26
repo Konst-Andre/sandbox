@@ -169,8 +169,15 @@ details[open] summary::before{transform:rotate(90deg)}
 .bx-hold.on{background:#E4005A;border-color:#E4005A;color:#fff}
 .bx-copy{margin-top:7px;width:100%;padding:12px;border-radius:10px;background:#E4005A;color:#fff;
   font-size:12.5px;font-weight:800}
+/* v17_8 · К17 · ОСНАСТКА: поле виводу — єдине місце, де виділяти ТРЕБА.
+   `body{user-select:none}` (р.48) успадковується в textarea; WebKit на iOS
+   форсує виняток для редагованих полів, Chrome/Firefox — ні. Наслідок: із
+   девайса копіювалось, із PC поле видиме й нескопійовне. `::selection`
+   глобально прозорий (р.53) робив і програмне `out.select()` невидимим. */
 .bx-out{margin-top:7px;width:100%;height:120px;background:#0f0f14;color:#9a9aa8;border:1px solid #1f1f27;
-  border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:10px;padding:7px}
+  border-radius:8px;font-family:ui-monospace,Menlo,monospace;font-size:10px;padding:7px;
+  -webkit-user-select:text;user-select:text;cursor:text}
+.bx-out::selection{background:#E4005A;color:#fff}
 .bx-out[hidden]{display:none}
 .bx-info{padding:8px 13px;font-size:11.5px;line-height:1.5;color:#9a9aa8;border-top:1px solid #1c1c23;
   max-height:44dvh;overflow:auto;background:#0d0d11}
@@ -312,7 +319,32 @@ details[open] summary::before{transform:rotate(90deg)}
    рядки конкурували напряму з низом: 1 > auto(острівець) і 1 < 12(бульбашка).
    Симптом рівно такий: список з'їдає острівець і не чіпає «+».
    `z-index:0` тут — не косметика, а замок контексту. */
-.el-ctxhead{padding:2px 14px 10px;background:var(--canvas);position:sticky;top:0;z-index:5}
+/* v17_6 · К7-а · З-20: заливка була жорсткою canvas і перекривала верхній еліпс
+   AUR.chrome (at 50% 3%) — на «Потребах» це 23% висоти, де аврори фізично не було.
+   sticky і z-index НЕ чіпаємо: прозорість не сміє знести перекриття. */
+.el-ctxhead{padding:2px 14px 10px;background:var(--tzbg,var(--canvas));position:sticky;top:0;z-index:5}
+/* v17_7 · К7-б · МАТЕРІАЛ верхньої зони, 4 гілки. К7-а довів (З-24), що відповідь
+   «нічого» непридатна: текст фільтрів ріже назви аптек. Гілки дають зоні матеріал,
+   не повертаючи заливку на всю площу.
+   ⚠ blur ставиться на sticky-зону ВСЕРЕДИНІ .el-scr — це НЕ плаваючий острівець:
+   з чотирьох підстав локу «скло тільки внизу» (MASTER_LOCK §8) тут діє одна, а
+   overscroll-оборони зона не тягне. Підкладка є завжди: аврора .screenbox (р.90)
+   плюс рядки, що заїжджають під зону — саме те, чого бракувало пігулці шапки.
+   ⚠ радіус блюру МАСШТАБУЄТЬСЯ разом із .bx-frame{transform:scale} — вирок по
+   tzBlur дійсний тільки на 1:1 (A100: скло судиться на своїй підкладці й у своєму
+   масштабі, інакше судиться інший об'єкт).
+   sticky і z-index не чіпаються жодною гілкою — замок із З-20. */
+.el-ctxhead[data-tz="blur"]{
+  background:color-mix(in srgb, var(--canvas) var(--tzA,70%), transparent);
+  -webkit-backdrop-filter:blur(var(--tzBlur,14px)) saturate(var(--tzSat,160%));
+  backdrop-filter:blur(var(--tzBlur,14px)) saturate(var(--tzSat,160%))}
+/* body (І-3 · К7): тіло є тільки ПІД КОНТРОЛАМИ, зона лишається прозорою.
+   Тут матеріал не оптичний, а речовий — плашка під рядом, як у папері підкладка
+   під написом. Власних важелів не отримує навмисно (В-6: форма зони — константа). */
+.el-ctxhead[data-tz="body"]{background:transparent}
+.el-ctxhead[data-tz="body"] .el-srw,
+.el-ctxhead[data-tz="body"] .el-chips-wrap,
+.el-ctxhead[data-tz="body"] .el-ctl{background:var(--canvas);border-radius:var(--r-ctl)}
 .el-ttl{font-size:25px;font-weight:800;letter-spacing:-.6px;padding:2px 0 11px;overflow:hidden;
   transition:height .2s,opacity .16s,padding .2s}
 .screenbox.sc .el-ttl{height:0;opacity:0;padding:0}
@@ -322,6 +354,14 @@ details[open] summary::before{transform:rotate(90deg)}
 .el-search[data-mat="lift"]{background:var(--surface);border:1px solid var(--line);box-shadow:var(--lift-s)}
 .el-search[data-mat="well"]{background:var(--well-bg);border:1px solid var(--line);box-shadow:var(--well)}
 .el-search[data-mat="well"][data-wb="0"]{border-color:transparent}
+/* v17_7 · Н-11. На знімках S19 поле читається НАЙВАЖЧИМ об'єктом верхньої зони:
+   і lift, і well дають йому власне тіло там, де решта зони тіла не має. Гілка
+   plain знімає тіло повністю — лишається лупа + плейсхолдер. Це не «третій
+   матеріал», а НУЛЬ матеріалу: контрольна точка, без якої вага двох інших
+   не має від чого відлічуватись. Судиться в тому самому кадрі, що К7-б
+   (§16: матеріал зони й матеріал поля — один візуальний вузол). */
+.el-search[data-mat="plain"]{background:transparent;border:1px solid transparent;
+  box-shadow:none;padding-left:0}
 .el-search svg{width:16px;height:16px;flex:none;opacity:.55;stroke-width:1.9}
 /* ⚠ П-3: без min-width:0 текст переноситься → лічильник друкує 356px замість 220 */
 .el-search span{min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
@@ -338,13 +378,13 @@ details[open] summary::before{transform:rotate(90deg)}
 /* ---------- список: КАРТКА (панель) ↔ РЯДОК (аркуш) ---------- */
 .el-list{padding:4px 14px 0;display:flex;flex-direction:column}
 .el-list[data-row="card"]{gap:9px}
-.el-list[data-row="row"]{gap:0;padding-top:0}
+.el-list[data-row="row"],.el-list[data-row="slit"]{gap:0;padding-top:0}
 .el-item{display:flex;gap:11px;align-items:flex-start}
 .el-list[data-row="card"] .el-item{background:var(--surface);border:1px solid var(--line);
   border-radius:var(--r-card);padding:12px 13px;box-shadow:var(--lift),var(--ridge)}
-.el-list[data-row="row"] .el-item{background:transparent;border:none;border-radius:0;
+.el-list[data-row="row"] .el-item,.el-list[data-row="slit"] .el-item{background:transparent;border:none;border-radius:0;
   padding:13px 0;box-shadow:none;border-bottom:1px solid var(--line)}
-.el-list[data-row="row"] .el-item:last-child{border-bottom:none}
+.el-list[data-row="row"] .el-item:last-child,.el-list[data-row="slit"] .el-item:last-child{border-bottom:none}
 .el-item .el-body{flex:1;min-width:0}
 .el-net{font-size:16.5px;font-weight:750;letter-spacing:-.35px}
 .el-addr{font-size:12px;color:var(--ink-2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -459,10 +499,28 @@ details[open] summary::before{transform:rotate(90deg)}
 .el-sw .el-item{position:relative;z-index:1;border:none;border-radius:0;box-shadow:none;
   background:var(--surface);
   transition:transform .2s cubic-bezier(.4,0,.2,1)}
-.el-list[data-row="row"] .el-sw .el-item{background:var(--canvas)}
-.el-list[data-row="row"] .el-sw.open .el-item{background:var(--surface)}
+/* v17_9 · К13 · І-4 · НАПІВПРОЗОРЕ ПОЛОТНО.
+   Було `var(--canvas)` — аркуш не «темніший за фон», він НЕПРОЗОРИЙ прямокутник
+   кольору фону поверх аврори, і аврора жила тільки в бокових полях 14px (З-31).
+   БЕЗ фолбеку `var(--sheet,var(--canvas))` навмисно: фолбек сховав би дефект
+   «змінна не ставиться», і аркуш виглядав би справним при мертвому важелі (З-20). */
+.el-list[data-row="row"] .el-sw .el-item,.el-list[data-row="slit"] .el-sw .el-item{background:var(--sheet)}
+.el-list[data-row="row"] .el-sw.open .el-item,.el-list[data-row="slit"] .el-sw.open .el-item{background:var(--surface)}
 .el-list[data-row="card"] .el-item{padding:var(--rowPadY,12px) 13px}
-.el-list[data-row="row"] .el-item{padding:var(--rowPadY,13px) 12px;border-bottom:none}
+.el-list[data-row="row"] .el-item,.el-list[data-row="slit"] .el-item{padding:var(--rowPadY,13px) 12px;border-bottom:none}
+
+/* v17_8 · К9' · І-1 · ЩІЛИНА ЗАМІСТЬ ЛІНІЇ — ГІЛКА, не заміна (§8).
+   `row` лишається недоторканим: суд між лінією і щілиною — на девайсі, не тут.
+   НОСІЙ ЩІЛИНИ ОДИН — `gap`. Кант `.el-sw` знімається навмисно: у гілці `row`
+   він `1px solid transparent`, а `.el-sw` фону не має — отже цей кант УЖЕ
+   пропускає аврору над кожним рядком, просто невидимо (впритул до волосинки
+   попереднього). Лишити його = два носії одного явища й нечесне число на
+   повзунку: 1 на шкалі дав би 2px на екрані (wsd 2.6).
+   `.open` тримає межу ТІННЮ, не кантом: кант, що з'являється на відкритті,
+   зсунув би рядок на 1px під пальцем — рух, якого ніхто не замовляв (A22). */
+.el-list[data-row="slit"]{gap:var(--slitW,1px)}
+.el-list[data-row="slit"] .el-sw{border:none;border-radius:0;box-shadow:none}
+.el-list[data-row="slit"] .el-sw.open{border-radius:var(--r-card);box-shadow:var(--lift)}
 .el-sw.open .el-item{transform:translateX(calc(-2 * var(--actW,74px)))}
 .el-sw-actions{position:absolute;top:0;right:0;bottom:0;display:flex;z-index:0;
   visibility:hidden;transition:visibility 0s linear .2s}
@@ -748,6 +806,9 @@ details[open] summary::before{transform:rotate(90deg)}
       <div class="bx-lv" data-k="dkS"><label>&Delta; поверхня<i></i></label><input type="range" id="dkS" min="1" max="14" step="0.5"><output></output></div>
       <div class="bx-lv" data-k="dkR"><label>&Delta; підняте<i></i></label><input type="range" id="dkR" min="2" max="22" step="0.5"><output></output></div>
       <div class="bx-lv" data-k="dkI"><label>підтон чорнила<i></i></label><input type="range" id="dkI" min="0" max="12" step="1"><output></output></div>
+      <div class="bx-lv" data-k="valL"><label>чорнило головне<i></i></label><input type="range" id="valL" min="80" max="100" step="1"><output></output></div>
+      <div class="bx-lv" data-k="mutL"><label>чорнило тихе<i></i></label><input type="range" id="mutL" min="45" max="85" step="1"><output></output></div>
+      <div class="bx-note"><b>К13 · І-4.</b> Ці два живуть тут, а крутяться в парі з <b>альфою полотна</b> (блок B): альфа з'їдає контраст, і число альфи без чорнила в тому ж кадрі не є вироком. Правило «одна змінна за раз» (14.14) тут <b>не діє</b> — альфа й чорнило одне явище. <code>--ink-3</code> веде <code>--ink-2</code> із прибитим розривом <b>19</b>: це ієрархія, не два кольори.</div>
       <div class="bx-note">Діагноз В-2: <code>#08080B</code> — сажа без відтінку, і поверхня на 5&nbsp;% світліше теж без відтінку. Ці важелі дають канві <b>підтон</b>, а не просто «світліше». Живі лише при темній темі.</div>
     </div>
   </details>
@@ -758,11 +819,18 @@ details[open] summary::before{transform:rotate(90deg)}
       <div class="bx-pick" id="pkMat" data-dk="mat">
         <button data-v="lift">lift (піднято)</button>
         <button data-v="well" aria-pressed="true">well (втоплено)</button>
+        <button data-v="plain">plain (без тіла)</button>
       </div>
       <div class="bx-pick" id="pkRow" data-dk="row">
         <button data-v="card">картка</button>
         <button data-v="row" aria-pressed="true">рядок на аркуші</button>
+        <button data-v="slit">щілина</button>
       </div>
+      <div class="bx-lv" data-k="slitW"><label>ширина щілини<i></i></label><input type="range" id="slitW" min="0" max="6" step="0.5"><output></output></div>
+      <div class="bx-lv" data-k="shtAL"><label>полотно α · св.<i></i></label><input type="range" id="shtAL" min="50" max="100" step="2.5"><output></output></div>
+      <div class="bx-lv" data-k="shtAD"><label>полотно α · тем.<i></i></label><input type="range" id="shtAD" min="50" max="100" step="2.5"><output></output></div>
+      <div class="bx-note"><b>К13 · І-4.</b> Аркуш був <b>непрозорим прямокутником кольору фону</b> поверх аврори — аврора жила тільки в бокових полях 14&nbsp;px (<b>З-31</b>). Тепер полотно пропускає її наскрізь. <b>Стеля 50 вбудована у шкалу, не в код:</b> нижче — це вже <code>tzFill=none</code>, і девайс на нього відповів (<b>З-24</b>); важіль не пропонує відхилене. Крутити разом із чорнилом (блок A): α до втрати читабельності → чорнило назад до порогу → α ще раз. Картки не чіпає — прозора картка це вже не картка.</div>
+      <div class="bx-note"><b>К9' · І-1.</b> «Щілина» — <b>гілка</b>, не заміна «рядка»: суд між лінією і щілиною — на девайсі. У гілці кант <code>.el-sw</code> знято, тож ширину несе <b>один</b> носій — <code>gap</code>. У «рядку» той кант <code>1px solid transparent</code> уже пропускає аврору невидимо, впритул до волосинки (<b>З-36</b>) — лишити його означало б 1 на шкалі й 2&nbsp;px на екрані.</div>
       <div class="bx-note">Ці два піки теза й перебиває. Перебитий підсвічується малиновою рамкою, а лічильник друкує <b>перебито N</b>. Світла тема — набір <b>well</b>, темна — набір <b>deboss</b> (§8.6: різні набори, не різні значення одного).</div>
       <div class="bx-lv" data-k="wY"><label>well Y &middot; світла<i></i></label><input type="range" id="wY" min="0" max="4" step="1"><output></output></div>
       <div class="bx-lv" data-k="wB"><label>well blur<i></i></label><input type="range" id="wB" min="0" max="8" step="1"><output></output></div>
@@ -891,6 +959,19 @@ details[open] summary::before{transform:rotate(90deg)}
         <button data-v="pull">потягнути вниз</button>
         <button data-v="icon">кнопка-лупа</button>
       </div>
+      <div class="bx-pick" id="pkTzFill" data-dk="tzFill">
+        <button data-v="canvas" aria-pressed="true">заливка канвою</button>
+        <button data-v="none">прозоро</button>
+        <button data-v="blur">скло (Apple soft)</button>
+        <button data-v="body">тіло під контролами</button>
+      </div>
+      <div class="bx-note">v17_6 · К7-а · <b>З-20</b>: «заливка канвою» перекриває верхню аврору на всю ширину зони (на «Потребах» це 23&nbsp;% висоти). «Прозоро» відкриває її — і водночас показує, чи потрібне <b>тіло ряду</b> (К7) чи <b>маска</b> (К8): sticky лишається, тому текст поїде поверх рядків при скролі. Це очікуваний стан, а не дефект.</div>
+      <div class="bx-note">v17_7 · К7-б · <b>З-24</b>: «прозоро» лишається як <b>контр-зразок</b>, а не кандидат — на девайсі текст фільтрів ріже назви аптек. Дві нові гілки — дві різні відповіді на те саме: <b>скло</b> обробляє те, що під зоною (Apple <code>scroll edge soft</code>), <b>тіло</b> дає підкладку тільки контролам і лишає решту зони прозорою. ⚠ Блюр масштабується зумом стенда — <b>вирок тільки на&nbsp;1:1</b>.</div>
+      <div class="bx-lv" data-k="tzBlur"><label>скло зони: блюр<i></i></label><input type="range" id="tzBlur" min="0" max="30" step="1"><output></output></div>
+      <div class="bx-lv" data-k="tzSat"><label>скло зони: насиченість<i></i></label><input type="range" id="tzSat" min="100" max="220" step="5"><output></output></div>
+      <div class="bx-lv" data-k="tzAL"><label>скло зони: alpha канви &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="tzAL" min="0" max="100" step="2"><output></output></div>
+      <div class="bx-lv" data-k="tzAD"><label>скло зони: alpha канви &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="tzAD" min="0" max="100" step="2"><output></output></div>
+      <div class="bx-note"><b>Alpha роздільна по темах, блюр і насиченість спільні</b> — <code>В-7</code>: розщеплюємо те, що описує <b>явище</b> (скільки канви лишилось), спільним лишається те, що описує <b>зону</b> (оптика скла, <code>В-5</code>). Калібрувати за <code>A100</code> на <b>гіршій</b> підкладці: темна тема при <code>фон=аркуш</code>, де аврори немає й під зоною самі рядки.</div>
       <div class="bx-note">«Потягнути» знімає ~48px верхньої зони = +1 запис на екран, але додає жест на кожен пошук. Судити на <b>1:1</b>: під зумом відстань жесту буде не та.</div>
     </div>
   </details>
@@ -1189,8 +1270,11 @@ const S = {
   thesis:'sheet', mat:'well', row:'row',
   /* матеріал */
   wb:1, wY:2, wB:5, wA:18, wMixL:60, dY:2, dB:5, dA:55, hA:3, wMixD:80,
+  /* v17_9 · К13. Дефолти 100/100/95/68 = ТОЧНІ поточні числа: стенд після патча
+     відкривається байт-у-байт як v17_8. Крок дає доступ, не вирок. */
+  shtAL:100, shtAD:100,
   /* ґрунт темної */
-  dkH:250, dkC:7, dkL:6, dkS:5, dkR:9, dkI:6,
+  dkH:250, dkC:7, dkL:6, dkS:5, dkR:9, dkI:6, valL:95, mutL:68,
   /* склад */
   comp:'v4', scroll:1,
   /* знак */
@@ -1216,10 +1300,14 @@ const S = {
   bgTiltL:0, bgTiltD:0,
   bgLtL:70, bgLtD:55, bgSatL:65, bgSatD:65,
   /* анатомія запису */
-  nSize:14, nWeight:650, aSize:12.5, mtSize:11.5, rowPadY:11, city:'chip', sort:'need',
+  nSize:14, nWeight:650, aSize:12.5, mtSize:11.5, rowPadY:11, slitW:1, city:'chip', sort:'need',
   chipMat:'out',
   /* верхня зона */
-  headGap:5, srch:'icon',
+  headGap:5, srch:'icon', tzFill:'canvas',
+  /* v17_7 · К7-б. Дефолти = стартова позиція повзунка, не лок. Блюр 14 і sat 160
+     взяті СУСІДНІМИ з острівцем (12px / 170%) навмисно: різниця в оптиці двох
+     скляних поверхонь одного застосунку мусить бути видна оку, а не вигадана. */
+  tzBlur:14, tzSat:160, tzAL:70, tzAD:66,
   /* v6 · рядок керування */
   ctl:'v6', locSurf:'sheet', ctlGap:7,
   /* кнопка «+» */
@@ -1270,7 +1358,7 @@ const THESIS = {panel:{mat:'lift', row:'card', chipMat:'surf'},
 const P0 = Object.assign({}, S, {
   thesis:'panel', mat:'lift', row:'card', chipMat:'surf',
   dkC:0, dkL:3.5, dkI:0, comp:'v1', scroll:0, mark:'none',
-  city:'meta', sort:'abc', srch:'always', fab:'f4', headGap:2,
+  city:'meta', sort:'abc', srch:'always', fab:'f4', headGap:2, tzFill:'canvas',
   hgrp:'none', actTone:'signal', fabTone:'accent', aL:68, aS:100
 });
 
@@ -1359,6 +1447,10 @@ const hx = h => { const n = parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,
 const rh = a => '#' + a.map(v => Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('');
 const mixHex = (a,b,t) => rh(hx(a).map((v,i) => v + (hx(b)[i]-v)*t));
 const hsl = (h,s,l,a) => a==null ? `hsl(${h} ${s}% ${l}%)` : `hsl(${h} ${s}% ${l}% / ${a})`;
+/* v17_9 · К13. Альфа на hex-константу. `color-mix(…,transparent)` НЕ вживається (З-37):
+   він домішує прозоре ЧОРНЕ, тобто разом з альфою тягне тон униз — два явища на
+   одному важелі. rgba() від тих самих байтів чіпає рівно альфу. */
+const hexA = (h,a) => { const c = hx(h); return `rgba(${c[0]},${c[1]},${c[2]},${a.toFixed(3)})`; };
 
 /* ============ іконки ============ */
 const I = {
@@ -1577,7 +1669,7 @@ function ctxhead(title){
   const ph = tab === 'ph' ? 'Пошук за адресою або мережею' : 'Пошук за назвою обладнання';
   const hint = (S.srch === 'pull' && !srchOpen)
     ? `<div class="el-hint">потягни вниз — з'явиться пошук</div>` : '';
-  return `<div class="el-ctxhead" data-srch="${srchVisible()?'on':'off'}">${big}
+  return `<div class="el-ctxhead" data-tz="${S.tzFill}" data-srch="${srchVisible()?'on':'off'}">${big}
     <div class="el-srw"><div class="el-search" data-mat="${S.mat}" data-wb="${S.wb}">${ico(I.se,16)}<span>${ph}</span></div></div>
     ${hint}${S.ctl === 'v6' ? ctlRow(chipMat) : chipsRow(chipMat)}</div>`;
 }
@@ -1770,6 +1862,16 @@ function aurLayers(dark){
 
 function applyVars(){
   const s = sbox.style, dark = effTheme() === 'dark';
+  /* v17_6 · К7-а · З-20. transparent, а не пропуск змінної: фолбек var(--tzbg,var(--canvas))
+     мовчки повернув би заливку, і пікер виглядав би мертвим. */
+  s.setProperty('--tzbg', S.tzFill==='canvas' ? 'var(--canvas)' : 'transparent');
+  /* v17_7 · К7-б. Гілки blur/body мають ВЛАСНІ правила за [data-tz], тому базовий
+     --tzbg для них мусить бути прозорим: інакше під склом лежала б непрозора
+     канва, і backdrop-filter блюрив би її замість аврори — гілка виглядала б
+     живою при мертвій оптиці (той самий клас, що фолбек у К7-а). */
+  s.setProperty('--tzA', (dark ? S.tzAD : S.tzAL) + '%');
+  s.setProperty('--tzBlur', S.tzBlur + 'px');
+  s.setProperty('--tzSat',  S.tzSat + '%');
   s.setProperty('--msize', S.mSize+'px'); s.setProperty('--msw', S.mSw);
   s.setProperty('--mgap', S.mGap+'px');   s.setProperty('--hsize', S.hSize+'px');
   s.setProperty('--wsize', S.wSize+'px'); s.setProperty('--weq', S.wEq);
@@ -1778,6 +1880,10 @@ function applyVars(){
   s.setProperty('--nSize', S.nSize+'px'); s.setProperty('--nWeight', S.nWeight);
   s.setProperty('--aSize', S.aSize+'px'); s.setProperty('--mtSize', S.mtSize+'px');
   s.setProperty('--rowPadY', S.rowPadY+'px'); s.setProperty('--headGap', S.headGap+'px');
+  /* v17_8 · К9'. Ставиться ЗАВЖДИ, а не тільки в гілці slit: CSS-фолбек
+     `var(--slitW,1px)` спрацьовує лише на ВІДСУТНІЙ змінній, і умовне
+     setProperty дало б важіль, що діє через раз (той самий клас, що З-20). */
+  s.setProperty('--slitW', S.slitW+'px');
   /* тон пігулки: накладка на полотно. + світліше (на темній це tone-lift, A45), − темніше. */
   /* v10 · КРОК 2 · пігулка шапки роздільна по темах (A39).
      Розділяється те, що несе ГЛИБИНУ (тон, кант, блік, тінь); спільним лишається
@@ -1961,9 +2067,15 @@ function applyVars(){
     s.setProperty('--canvas',  hsl(H, C, L));
     s.setProperty('--surface', hsl(H, C*0.92, sL));
     s.setProperty('--raised',  hsl(H, C*0.85, rL));
-    s.setProperty('--ink',     hsl(H, S.dkI, 95));
-    s.setProperty('--ink-2',   hsl(H, S.dkI*0.8, 68));
-    s.setProperty('--ink-3',   hsl(H, S.dkI*0.7, 49));
+    /* v17_9 · К13. Полотно — та сама канва, але з альфою: аврора проходить крізь
+       аркуш, а не тільки повз нього. Чорнило стало важелями в ТОМУ Ж кроці —
+       альфа з'їдає контраст, і число альфи без чорнила в кадрі не є вироком (І-4).
+       Розрив ink-2 ↔ ink-3 прибитий 19 (68→49): це ієрархія, а не два незалежні
+       кольори, і другий важіль розсинхронив би її мовчки. */
+    s.setProperty('--sheet',   hsl(H, C, L, (S.shtAD/100).toFixed(3)));
+    s.setProperty('--ink',     hsl(H, S.dkI, S.valL));
+    s.setProperty('--ink-2',   hsl(H, S.dkI*0.8, S.mutL));
+    s.setProperty('--ink-3',   hsl(H, S.dkI*0.7, S.mutL - 19));
     s.setProperty('--glass',   hsl(H, C*0.92, sL, .8));
     s.setProperty('--glass-rim', 'rgba(255,255,255,.11)');
     s.setProperty('--line',    'rgba(255,255,255,.075)');
@@ -1982,6 +2094,12 @@ function applyVars(){
     s.setProperty('--accent-ink',  S.aLL > 56 ? hsl(S.aHL, 55, 10) : '#FFFFFF');
     s.setProperty('--well', `inset 0 ${S.wY}px ${S.wB}px rgba(16,16,24,${(S.wA/100).toFixed(2)})`);
     s.setProperty('--well-bg', mixHex('#FFFFFF', '#EFEFF3', S.wMixL/100));
+    /* v17_9 · К13. Світла канва прибита в :root (`#EFEFF3`, р.199) і важеля не має —
+       тому альфа кладеться на ту саму константу, а не на var(--canvas): rgba()
+       від змінної не будується. Прецедент константи в цій гілці вже є — сусідній
+       рядок `--well-bg` мішає той самий `#EFEFF3`. Ставиться ПІСЛЯ removeProperty,
+       бо `--sheet` не входить у `grd` і зняттю не підлягає. */
+    s.setProperty('--sheet', hexA('#EFEFF3', S.shtAL/100));
   }
   /* v17 · К1. removeProperty, а не 'none': порожня змінна лишила б у каскаді
      недійсне значення, а фолбек `var(--bg-aur,none)` спрацьовує тільки на
@@ -2098,9 +2216,29 @@ function conds(){
     ['deboss · темна', 'тема = темна і матеріал = well', dark && S.mat==='well', ['dY','dB','dA','hA','wMixD']],
     ['обведення поля', 'well і поле видно', S.mat==='well' && hasHead && srchVisible(), ['wb']],
     ['матеріал · рядок', 'таб має список', hasHead, ['mat','row']],
+    /* v17_8 · К9'. Важіль живий ТІЛЬКИ в гілці slit: у «рядку» щілини немає
+       за версткою, у «картці» її роль грає gap:9px, прибитий константою.
+       Без цього рядка slitW вважався б вічно живим і осів би в щілині
+       покриття cssGap — рівно З-9, і паспорт друкував би неповний вирок
+       як повний (З-30: важіль, оголошений живим там, де його не видно). */
+    ['щілина', 'таб має список і рядок = щілина', hasHead && S.row==='slit', ['slitW']],
+    /* v17_9 · К13. Альфа полотна живе в обох гілках аркуша (row і slit) і мертва
+       в картці: там фон `--surface`, правило її не чіпає. Роздільність по темах —
+       В-7: на канві 4% і на канві 98% те саме число дає різні явища (З-7). */
+    ['полотно · альфа св.',  'аркуш і тема = світла', hasHead && S.row!=='card' && !dark, ['shtAL']],
+    ['полотно · альфа тем.', 'аркуш і тема = темна',  hasHead && S.row!=='card' &&  dark, ['shtAD']],
+    ['чорнило темної', 'тема = темна', dark, ['valL','mutL']],
     ['анатомія запису', 'таб має список', hasHead, ['nSize','nWeight','aSize','mtSize','rowPadY','city','sort']],
     ['свайп A22', 'таб має список', hasHead, ['actW','swTrig','swSlop']],
     ['відступ шапки', 'верхня зона існує', hasHead, ['headGap','srch']],
+    ['заливка верхньої зони', 'верхня зона існує', hasHead, ['tzFill']],
+    /* v17_7 · К7-б. Оптика спільна, alpha роздільна по темах (В-7). Без цих
+       трьох рядків важелі вважались би вічно живими й осідали б у щілині
+       покриття cssGap — рівно провал З-9, і паспорт друкував би неповний
+       вирок як повний. */
+    ['скло верхньої зони', 'зона існує і матеріал = скло', hasHead && S.tzFill==='blur', ['tzBlur','tzSat']],
+    ['скло зони · св.', 'скло зони і тема = світла', hasHead && S.tzFill==='blur' && !dark, ['tzAL']],
+    ['скло зони · тем.', 'скло зони і тема = темна',  hasHead && S.tzFill==='blur' &&  dark, ['tzAD']],
     ['колапс', 'великий заголовок існує', hasTtl, ['scroll']],
     ['скло бульбашки · св.', 'тема = світла і «+» скляна', !dark && S.fabTone==='glass', ['fabAL']],
     ['скло бульбашки · тем.', 'тема = темна і «+» скляна', dark && S.fabTone==='glass', ['fabAD']],
@@ -2330,6 +2468,8 @@ lockLoad(); installLocks();
 
 [['dkH',v=>v+'°',1],['dkC',v=>v+'%',1],['dkL',v=>v.toFixed(1)+'%',1],['dkS',v=>'+'+v.toFixed(1),1],
  ['dkR',v=>'+'+v.toFixed(1),1],['dkI',v=>v+'%',1],
+ ['valL',v=>v+'%',1],['mutL',v=>v+'% / '+(v-19)+'%',1],
+ ['shtAL',v=>(v/100).toFixed(3),1],['shtAD',v=>(v/100).toFixed(3),1],
  ['wY',v=>v+'px',1],['wB',v=>v+'px',1],['wA',v=>(v/100).toFixed(2),1],['wMixL',v=>v+'%',1],
  ['dY',v=>v+'px',1],['dB',v=>v+'px',1],['dA',v=>(v/100).toFixed(2),1],['hA',v=>(v/100).toFixed(2),1],
  ['wMixD',v=>v+'%',1],
@@ -2348,7 +2488,8 @@ lockLoad(); installLocks();
  ['bgTiltL',v=>(v/100).toFixed(2),1],['bgTiltD',v=>(v/100).toFixed(2),1],
  ['bgLtL',v=>v+'%',1],['bgLtD',v=>v+'%',1],['bgSatL',v=>v+'%',1],['bgSatD',v=>v+'%',1],
  ['nSize',v=>v+'px',1],['nWeight',null,1],['aSize',v=>v+'px',1],['mtSize',v=>v+'px',1],
- ['rowPadY',v=>v+'px',1],['headGap',v=>v+'px',1],
+ ['rowPadY',v=>v+'px',1],['slitW',v=>v+'px',1],['headGap',v=>v+'px',1],
+ ['tzBlur',v=>v+'px',1],['tzSat',v=>v+'%',1],['tzAL',v=>(v/100).toFixed(2),1],['tzAD',v=>(v/100).toFixed(2),1],
  ['fabS',v=>v+'px',1],['ctH',v=>v+'px',1],['ctSize',v=>(v/10).toFixed(1)+'px',1],['ctR',v=>v+'px',1],['ctPx',v=>v+'px',1],['ctRimL',v=>(v/200).toFixed(3),1],['ctRimD',v=>(v/100).toFixed(2),1],['ctFill',v=>v+'',1],['ctInkL',v=>v+'%',1],['ctInkD',v=>v+'%',1],['navH',v=>v+'px',1],['nvSz',v=>v+'px',1],['nvSw',v=>(v/10).toFixed(1),1],['nvLbl',v=>(v/10).toFixed(1)+'px',1],['nvGap',v=>v+'px',1],['bdH',v=>v+'px',1],['bdR',v=>v+'px',1],['bdSize',v=>(v/10).toFixed(1)+'px',1],['bdFillL',v=>(v/100).toFixed(2),1],['bdFillD',v=>(v/100).toFixed(2),1],['ctlOnTintL',v=>(v/100).toFixed(2),1],['ctlOnTintD',v=>(v/100).toFixed(2),1],['ctlOnDep',v=>v+'',1],['ctlOnRim',v=>(v/100).toFixed(2),1],['ctlOnInk',v=>v+'%',1],['hdvIn',v=>v+'px',1],['hdvW',v=>(v/10).toFixed(1)+'px',1],['hdvGap',v=>v+'px',1],['hdvAL',v=>(v/100).toFixed(2),1],['hdvAD',v=>(v/100).toFixed(2),1],['hpToneL',v=>(v>0?'+':'')+v,1],['hpToneD',v=>(v>0?'+':'')+v,1],['hpRimL',v=>(v/200).toFixed(3),1],['hpRimD',v=>(v/100).toFixed(2),1],['hpRidgeL',v=>(v/100).toFixed(2),1],['hpRidgeD',v=>(v/100).toFixed(2),1],['hpElev',v=>v+'px',1],['hpShA',v=>(v/100).toFixed(2),1],['hpShY',v=>v+'px',1],['hpBlur',v=>v+'px',1],['hpSat',v=>v+'%',1],['hbSw',v=>(v/10).toFixed(1),1],['hbInkL',v=>v+'%',1],['hbInkD',v=>v+'%',1],['hbSz',v=>v+'px',1],['fabGap',v=>v+'px',1],['fabShA',v=>(v/100).toFixed(2),1],
  ['actW',v=>v+'px',1],['swTrig',v=>v+'px',1],['swSlop',v=>v+'px',1],
  ['n5w1',v=>v+'%',0],['n5w2',v=>v+'%',0],['n5w3',v=>v+'%',0],
@@ -2370,6 +2511,7 @@ lockLoad(); installLocks();
 pick('pkMat','mat'); pick('pkRow','row'); pick('pkWb','wb'); pick('pkComp','comp');
 pick('pkScroll','scroll'); pick('pkMark','mark'); pick('pkEqL','eqL'); pick('pkEqD','eqD');
 pick('pkBfill','bfill'); pick('pkCity','city'); pick('pkSort','sort'); pick('pkSrch','srch');
+pick('pkTzFill','tzFill');   /* v17_6 · К7-а */
 pick('pkCtl','ctl'); pick('pkLocS','locSurf'); pick('pkFabE','fabEdge'); pick('pkAlign','fabAlign'); pick('pkHand','hand'); pick('pkShT','fabShTint'); pick('pkShPos','shPos'); pick('pkShOrd','fabShOrd'); pick('pkShWho','shWho');
 pick('pkPaint','n5Paint');
 pick('pkHgrp','hgrp'); pick('pkHbare','hbare'); pick('pkHdiv','hdiv');
@@ -2530,9 +2672,11 @@ function cssPassport(dark){
 --canvas:${hsl(S.dkH,S.dkC,S.dkL)};
 --surface:${hsl(S.dkH,S.dkC*0.92,S.dkL+S.dkS)};
 --raised:${hsl(S.dkH,S.dkC*0.85,S.dkL+S.dkR)};
---ink:${hsl(S.dkH,S.dkI,95)}; --ink-2:${hsl(S.dkH,S.dkI*0.8,68)}; --ink-3:${hsl(S.dkH,S.dkI*0.7,49)};
+--sheet:${hsl(S.dkH,S.dkC,S.dkL,(S.shtAD/100).toFixed(3))};   /* К13 · полотно аркуша (row/slit); картка лишається --surface */
+--ink:${hsl(S.dkH,S.dkI,S.valL)}; --ink-2:${hsl(S.dkH,S.dkI*0.8,S.mutL)}; --ink-3:${hsl(S.dkH,S.dkI*0.7,S.mutL-19)};
 --well:inset 0 ${S.dY}px ${S.dB}px rgba(0,0,0,${(S.dA/100).toFixed(2)}),inset 0 -1px 0 rgba(255,255,255,${(S.hA/100).toFixed(2)});
 --well-bg:${hsl(S.dkH,S.dkC*0.92,S.dkL+S.dkS-S.dkS*S.wMixD/100)};` : `
+--sheet:${hexA('#EFEFF3',S.shtAL/100)};   /* К13 · полотно аркуша (row/slit); картка лишається --surface */
 --well:inset 0 ${S.wY}px ${S.wB}px rgba(16,16,24,${(S.wA/100).toFixed(2)});
 --well-bg:${mixHex('#FFFFFF','#EFEFF3',S.wMixL/100)};`;
   /* v17 · К1 · фон іде в паспорт із aurLayers() — тієї ж функції, що годує стенд.
@@ -2545,8 +2689,11 @@ function cssPassport(dark){
 .el-net{font-size:${S.nSize}px;font-weight:${S.nWeight}}
 .el-addr{font-size:${S.aSize}px}
 .el-meta{font-size:${S.mtSize}px}
-.el-item{padding-block:${S.rowPadY}px}
-.el-ctxhead{padding-top:${S.headGap}px}  /* пошук=${S.srch} · місто=${S.city} · сорт=${S.sort} */
+.el-item{padding-block:${S.rowPadY}px}${S.row==='slit'?`
+.el-list[data-row="slit"]{gap:${S.slitW}px}
+.el-list[data-row="slit"] .el-sw{border:none}  /* К9' · щілину несе gap; кант знято, інакше два носії (З-36) */`:''}
+.el-ctxhead{padding-top:${S.headGap}px;background:${S.tzFill==='canvas'?'var(--canvas)':(S.tzFill==='blur'?`color-mix(in srgb,var(--canvas) ${dark?S.tzAD:S.tzAL}%,transparent)`:'transparent')}${S.tzFill==='blur'?`;backdrop-filter:blur(${S.tzBlur}px) saturate(${S.tzSat}%)`:''}}  /* пошук=${S.srch} · місто=${S.city} · сорт=${S.sort} · матеріал зони=${({canvas:'канва (аврора перекрита)',none:'ПРОЗОРО (аврора видна, текст ріже рядки)',blur:'СКЛО (аврора видна крізь блюр)',body:'ТІЛО під контролами (аврора видна навколо)'})[S.tzFill]} · поле=${S.mat} */${S.tzFill==='body'?`
+.el-ctxhead[data-tz="body"] .el-srw,.el-ctxhead[data-tz="body"] .el-chips-wrap,.el-ctxhead[data-tz="body"] .el-ctl{background:var(--canvas);border-radius:var(--r-ctl)}`:''}
 .el-fab{width:${S.fabS}px;height:${S.fabS}px} /* зазор ${S.fabGap}px · рука ${S.hand==='left'?'ліва':'права'} · вирівнювання ${S.fabAlign==='base'?'по ребру':'по центру'} · тінь ${(!dark&&S.fabShTint==='accent')?'у тон '+(S.fabShA/100).toFixed(2):'нейтральна'} */
 .el-act{width:${S.actW}px} /* A22: зсув = 2×${S.actW} = ${2*S.actW} · TRIG ${S.swTrig} · SLOP ${S.swSlop} */
 .el-brand .el-mk{width:${S.mSize}px;height:${S.mSize}px}
