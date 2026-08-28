@@ -1390,7 +1390,7 @@ details[open] summary::before{transform:rotate(90deg)}
         <div class="bx-lv" data-k="mSw"><label>штрих<i></i></label><input type="range" id="mSw" min="1.2" max="3.2" step="0.1"><output></output></div>
         <div class="bx-lv" data-k="mGap"><label>зазор &harr; wm<i></i></label><input type="range" id="mGap" min="0" max="14" step="1"><output></output></div>
         <div class="bx-lv" data-k="hSize"><label>герой<i></i></label><input type="range" id="hSize" min="64" max="128" step="4"><output></output></div>
-        <div class="bx-lv" data-k="pRad"><label>радіус аркуша<i></i></label><input type="range" id="pRad" min="0" max="5" step="0.5"><output></output></div>
+        <div class="bx-lv" data-k="pRad"><label>радіус аркуша<i></i></label><input type="range" id="pRad" min="0" max="5" step="0.1"><output></output></div>
         <div class="bx-lv" data-k="n1Holes"><label>Н1 отворів<i></i></label><input type="range" id="n1Holes" min="2" max="5" step="1"><output></output></div>
         <div class="bx-lv" data-k="n1R"><label>Н1 радіус отв.<i></i></label><input type="range" id="n1R" min="0.8" max="2.6" step="0.1"><output></output></div>
         <div class="bx-lv" data-k="n2Lines"><label>Н2 ліній<i></i></label><input type="range" id="n2Lines" min="2" max="4" step="1"><output></output></div>
@@ -1616,10 +1616,14 @@ const S0 = Object.assign({}, S);
                  сховище живе на одному пристрої й гине від «очистити дані».
      LOCKS     — живий реєстр фіксацій оператора. Засівається з LOCK_SEED при
                  ПЕРШОМУ відкритті і далі живе своїм життям.
-   Чому засів іде і в S: інакше стенд відкривався б у заводському вигляді, а ЛОК
-   лежав би поруч невидимим — рівно та ручна робота, яку цей крок і прибирає.
-   Засів спрацьовує ТІЛЬКИ на порожньому сховищі: інакше він щоразу затирав би
-   свіжий раунд оператора мовчки (клас В-17). */
+   ДВІ РІЗНІ РОБОТИ, і в v17_15 їх плутали:
+     · ЗАПІКАННЯ в S (v17_16, зразу під масивом) — безумовне, від сховища не
+       залежить. Це те, що видно на екрані при відкритті.
+     · ЗАСІВ реєстру LOCKS (lockSeed нижче) — тільки на ПОРОЖНЬОМУ сховищі,
+       інакше він затирав би свіжий раунд оператора мовчки (клас В-17).
+   Наслідок, який треба знати: на пристрої зі СТАРИМ сховищем реєстр покаже
+   drift («ЛОК 9 · зараз 26») — це не дефект, а чесна різниця між тим, що
+   запечено в білді, і тим, що ти зафіксував на цьому пристрої раніше. */
 const LOCK_SEED = {
   aH:340, aHL:340, aL:50, aLL:46, aS:100, aSL:100, aSize:12.5, aSoft:15, aSoftL:12,
   actTone:'quiet', actW:82, bH:30, bR:18, bdFillD:18, bdFillL:14, bdH:28, bdR:16, bdSize:145,
@@ -1647,9 +1651,24 @@ const LOCK_SEED = {
   swTrig:46, tzAD:46, tzAL:64, tzBlur:14, tzFill:'blur', tzSat:170, valL:90, wEq:700, wLe:600,
   wSize:20, wTrack:-10
 };
+/* ── Ф-ЛОК-2 · ЗАПІКАННЯ (v17_16) ────────────────────────────────────────
+   Вироки стають ДЕФОЛТОМ стенда, а не засівом реєстру. Виконується тут —
+   ПІСЛЯ знімка S0 (р.1609), отже «ставка» далі вертає ЗАВОДСЬКІ числа, і
+   заводська гілка не втрачена: три стани лишились трьома.
+   Чому безумовно, без огляду на сховище: lockSeed() нижче засіває тільки
+   ПОРОЖНЄ сховище (В-17 — не затирати свіжий раунд). На пристрої, де стенд
+   уже відкривали, сховище непорожнє, засів не спрацьовував — і стенд щоразу
+   відкривався заводським, а вироки лежали поруч невидимими. Саме це й було
+   дефектом: числа існували в білді й не потрапляли на екран.
+   Числа НЕ дублюються: єдиний носій лишається LOCK_SEED, S бере з нього. */
+Object.keys(LOCK_SEED).forEach(k => { if (k in S) S[k] = LOCK_SEED[k]; });
 /* Гейт засіву. Вирок, який НЕ ЛЯГАЄ на власний повзунок, — протухлий вирок:
    повзунок його не відтворить, і наступний раунд почнеться з брехні. Не клемпимо
-   мовчки (це і був би дефект у детекторі, З-45) — друкуємо в консоль поіменно. */
+   мовчки (це і був би дефект у детекторі, З-45).
+   v17_16: носій звіту змінено з console.warn на ПАСПОРТ. Причина — не смак:
+   у прев'ю-пісочниці консоль розгортається панеллю й з'їдає пів екрана стенда
+   (A68), тобто детектор псував рівно те, що мав охороняти. Паспорт читається
+   тоді, коли його відкривають, і нічого не займає, поки мовчить. */
 let LOCK_SEED_BAD = [];
 function lockSeedAudit(){
   LOCK_SEED_BAD = [];
@@ -1663,7 +1682,6 @@ function lockSeedAudit(){
                                                 LOCK_SEED_BAD.push(k+' не на сітці step='+st);
     else if (x === lo || x === hi)              LOCK_SEED_BAD.push(k+' НА МЕЖІ '+lo+'…'+hi+' (З-61)');
   });
-  if (LOCK_SEED_BAD.length) console.warn('Ф-ЛОК · вироки під питанням:', LOCK_SEED_BAD);
 }
 
 let LOCKS = {}, LOCK_STALE = [], LOCK_MEM = false, o_v_cache = null;
@@ -3156,6 +3174,7 @@ document.getElementById('copyBtn').addEventListener('click', () => {
 ЗАЛОЧЕНО = ${JSON.stringify(Object.fromEntries(Object.keys(LOCKS).sort().map(k=>[k,LOCKS[k]])))}
 ЗСУНУТО З ЛОКУ: ${Object.keys(LOCKS).filter(k=>String(LOCKS[k])!==String(S[k])).map(k=>`${k} ЛОК ${LOCKS[k]} → ${S[k]}`).join(' · ') || '—'}
 ПРОТУХЛІ ключі сховища (важеля вже немає): ${LOCK_STALE.join(', ') || '—'}
+ЗАСІВ ПІД ПИТАННЯМ (вирок не лягає на власний повзунок, З-45/З-61): ${LOCK_SEED_BAD.join(' · ') || '—'}
 УСПАДКОВАНО зі спільного ключа (НЕ судилось на цій гілці окремо): ${LOCK_INHERIT.join(' · ') || '—'}
 ${('bgSpread' in LOCKS) ? '⚠ bgSpread ЗАЛОЧЕНО ДО v17_5: тоді він масштабував СТОП, тепер РАДІУСИ. Ключ той самий, підстава інша — лок переглянути оком, LOCK_STALE цього не ловить.' : ''}
 мертві важелі ВИКЛЮЧЕНО: ${[...d].join(', ') || '—'}
