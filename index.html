@@ -1457,6 +1457,7 @@ details[open] summary::before{transform:rotate(90deg)}
   <button class="bx-copy" id="betBtn">&#8634; ставка &mdash; повернути дефолти стенда</button>
   <div class="bx-lockrow">
     <button class="bx-lock2" id="lockExp">ЛОК &rarr; valuesLOCK.md</button>
+    <button class="bx-lock2" id="lockApply">&#8635; RESTORE LOCKS</button>
     <button class="bx-lock2 warn" id="lockRst">скинути ЛОК</button>
   </div>
   <textarea class="bx-out" id="out" hidden readonly></textarea>
@@ -1607,6 +1608,64 @@ const LOCK_KEY = 'EL_LOCK', LOCK_BUILD = 'v16';
    ЛОК тут не заважає: lockLoad() пише в LOCKS, у S не пише жодного разу. */
 const S0 = Object.assign({}, S);
 
+/* ============================================================
+   Ф-ЛОК · ЗАСІВ ЛОКУ · 196 device-вироків раунду v17_15 (XS, обидві теми).
+   ТРИ СТАНИ, і вони НЕ взаємозамінні:
+     S0        — заводські дефолти стенда. Кнопка «ставка». Не рухаються ніколи.
+     LOCK_SEED — цей масив. Вироки, зняті з девайса, вшиті в БІЛД, а не в сховище:
+                 сховище живе на одному пристрої й гине від «очистити дані».
+     LOCKS     — живий реєстр фіксацій оператора. Засівається з LOCK_SEED при
+                 ПЕРШОМУ відкритті і далі живе своїм життям.
+   Чому засів іде і в S: інакше стенд відкривався б у заводському вигляді, а ЛОК
+   лежав би поруч невидимим — рівно та ручна робота, яку цей крок і прибирає.
+   Засів спрацьовує ТІЛЬКИ на порожньому сховищі: інакше він щоразу затирав би
+   свіжий раунд оператора мовчки (клас В-17). */
+const LOCK_SEED = {
+  aH:340, aHL:340, aL:50, aLL:46, aS:100, aSL:100, aSize:12.5, aSoft:15, aSoftL:12,
+  actTone:'quiet', actW:82, bH:30, bR:18, bdFillD:18, bdFillL:14, bdH:28, bdR:16, bdSize:145,
+  bg:'all', bgA1D:28, bgA1L:32, bgA2D:14, bgA2L:38, bgA3D:8, bgA3L:30, bgH1D:212, bgH1L:216,
+  bgH2D:276, bgH2L:232, bgH3D:194, bgH3L:196, bgLtD:55, bgLtL:60, bgSatD:64, bgSatL:36,
+  bgSpread:115, bgTiltD:1, bgTiltL:3, cdAD:37.5, cdAL:45, cdBevBD:0, cdBevBL:4, cdBevSD:3,
+  cdBevSL:3, cdBevTD:5, cdBevTL:0, cdBevW:20, cdBlur:12, cdGap:12, cdPadX:16, cdR:20,
+  cdRimAD:26, cdRimAL:5, cdRimW:18, cdSat:170, cdShA:22, cdShB:4, cdShY:2, city:'chip',
+  comp:'v4', ctFill:0, ctH:20, ctInkL:70, ctPx:7, ctR:16, ctRimL:25, ctSize:105, ctl:'v6',
+  ctlGap:7, ctlOn:'tint', ctlOnInk:70, ctlOnRim:20, ctlOnTintL:12, dkC:7, dkH:250, dkI:6,
+  dkL:6, dkR:9, dkS:5, eqD:'grad', eqL:'grad', fabAD:50, fabAL:46, fabAlign:'mid', fabBlur:0,
+  fabEdge:'both', fabElev:8, fabGap:18, fabHaloAD:28, fabHaloAL:12, fabHaloSD:4, fabHaloSL:10,
+  fabRimAD:24, fabRimAL:8, fabRimW:15, fabRingAD:14, fabRingAL:38, fabRingW:22, fabS:60,
+  fabSat:10, fabShA:28, fabShCA:28, fabShCB:4, fabShCS:-2, fabShCY:1, fabShOrd:'over',
+  fabShS:-2, fabShTint:'none', fabShY:2, fabTone:'glass', gAng:100, gShift:40, hand:'right',
+  hbInkD:65, hbInkL:55, hbSw:18, hbSz:17, hbare:1, hdiv:1, hdvAD:14, hdvGap:3, hdvIn:5,
+  hdvW:10, headGap:5, hgrp:'glass', hpBlur:14, hpElev:1, hpRidgeD:28, hpRidgeL:28, hpRimD:16,
+  hpRimL:11, hpSat:190, hpShA:18, hpShY:1, hpToneD:5, hpToneL:8, locSurf:'sheet', mGap:1,
+  mSize:30, mSw:1.2, mark:'n5', mat:'plain', mtSize:11.5, mutL:74, n5Cut:4.3, n5Gap:2.2,
+  n5Lines:3, n5Paint:'grad', n5Tray:3.2, n5TrayW:1.2, n5w1:50, n5w2:80, n5w3:100, nSize:14,
+  nWeight:650, navH:60, nvGap:3, nvLbl:100, nvSw:20, nvSz:21, pRad:2.2, pkEdge:'none',
+  row:'card', rowPadY:11, shBotD:28, shBotL:42, shPos:'screen', shRimBD:3, shRimBL:10,
+  shRimD:12, shRimL:4, shSpecD:8, shSpecL:46, shSpecSD:28, shSpecSL:28, shTopD:14, shTopL:24,
+  shWho:'fab', shXD:34, shXL:38, shYD:20, shYL:18, sort:'need', srch:'icon', swSlop:10,
+  swTrig:46, tzAD:46, tzAL:64, tzBlur:14, tzFill:'blur', tzSat:170, valL:90, wEq:700, wLe:600,
+  wSize:20, wTrack:-10
+};
+/* Гейт засіву. Вирок, який НЕ ЛЯГАЄ на власний повзунок, — протухлий вирок:
+   повзунок його не відтворить, і наступний раунд почнеться з брехні. Не клемпимо
+   мовчки (це і був би дефект у детекторі, З-45) — друкуємо в консоль поіменно. */
+let LOCK_SEED_BAD = [];
+function lockSeedAudit(){
+  LOCK_SEED_BAD = [];
+  Object.keys(LOCK_SEED).forEach(k => {
+    const el = document.getElementById(k);
+    if (!el || el.type !== 'range') return;
+    const lo = +el.min, hi = +el.max, st = +el.step, x = +LOCK_SEED[k];
+    if (!isFinite(x)) return;
+    if (x < lo || x > hi)                       LOCK_SEED_BAD.push(k+' поза '+lo+'…'+hi);
+    else if (Math.abs((x-lo)/st - Math.round((x-lo)/st)) > 1e-9)
+                                                LOCK_SEED_BAD.push(k+' не на сітці step='+st);
+    else if (x === lo || x === hi)              LOCK_SEED_BAD.push(k+' НА МЕЖІ '+lo+'…'+hi+' (З-61)');
+  });
+  if (LOCK_SEED_BAD.length) console.warn('Ф-ЛОК · вироки під питанням:', LOCK_SEED_BAD);
+}
+
 let LOCKS = {}, LOCK_STALE = [], LOCK_MEM = false, o_v_cache = null;
 function lockLoad(){
   let raw = null;
@@ -1618,6 +1677,13 @@ function lockLoad(){
   o_v_cache = o.v || {};
   Object.keys(o.v || {}).forEach(k => { (k in S) ? LOCKS[k] = o.v[k] : LOCK_STALE.push(k); });
   lockMigrate();
+}
+/* Засів. Порожнє сховище = перше відкриття цього білда на цьому пристрої. */
+function lockSeed(){
+  if (Object.keys(LOCKS).length || LOCK_STALE.length) return false;
+  Object.keys(LOCK_SEED).forEach(k => { if (k in S){ LOCKS[k] = LOCK_SEED[k]; S[k] = LOCK_SEED[k]; } });
+  lockSave();
+  return true;
 }
 
 /* v16 · МІГРАЦІЯ КЛЮЧІВ ПІСЛЯ РОЗЩЕПЛЕННЯ (крок 1д).
@@ -2761,7 +2827,7 @@ function pick(id, key){
 /* Порядок обов'язковий: регістр → кнопки → ініціалізація важелів.
    slider() усередині кличе markLock, а той читає LOCKS — інакше перший малюнок
    покаже «нема ЛОКу» на залочених рядках і оператор вирішить, що лок не зберігся. */
-lockLoad(); installLocks();
+lockLoad(); lockSeedAudit(); lockSeed(); installLocks();
 
 [['dkH',v=>v+'°',1],['dkC',v=>v+'%',1],['dkL',v=>v.toFixed(1)+'%',1],['dkS',v=>'+'+v.toFixed(1),1],
  ['dkR',v=>'+'+v.toFixed(1),1],['dkI',v=>v+'%',1],
@@ -3149,6 +3215,21 @@ ${keys.map(k => `| \`${k}\` | ${LOCKS[k]} | ${String(LOCKS[k])===String(S[k]) ? 
 document.getElementById('betBtn').addEventListener('click', () => {
   if (!confirm('Повернути ВСІ важелі до дефолтів стенда? ЛОК не постраждає.')) return;
   Object.assign(S, S0);
+  syncPicks(); render(); measure();
+});
+
+/* Ф-ЛОК · RESTORE LOCKS. Дзеркало «ставки»: та повертає до ЗАВОДСЬКИХ, ця — до
+   ОСТАННІХ ЗАФІКСОВАНИХ. Реєстр LOCKS не чіпається: він джерело, а не жертва.
+   Ключі, яких у ЛОКу немає (ще не судилися), лишаються як є — підтягувати їх
+   до дефолту означало б тихо скасувати незалочений експеримент. */
+document.getElementById('lockApply').addEventListener('click', () => {
+  const ks = Object.keys(LOCKS).filter(k => k in S);
+  if (!ks.length){ alert('ЛОК порожній — повертати нічого.'); return; }
+  const moved = ks.filter(k => String(S[k]) !== String(LOCKS[k]));
+  if (!moved.length){ alert('Уже на ЛОКу: всі ' + ks.length + ' збігаються.'); return; }
+  if (!confirm('Повернути ' + moved.length + ' важел(ів) до ЛОКу?\n' +
+      moved.slice(0,12).join(', ') + (moved.length>12 ? ' …' : ''))) return;
+  ks.forEach(k => S[k] = LOCKS[k]);
   syncPicks(); render(); measure();
 });
 
