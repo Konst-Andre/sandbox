@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0e">
-<title>EquipLens · headbench v17_5</title>
+<title>EquipLens · headbench v17_21</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -430,7 +430,29 @@ details[open] summary::before{transform:rotate(90deg)}
    верхня грань фаски, а два носії однієї грані = З-57. Правило має (0,3,0),
    тому мовчання тут означало б довіру до `.el-sw .el-item` (0,2,0).
    --cdGlass = `none` при cdBlur=0: `blur(0px)` усе одно заводить шар. */
+/* К22-в · glift — носій об'єму темної теми.
+   `background-image` ОКРЕМОЮ властивістю і ОБОВ'ЯЗКОВО після `background:`:
+   скорочення рядком вище скидає background-image у initial, тому зворотний
+   порядок дав би мертвий важіль (той самий клас, що per-side кольори фаски).
+   Градієнт іде в ТОНІ тіла, не білим інжектом (A45); на прямокутнику тип
+   градієнта лінійний (A99); на напівпрозорому тілі шейдинг читається
+   «всередині матеріалу» (A102). --cdGlift = `none` при альфі 0. */
+/* К22-в-б · ridge — блік ВЕРХНЬОГО РЕБРА. Третій базовий важіль DARK-набору
+   A45 MANIFEST (sat · lit · glift · ridge); у К22-б знімався не він, а прибитий
+   ТОКЕН `--ridge:inset 0 1px 0 rgba(255,255,255,.07)` — 1px, що дублював кант.
+   ТРИ НОСІЇ, ТРИ РОБОТИ, і саме тому це не З-57:
+     cdBevTD — border-top-color: контур, іде по ДУЗІ кутів;
+     ridge   — смуга у px: має РІЗКУ нижню межу, око читає товщину матеріалу;
+     glift   — градієнт у %: без низу, читається як напрям світла.
+   Ridge у px, не в %: ребро не масштабується з висотою картки — інакше на
+   високій картці «грань» розповзається в пляму.
+   Носій — background-image, НЕ inset box-shadow: картка їздить під свайпом A22,
+   і обидва shadow-шляхи шимерять на сабпіксельному зсуві (A70). Панель hpRidge
+   може дозволити собі inset — вона нерухома; картка ні.
+   Порядок шарів у ОДНІЙ властивості: перший = ВЕРХНІЙ. ridge над glift. Два
+   окремі оголошення background-image неможливі — друге затерло б перше. */
 .el-list[data-row="card"] .el-item{background:var(--cdBody,var(--surface));
+  background-image:var(--cdRidge,none),var(--cdGlift,none);
   background-clip:padding-box;
   border:var(--cdBevW,1px) solid transparent;
   border-top-color:var(--cdBevT,transparent);
@@ -561,6 +583,27 @@ details[open] summary::before{transform:rotate(90deg)}
 .el-list[data-row="card"] .el-sw{border-radius:var(--cdR,13px);
   border:var(--cdRimW,1px) solid var(--cdRimC,transparent);
   box-shadow:var(--cdSh,none)}
+/* Ф-ШОВ · ДІАГНОСТИЧНІ ГІЛКИ ШВУ (не важіль тону — прилад).
+   Симптом: світла смуга ~1–2px спалахує по НИЖНІЙ кромці картки під скролом.
+   Носій встановлено пробою оператора: є при `cdRimAD>0` І `cdBlur>0`; розмір
+   кільця не впливає — отже кант не створює смугу, а ДАЄ ЇЙ КОНТРАСТ.
+   Корінь (fxtf-drafts#374 + практика): блюр усереднює коло сусідніх пікселів,
+   а за кромкою елемента пікселів НЕМАЄ — WebKit дублює крайній ряд. При скролі
+   крайнім щокадру стає інший ряд, тому по кромці йде нестабільна смуга
+   неповного блюру. Числами (cdRimW · cdR · cdBevW) це не лікується в принципі.
+   Чотири гілки = чотири РІЗНІ пояснення. Судяться поодинці, не в суміші. */
+.screenbox[data-seam="clip"] .el-list[data-row="card"] .el-sw{overflow:clip}
+.screenbox[data-seam="layer"] .el-list[data-row="card"] .el-item{will-change:transform}
+.screenbox[data-seam="oscr"] .el-scr{overscroll-behavior:none}
+/* `назовні`: скло переїжджає з .el-item на .el-sw. Кромка скла збігається з
+   кромкою канта, і неповний край блюру лягає ПІД кант, де його не видно.
+   ⚠ ПОБІЧНИЙ ЕФЕКТ, названий вголос: скло більше не їде з карткою під свайпом —
+   воно розмиватиме й дії, що відкриваються. Це ДІАГНОСТИЧНА позиція: вона
+   відповідає «чи корінь у кромці», а не «чи так лишаємо». */
+.screenbox[data-seam="out"] .el-list[data-row="card"] .el-item{
+  -webkit-backdrop-filter:none;backdrop-filter:none}
+.screenbox[data-seam="out"] .el-list[data-row="card"] .el-sw{
+  -webkit-backdrop-filter:var(--cdGlass,none);backdrop-filter:var(--cdGlass,none)}
 .el-list[data-row="row"] .el-sw{border-radius:0;border:1px solid transparent;box-shadow:none;
   border-bottom-color:var(--line)}
 .el-list[data-row="row"] .el-sw:last-child{border-bottom-color:transparent}
@@ -1039,6 +1082,23 @@ details[open] summary::before{transform:rotate(90deg)}
         <div class="bx-lv" data-k="cdBevBD"><label>фаска: низ &middot; тем. <b style="color:#9a9aa8">чорний</b><i></i></label><input type="range" id="cdBevBD" min="0" max="40" step="1"><output></output></div>
         <div class="bx-lv" data-k="cdBevSD"><label>фаска: боки &middot; тем. <b style="color:#9a9aa8">білий</b><i></i></label><input type="range" id="cdBevSD" min="0" max="40" step="1"><output></output></div>
         <div class="bx-note"><b>Фізика: світло завжди зверху.</b> Різниться <b>яка грань несе читання</b>. <b>Світла:</b> головний носій &mdash; <b>нижня</b> грань (тінь), верхня лише підсвічує. <b>Темна:</b> головний &mdash; <b>верхня</b> (світло), бо drop-тінь на OLED мертва (<code>A45</code>). Боки окремим важелем &mdash; інакше &laquo;фаска направлена&raquo; невідрізненна від &laquo;кільце трохи світліше&raquo;.</div>
+        <div class="bx-pick" id="pkSeam" data-dk="cdSeam">
+        <button data-v="off" aria-pressed="true">шов: як є</button>
+        <button data-v="clip">clip</button>
+        <button data-v="layer">шар</button>
+        <button data-v="oscr">оверскрол</button>
+        <button data-v="out">назовні</button>
+        </div>
+        <div class="bx-note">✅ <b><code>Ф-ШОВ</code> &middot; ВИРОК: це був артефакт СТЕНДА, не продукту.</b> На <b>1:1</b> примари немає навіть при дефолті; на <b>90%</b> вона є, і жодна з чотирьох гілок її не знімає. Отже носій — <b>дробовий <code>transform:scale</code></b> самого стенда: він множить координати на 0.9, кромки лягають між пікселями, і крайовий недобір блюру (за кромкою немає сусідів для усереднення &mdash; WebKit дублює крайній ряд) стає видимим. Кант лише давав контраст. <b>⚠ Скло судиться ТІЛЬКИ на 1:1</b> &mdash; лічильник тепер про це й нагадує. Гілки лишені <b>арсеналом</b>, а не фіксом: якщо той самий симптом колись з'явиться в продукті на девайсі, перебір уже готовий і не треба буде заводити його вдруге. <code>clip</code> обрізка · <code>шар</code> ресемпл · <code>оверскрол</code> · <code>назовні</code> кромка скла = кромка канта (⚠ ціна: скло не їде під свайпом). Дефолт <code>як є</code> &mdash; жодна не втручається.</div>
+        <div class="bx-lv" data-k="cdRdgAD"><label>ребро: блiк &alpha; &middot; тем.<i></i></label><input type="range" id="cdRdgAD" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="cdRdgH"><label>ребро: висота &middot; тем.<i></i></label><input type="range" id="cdRdgH" min="1" max="16" step="1"><output></output></div>
+        <div class="bx-note">🆕 <b>К22-в-б &middot; <code>ridge</code>: товщина ребра.</b> Третій базовий важіль DARK-набору <code>A45&nbsp;MANIFEST</code> (<code>sat&nbsp;&middot;&nbsp;lit&nbsp;&middot;&nbsp;glift&nbsp;&middot;&nbsp;ridge</code>). <b>Три носії &mdash; три роботи:</b> кант окреслює <i>де</i> картка закінчується (йде по дузі кутів) &middot; <b>ridge</b> каже <i>яка вона товста</i> &mdash; має різку нижню межу на фіксованій відстані, і око читає це як грань &middot; <b>glift</b> каже <i>звідки світло</i> &mdash; він без низу. Тому <b>px, не %</b>: ребро не масштабується з висотою картки. Білий тут дозволений, хоч у <code>glift</code> заборонений (<code>A45</code> п.3): заборона прив'язана до <b>площі</b> &mdash; на 4px білого око читає блиск, на 60% висоти &mdash; сірий наліт.</div>
+        <div class="bx-note">⚠ <b>Судити ridge при <code>фаска: верх &middot; тем.</code> = 0.</b> Ridge живе <b>під</b> кантом (<code>background-clip:padding-box</code>), і при живій фасці перші пікселі зіллються з нею в одну пляму &mdash; ти міряв би <b>суму двох білих</b>, а вирок виносив одному. Носій &mdash; <code>background-image</code>, не <code>inset box-shadow</code>: картка їздить під свайпом (<code>A70</code>).</div>
+        <div class="bx-lv" data-k="cdGliftAD"><label>glift: &alpha; шару &middot; тем.<i></i></label><input type="range" id="cdGliftAD" min="0" max="60" step="1"><output></output></div>
+        <div class="bx-lv" data-k="cdGliftD"><label>glift: приріст L &middot; тем.<i></i></label><input type="range" id="cdGliftD" min="0" max="24" step="1"><output></output></div>
+        <div class="bx-lv" data-k="cdGliftHD"><label>glift: висота згасання &middot; тем.<i></i></label><input type="range" id="cdGliftHD" min="5" max="100" step="5"><output></output></div>
+        <div class="bx-note">🆕 <b>К22-в &middot; <code>glift</code>: об'єм у тоні тіла.</b> Верх картки світлішає <b>тим самим відтінком</b> (<code>dkH</code>), а не білим інжектом &mdash; білий на темній заборонено (<code>A45</code>): він дає сірий наліт, а не світло. На напівпрозорому тілі шейдинг читається &laquo;всередині матеріалу&raquo; (<code>A102</code>). Прямокутник &rarr; <b>лінійний</b> градієнт (<code>A99</code>). <b>&alpha;&nbsp;=&nbsp;0 &mdash; вимикач:</b> шар не заводиться, тому два важелі форми оголошені мертвими.</div>
+        <div class="bx-note">⚠ <b>Що зробить замір недійсним.</b> Живе скло (<code>cdBlur&nbsp;12</code>) підмішує аврору під картку (<code>A100</code>) &mdash; перший раунд ставити при <b>блюр&nbsp;0</b>. І опустити руками <b>фаску: верх</b> та <b>фаску: боки</b> в <b>0</b>: інакше <code>glift</code> судиться проти <b>подвійного</b> контуру, а не проти одного силуету.</div>
         <div class="bx-note"><b>Чому <code>border-color</code>, а не <code>inset box-shadow</code>.</b> Картка їздить під свайпом <code>A22</code>; обидва shadow-шляхи ре-растеризуються на сабпіксельному зсуві і шимерять (<code>A70</code>, закрито device-тестом). <code>border</code> малюється як частина боксу.</div>
         <div class="bx-lv" data-k="cdShY"><label>тінь: зсув &darr; &middot; св.<i></i></label><input type="range" id="cdShY" min="0" max="14" step="1"><output></output></div>
         <div class="bx-lv" data-k="cdShB"><label>тінь: блюр &middot; св.<i></i></label><input type="range" id="cdShB" min="0" max="28" step="1"><output></output></div>
@@ -1526,6 +1586,22 @@ const S = {
   cdBevTD:8, cdBevBD:0, cdBevSD:8,
   cdShY:5, cdShB:14, cdShA:7,
   cdBlur:0, cdSat:150,
+  /* К22-в · glift. Нуль альфи = вимикач: шар не заводиться взагалі, отже
+     дефолт відтворює ПОТОЧНУ картинку (1.18), а не вигадану. Альфа окрема
+     від альфи тіла навмисно: якби вона бралась із cdAD, то при cdGliftD=0
+     верхня зупинка дала б композит ≈0.61 — перший клік важеля був би
+     стрибком, решта дрібними приростами, і замір став би недійсним (З-61).
+     Висота згасання 60% — стартова позиція повзунка, не лок. */
+  cdGliftAD:0, cdGliftD:0, cdGliftHD:60,
+  /* К22-в-б · ridge. Альфа 0 = вимикач (шар не заводиться), тому дефолт не
+     рушить картинку (1.18). Висота 4px — стартова позиція повзунка: провенанс
+     A45 (`glift +4 · ridge .10`) дає силу бліку, не його товщину; товщина в
+     тому прецеденті була 1px inset, а тут судиться СМУГА. Число з діапазону,
+     не з локу. */
+  cdRdgAD:0, cdRdgH:4,
+  /* Ф-ШОВ · дефолт 'off' = контроль. Прилад не має мовчки правити картинку:
+     інакше наступний раунд судив би вже полагоджений шов, не знаючи про це. */
+  cdSeam:'off',
   chipMat:'out',
   /* верхня зона */
   headGap:5, srch:'icon', tzFill:'canvas',
@@ -1609,7 +1685,12 @@ const LOCK_KEY = 'EL_LOCK', LOCK_BUILD = 'v16';
 const S0 = Object.assign({}, S);
 
 /* ============================================================
-   Ф-ЛОК · ЗАСІВ ЛОКУ · 196 device-вироків раунду v17_15 (XS, обидві теми).
+   Ф-ЛОК · ЗАСІВ ЛОКУ · 203 device-вироки раунду v17_18 (XS, обидві теми).
+   Дельта проти v17_15: +7 нових ключів (cdGlift×3 · cdRdg×2 · ctInkD · ctRimD —
+   тобто glift і ridge ПРОЙШЛИ девайс і більше не «стартова позиція повзунка»),
+   4 переміряні: cdAD 37.5→40 · cdBevTD 5→3 · tzAD 46→28 · tzAL 64→46.
+   ⚠ tz-пара з'їхала НА ОБОХ темах — це не дрейф картки, це переогляд скла
+     верхньої зони; поводитись з ним як з окремим предметом.
    ТРИ СТАНИ, і вони НЕ взаємозамінні:
      S0        — заводські дефолти стенда. Кнопка «ставка». Не рухаються ніколи.
      LOCK_SEED — цей масив. Вироки, зняті з девайса, вшиті в БІЛД, а не в сховище:
@@ -1629,27 +1710,27 @@ const LOCK_SEED = {
   actTone:'quiet', actW:82, bH:30, bR:18, bdFillD:18, bdFillL:14, bdH:28, bdR:16, bdSize:145,
   bg:'all', bgA1D:28, bgA1L:32, bgA2D:14, bgA2L:38, bgA3D:8, bgA3L:30, bgH1D:212, bgH1L:216,
   bgH2D:276, bgH2L:232, bgH3D:194, bgH3L:196, bgLtD:55, bgLtL:60, bgSatD:64, bgSatL:36,
-  bgSpread:115, bgTiltD:1, bgTiltL:3, cdAD:37.5, cdAL:45, cdBevBD:0, cdBevBL:4, cdBevSD:3,
-  cdBevSL:3, cdBevTD:5, cdBevTL:0, cdBevW:20, cdBlur:12, cdGap:12, cdPadX:16, cdR:20,
-  cdRimAD:26, cdRimAL:5, cdRimW:18, cdSat:170, cdShA:22, cdShB:4, cdShY:2, city:'chip',
-  comp:'v4', ctFill:0, ctH:20, ctInkL:70, ctPx:7, ctR:16, ctRimL:25, ctSize:105, ctl:'v6',
-  ctlGap:7, ctlOn:'tint', ctlOnInk:70, ctlOnRim:20, ctlOnTintL:12, dkC:7, dkH:250, dkI:6,
-  dkL:6, dkR:9, dkS:5, eqD:'grad', eqL:'grad', fabAD:50, fabAL:46, fabAlign:'mid', fabBlur:0,
-  fabEdge:'both', fabElev:8, fabGap:18, fabHaloAD:28, fabHaloAL:12, fabHaloSD:4, fabHaloSL:10,
-  fabRimAD:24, fabRimAL:8, fabRimW:15, fabRingAD:14, fabRingAL:38, fabRingW:22, fabS:60,
-  fabSat:10, fabShA:28, fabShCA:28, fabShCB:4, fabShCS:-2, fabShCY:1, fabShOrd:'over',
-  fabShS:-2, fabShTint:'none', fabShY:2, fabTone:'glass', gAng:100, gShift:40, hand:'right',
-  hbInkD:65, hbInkL:55, hbSw:18, hbSz:17, hbare:1, hdiv:1, hdvAD:14, hdvGap:3, hdvIn:5,
-  hdvW:10, headGap:5, hgrp:'glass', hpBlur:14, hpElev:1, hpRidgeD:28, hpRidgeL:28, hpRimD:16,
-  hpRimL:11, hpSat:190, hpShA:18, hpShY:1, hpToneD:5, hpToneL:8, locSurf:'sheet', mGap:1,
-  mSize:30, mSw:1.2, mark:'n5', mat:'plain', mtSize:11.5, mutL:74, n5Cut:4.3, n5Gap:2.2,
-  n5Lines:3, n5Paint:'grad', n5Tray:3.2, n5TrayW:1.2, n5w1:50, n5w2:80, n5w3:100, nSize:14,
-  nWeight:650, navH:60, nvGap:3, nvLbl:100, nvSw:20, nvSz:21, pRad:2.2, pkEdge:'none',
-  row:'card', rowPadY:11, shBotD:28, shBotL:42, shPos:'screen', shRimBD:3, shRimBL:10,
-  shRimD:12, shRimL:4, shSpecD:8, shSpecL:46, shSpecSD:28, shSpecSL:28, shTopD:14, shTopL:24,
-  shWho:'fab', shXD:34, shXL:38, shYD:20, shYL:18, sort:'need', srch:'icon', swSlop:10,
-  swTrig:46, tzAD:46, tzAL:64, tzBlur:14, tzFill:'blur', tzSat:170, valL:90, wEq:700, wLe:600,
-  wSize:20, wTrack:-10
+  bgSpread:115, bgTiltD:1, bgTiltL:3, cdAD:40, cdAL:45, cdBevBD:0, cdBevBL:4, cdBevSD:3,
+  cdBevSL:3, cdBevTD:3, cdBevTL:0, cdBevW:20, cdBlur:12, cdGap:12, cdGliftAD:34, cdGliftD:16,
+  cdGliftHD:70, cdPadX:16, cdR:20, cdRdgAD:24, cdRdgH:10, cdRimAD:26, cdRimAL:5, cdRimW:18,
+  cdSat:170, cdShA:22, cdShB:4, cdShY:2, city:'chip', comp:'v4', ctFill:0, ctH:20, ctInkD:40,
+  ctInkL:70, ctPx:7, ctR:16, ctRimD:26, ctRimL:25, ctSize:105, ctl:'v6', ctlGap:7,
+  ctlOn:'tint', ctlOnInk:70, ctlOnRim:20, ctlOnTintL:12, dkC:7, dkH:250, dkI:6, dkL:6, dkR:9,
+  dkS:5, eqD:'grad', eqL:'grad', fabAD:50, fabAL:46, fabAlign:'mid', fabBlur:0, fabEdge:'both',
+  fabElev:8, fabGap:18, fabHaloAD:28, fabHaloAL:12, fabHaloSD:4, fabHaloSL:10, fabRimAD:24,
+  fabRimAL:8, fabRimW:15, fabRingAD:14, fabRingAL:38, fabRingW:22, fabS:60, fabSat:10,
+  fabShA:28, fabShCA:28, fabShCB:4, fabShCS:-2, fabShCY:1, fabShOrd:'over', fabShS:-2,
+  fabShTint:'none', fabShY:2, fabTone:'glass', gAng:100, gShift:40, hand:'right', hbInkD:65,
+  hbInkL:55, hbSw:18, hbSz:17, hbare:1, hdiv:1, hdvAD:14, hdvGap:3, hdvIn:5, hdvW:10,
+  headGap:5, hgrp:'glass', hpBlur:14, hpElev:1, hpRidgeD:28, hpRidgeL:28, hpRimD:16, hpRimL:11,
+  hpSat:190, hpShA:18, hpShY:1, hpToneD:5, hpToneL:8, locSurf:'sheet', mGap:1, mSize:30,
+  mSw:1.2, mark:'n5', mat:'plain', mtSize:11.5, mutL:74, n5Cut:4.3, n5Gap:2.2, n5Lines:3,
+  n5Paint:'grad', n5Tray:3.2, n5TrayW:1.2, n5w1:50, n5w2:80, n5w3:100, nSize:14, nWeight:650,
+  navH:60, nvGap:3, nvLbl:100, nvSw:20, nvSz:21, pRad:2.2, pkEdge:'none', row:'card',
+  rowPadY:11, shBotD:28, shBotL:42, shPos:'screen', shRimBD:3, shRimBL:10, shRimD:12, shRimL:4,
+  shSpecD:8, shSpecL:46, shSpecSD:28, shSpecSL:28, shTopD:14, shTopL:24, shWho:'fab', shXD:34,
+  shXL:38, shYD:20, shYL:18, sort:'need', srch:'icon', swSlop:10, swTrig:46, tzAD:28, tzAL:46,
+  tzBlur:14, tzFill:'blur', tzSat:170, valL:90, wEq:700, wLe:600, wSize:20, wTrack:-10
 };
 /* ── Ф-ЛОК-2 · ЗАПІКАННЯ (v17_16) ────────────────────────────────────────
    Вироки стають ДЕФОЛТОМ стенда, а не засівом реєстру. Виконується тут —
@@ -2220,6 +2301,28 @@ function applyVars(){
   s.setProperty('--cdSh',   dark ? 'none'
     : '0 '+S.cdShY+'px '+S.cdShB+'px '+hexA(cdShd,S.cdShA/100));
   s.setProperty('--cdGlass', S.cdBlur>0 ? 'blur('+S.cdBlur+'px) saturate('+S.cdSat+'%)' : 'none');
+  /* К22-в · glift. Та сама HSL-вісь, що --cdBody (dkH · dkC*0.92), зсув тільки
+     по L: об'єм лишається в тоні матеріалу (A45 — білий інжект заборонено).
+     ⚠ Друга зупинка — hsl(… / 0), НІКОЛИ transparent: transparent це
+     rgba(0,0,0,0), і sRGB-інтерполяція тягне середину градієнта в сірий.
+     Альфа 0 → 'none': шар з нульовою альфою все одно заводить композит —
+     той самий клас, що --cdGlass при cdBlur=0.
+     На світлій 'none' безумовно: там elevation несе drop-тінь (A45). */
+  /* К22-в-б · ridge. Білий, а не in-hue: у MANIFEST це `top inset-highlight`,
+     окремий рядок від `glift`. Друга зупинка — rgba(…,0), не transparent
+     (той самий клас, що в glift: sRGB тягла б середину в сірий).
+     Альфа 0 → 'none': шар з нульовою альфою все одно заводить композит. */
+  s.setProperty('--cdRidge', (dark && S.cdRdgAD>0)
+    ? 'linear-gradient(180deg,'
+      + hexA(cdLit,S.cdRdgAD/100) + ' 0,'
+      + hexA(cdLit,0) + ' ' + S.cdRdgH + 'px)'
+    : 'none');
+  const cdGliftL = S.dkL + S.dkS + S.cdGliftD;
+  s.setProperty('--cdGlift', (dark && S.cdGliftAD>0)
+    ? 'linear-gradient(180deg,'
+      + hsl(S.dkH,S.dkC*0.92,cdGliftL,(S.cdGliftAD/100).toFixed(3)) + ' 0%,'
+      + hsl(S.dkH,S.dkC*0.92,cdGliftL,0) + ' ' + S.cdGliftHD + '%)'
+    : 'none');
   s.setProperty('--aSize', S.aSize+'px'); s.setProperty('--mtSize', S.mtSize+'px');
   s.setProperty('--rowPadY', S.rowPadY+'px'); s.setProperty('--headGap', S.headGap+'px');
   /* v17_8 · К9'. Ставиться ЗАВЖДИ, а не тільки в гілці slit: CSS-фолбек
@@ -2270,6 +2373,7 @@ function applyVars(){
      ТА САМА альфа акценту дає помітно гучніший неон (S — домінантний важіль
      придушення на темній, не L). Тому вилка темної читається інакше при тому ж числі. */
   sbox.dataset.onmat = S.ctlOn;
+  sbox.dataset.seam = S.cdSeam;   /* Ф-ШОВ · гілка шву */
   const tintA = (dark ? S.ctlOnTintD : S.ctlOnTintL) / 100;
   s.setProperty('--on-tint', `rgba(228,0,90,${tintA.toFixed(2)})`);
   s.setProperty('--on-rim', dark
@@ -2605,6 +2709,27 @@ function conds(){
       ['cdRimAL','cdBevTL','cdBevBL','cdBevSL','cdShY','cdShB','cdShA']],
     ['картка · край тем.', 'картка і тема = темна',  hasHead && S.row==='card' &&  dark,
       ['cdRimAD','cdBevTD','cdBevBD','cdBevSD']],
+    /* Ф-ШОВ. Прилад живий там, де живий сам симптом: картка + УВІМКНЕНЕ скло.
+       При cdBlur=0 смуги немає взагалі (проба оператора), отже пікер тоді
+       нічого не діагностує і оголошується мертвим — інакше він обіцяв би
+       відповідь на питання, якого в тій конфігурації не існує (З-30). */
+    ['картка · шов', 'картка і скло увімкнене', hasHead && S.row==='card' && S.cdBlur>0,
+      ['cdSeam']],
+    /* К22-в-б · ridge. Та сама конструкція, що glift: альфа — вимикач, висота
+       оголошується мертвою при 0 ЯВНО. Гілка тільки темна (A45). */
+    ['картка · ребро тем.', 'картка і тема = темна', hasHead && S.row==='card' && dark,
+      ['cdRdgAD']],
+    ['картка · ребро · висота', 'ребро увімкнено: блiк > 0',
+      hasHead && S.row==='card' && dark && S.cdRdgAD>0, ['cdRdgH']],
+    /* К22-в · glift. Гілка одна — темна: на світлій носія немає взагалі (A45).
+       Альфа — вимикач, тому два важелі форми оголошені мертвими ЯВНО при 0.
+       Без цього рядка вони вважались би живими при вимкненому шарі й осіли б
+       у щілині покриття cssGap — рівно З-30 (важіль, оголошений живим там, де
+       його не видно) і З-9. */
+    ['картка · glift тем.', 'картка і тема = темна', hasHead && S.row==='card' && dark,
+      ['cdGliftAD']],
+    ['картка · glift · форма', 'glift увімкнено: альфа шару > 0',
+      hasHead && S.row==='card' && dark && S.cdGliftAD>0, ['cdGliftD','cdGliftHD']],
     /* Скло — оптика, спільна по темах (як tzBlur/tzSat). Пара НЕРОЗРИВНА: blur без
        saturate дає сіре скло, і оператор судив би дефект приладу замість явища. */
     ['картка · скло', 'таб має список і рядок = картка', hasHead && S.row==='card',
@@ -2743,6 +2868,22 @@ function measure(){
   const seH = se ? se.offsetHeight : 0;
   const seBad = (se && srchVisible() && seH > BOUND.searchMax)
     ? ` <span class="bx-bad">поле ${seH}px &gt; ${BOUND.searchMax} — верстка</span>` : '';
+  /* ГЕЙТ ЗУМУ. Попередження про «вирок по склу дійсний тільки на 1:1» жило в
+     КОМЕНТАРІ ДО КОДУ і в нотатці однієї групи — тобто там, куди під час раунду
+     ніхто не дивиться. Коштувало сесії: тінь на краю скла фільтрів виявилась
+     артефактом дробового transform:scale (є на 90% і 70%, немає на 100/80/60).
+     Тепер попередження стоїть у ЛІЧИЛЬНИКУ, поруч з іншими вироками верстки.
+     frame береться з DOM, а не із замикання: measure() відпрацьовує раніше,
+     ніж оголошено const frame — інакше TDZ. */
+  const zEl = document.getElementById('frame');
+  const zNow = zEl ? (+zEl.style.getPropertyValue('--z') || 1) : 1;
+  /* v17_21 · КОМПАКТНО. Перша редакція стояла окремим блоком у першому рядку
+     лічильника й на розкритій панелі з'їдала чотири рядки — попередження про
+     недійсність заміру саме коштувало екрана, на якому робиться замір.
+     Тепер це такий самий короткий маркер, як «перебито N» чи «зсунуто N»,
+     і живе в тому ж службовому рядку, що ЛОК. */
+  const zBad = Math.abs(zNow - 1) > .002
+    ? ` · <b class="bx-warn">ЗУМ ${Math.round(zNow*100)}% · скло тільки 1:1</b>` : '';
   const T = THESIS[S.thesis];
   const ovr = Object.keys(T).filter(k => S[k] !== T[k]).length;
   const total = document.querySelectorAll('[data-k],[data-dk]').length;
@@ -2755,7 +2896,7 @@ function measure(){
     ` <span class="bx-dim">· ЛОК ${Object.keys(LOCKS).length}/${total}` +
       `${drift ? ` · <b class="bx-warn">зсунуто ${drift}</b>` : ''}` +
       `${LOCK_STALE.length ? ` · <b class="bx-warn">протухло ${LOCK_STALE.length}</b>` : ''}` +
-      `${LOCK_MEM ? ' · <b class="bx-warn">без сховища</b>' : ''}</span>` +
+      `${LOCK_MEM ? ' · <b class="bx-warn">без сховища</b>' : ''}${zBad}</span>` +
     ` <span class="bx-dim">· ${S.mark==='none'?'Н4':S.mark.toUpperCase()}/${S.comp.toUpperCase()}</span>`;
 }
 
@@ -2904,6 +3045,12 @@ lockLoad(); lockSeedAudit(); lockSeed(); installLocks();
  ['cdBevSL',v=>(v/100).toFixed(2),1],
  ['cdBevTD',v=>(v/100).toFixed(2),1],['cdBevBD',v=>(v/100).toFixed(2),1],
  ['cdBevSD',v=>(v/100).toFixed(2),1],
+ /* К22-в · glift. Реєстрація їде В ТОМУ САМОМУ кроці, що й розмітка (В-14):
+    паритет К20 звіряє data-k з ключем S і дав би ✓ повзунку без обробника. */
+ /* К22-в-б · ridge. Реєстрація в тому ж кроці, що й розмітка (В-14). */
+ ['cdRdgAD',v=>(v/100).toFixed(2),1],['cdRdgH',v=>v+'px',1],
+ ['cdGliftAD',v=>(v/100).toFixed(2),1],['cdGliftD',v=>'+'+v+' L',1],
+ ['cdGliftHD',v=>v+'%',1],
  ['cdShY',v=>v+'px',1],['cdShB',v=>v+'px',1],['cdShA',v=>(v/100).toFixed(2),1],
  ['cdBlur',v=>v+'px',1],['cdSat',v=>v+'%',1]
 ].forEach(([id,fmt,live]) => slider(id, fmt, !!live));
@@ -2912,6 +3059,7 @@ pick('pkMat','mat'); pick('pkRow','row'); pick('pkEdge','pkEdge'); pick('pkWb','
 pick('pkScroll','scroll'); pick('pkMark','mark'); pick('pkEqL','eqL'); pick('pkEqD','eqD');
 pick('pkBfill','bfill'); pick('pkCity','city'); pick('pkSort','sort'); pick('pkSrch','srch');
 pick('pkTzFill','tzFill');   /* v17_6 · К7-а */
+pick('pkSeam','cdSeam');     /* Ф-ШОВ */
 pick('pkCtl','ctl'); pick('pkLocS','locSurf'); pick('pkFabE','fabEdge'); pick('pkAlign','fabAlign'); pick('pkHand','hand'); pick('pkShT','fabShTint'); pick('pkShPos','shPos'); pick('pkShOrd','fabShOrd'); pick('pkShWho','shWho');
 pick('pkPaint','n5Paint');
 pick('pkHgrp','hgrp'); pick('pkHbare','hbare'); pick('pkHdiv','hdiv');
@@ -2954,6 +3102,7 @@ function applyZoom(){
   fitBox.style.width  = (frameW()*z).toFixed(1)+'px';
   fitBox.style.height = (frameH()*z).toFixed(1)+'px';
   zValEl.textContent = (zMode === 'fit' ? 'fit ' : '') + Math.round(z*100) + '%';
+  measure();   /* гейт зуму мусить оновитись у ТОМУ Ж кадрі, що й масштаб */
 }
 document.getElementById('zIn').addEventListener('click', () => {
   zNum = Math.min(2, (zMode==='fit' ? fitZoom() : zNum) + .1); zMode='num'; applyZoom(); });
@@ -3082,17 +3231,35 @@ function cssPassport(dark){
   /* v17 · К1 · фон іде в паспорт із aurLayers() — тієї ж функції, що годує стенд.
      Рукописне дублювання рядка тут і було б новим випадком дефекту, проти
      якого cssPassport стала іменованою. */
+  /* К22-в-б. Шари паспорта збираються ЗМІННОЮ, а не двома незалежними
+     рядками: у CSS це ОДНА властивість, і паспорт, що друкує два окремі
+     `background-image`, показував би картинку, якої не існує — друге
+     оголошення затерло б перше. */
+  const cdRdgCss = (dark && S.cdRdgAD>0)
+    ? `linear-gradient(180deg,${hexA('#FFFFFF',S.cdRdgAD/100)} 0,${hexA('#FFFFFF',0)} ${S.cdRdgH}px)` : '';
+  const cdGliftCss = (dark && S.cdGliftAD>0)
+    ? `linear-gradient(180deg,${hsl(S.dkH,S.dkC*0.92,S.dkL+S.dkS+S.cdGliftD,(S.cdGliftAD/100).toFixed(3))} 0%,${hsl(S.dkH,S.dkC*0.92,S.dkL+S.dkS+S.cdGliftD,0)} ${S.cdGliftHD}%)` : '';
+  const cdLayers = [cdRdgCss, cdGliftCss].filter(Boolean).join(',');
+  /* Ф-ШОВ у паспорті друкується ЗАВЖДИ, коли гілка не 'off': інакше з паспорта
+     пішов би CSS, який на девайсі виглядав інакше, ніж у стенді. */
+  const seamCss = S.cdSeam==='off' ? '' : {
+    clip :'\n.el-list[data-row="card"] .el-sw{overflow:clip}  /* Ф-ШОВ · гілка clip */',
+    layer:'\n.el-list[data-row="card"] .el-item{will-change:transform}  /* Ф-ШОВ · гілка шар */',
+    oscr :'\n.el-scr{overscroll-behavior:none}  /* Ф-ШОВ · гілка оверскрол */',
+    out  :'\n.el-list[data-row="card"] .el-item{backdrop-filter:none}\n.el-list[data-row="card"] .el-sw{backdrop-filter:var(--cdGlass)}  /* Ф-ШОВ · гілка назовні · ⚠ скло не їде під свайпом */'
+  }[S.cdSeam] || '';
   const aurCss = aurLayers(dark);
   const cssBg = S.bg === 'sheet' ? '\n/* фон: аркуш — background-image не ставиться */'
     : `\n.screenbox{background-image:${aurCss}} /* фон: ${S.bg==='all'?'аврора всюди':'аврора під хромом'} */`;
-  return `CSS · тема ${dark?'темна':'світла'}:${cssDark}${cssBg}
+  return `CSS · тема ${dark?'темна':'світла'}:${cssDark}${cssBg}${seamCss}
 .el-net{font-size:${S.nSize}px;font-weight:${S.nWeight}}
 .el-addr{font-size:${S.aSize}px}
 .el-meta{font-size:${S.mtSize}px}
 .el-item{padding-block:${S.rowPadY}px}${S.row==='card'?`
 .el-list[data-row="card"]{gap:${S.cdGap}px}  /* К-3: внутр. зазор мета 8px → підлога 16 */
 .el-list[data-row="card"] .el-sw{border-radius:${S.cdR}px;border-width:${(S.cdRimW/10).toFixed(1)}px;border-color:${dark?hexA('#FFFFFF',S.cdRimAD/100):hexA('#12121C',S.cdRimAL/100)};box-shadow:${dark?'none':'0 '+S.cdShY+'px '+S.cdShB+'px '+hexA('#101018',S.cdShA/100)}}  /* силует · тінь тільки світла (A45) */
-.el-list[data-row="card"] .el-item{border-width:${(S.cdBevW/10).toFixed(1)}px;border-radius:${Math.max(0,S.cdR-S.cdRimW/10).toFixed(1)}px;padding-inline:${S.cdPadX}px;background:${dark?hsl(S.dkH,S.dkC*0.92,S.dkL+S.dkS,(S.cdAD/100).toFixed(3)):hexA('#FFFFFF',S.cdAL/100)};background-clip:padding-box;border-top-color:${dark?hexA('#FFFFFF',S.cdBevTD/100):hexA('#FFFFFF',S.cdBevTL/100)};border-bottom-color:${dark?hexA('#12121C',S.cdBevBD/100):hexA('#12121C',S.cdBevBL/100)};border-inline-color:${dark?hexA('#FFFFFF',S.cdBevSD/100):hexA('#12121C',S.cdBevSL/100)}${S.cdBlur>0?';backdrop-filter:blur('+S.cdBlur+'px) saturate('+S.cdSat+'%)':''}}  /* фаска · К-1 концентрика · грані A95 · скло=${S.cdBlur>0?'УВІМКНЕНО (лок «скло тільки внизу» під судом)':'вимкнено'} */`:''}${S.row==='slit'?`
+.el-list[data-row="card"] .el-item{border-width:${(S.cdBevW/10).toFixed(1)}px;border-radius:${Math.max(0,S.cdR-S.cdRimW/10).toFixed(1)}px;padding-inline:${S.cdPadX}px;background:${dark?hsl(S.dkH,S.dkC*0.92,S.dkL+S.dkS,(S.cdAD/100).toFixed(3)):hexA('#FFFFFF',S.cdAL/100)};background-clip:padding-box;border-top-color:${dark?hexA('#FFFFFF',S.cdBevTD/100):hexA('#FFFFFF',S.cdBevTL/100)};border-bottom-color:${dark?hexA('#12121C',S.cdBevBD/100):hexA('#12121C',S.cdBevBL/100)};border-inline-color:${dark?hexA('#FFFFFF',S.cdBevSD/100):hexA('#12121C',S.cdBevSL/100)}${S.cdBlur>0?';backdrop-filter:blur('+S.cdBlur+'px) saturate('+S.cdSat+'%)':''}}  /* фаска · К-1 концентрика · грані A95 · скло=${S.cdBlur>0?'УВІМКНЕНО (лок «скло тільки внизу» під судом)':'вимкнено'} */${cdLayers?`
+.el-list[data-row="card"] .el-item{background-image:${cdLayers}}  /* шари зверху вниз: ${cdRdgCss?'ridge ребро '+S.cdRdgH+'px':''}${cdRdgCss&&cdGliftCss?' · ':''}${cdGliftCss?'glift об\'єм у тоні тіла':''} (A45/A99/A102) · другі зупинки з альфою 0, не transparent */`:''}`:''}${S.row==='slit'?`
 .el-list[data-row="slit"]{gap:${S.slitW}px}
 .el-list[data-row="slit"] .el-sw{border:none}  /* К9' · щілину несе gap; кант знято, інакше два носії (З-36) */`:''}
 .el-ctxhead{padding-top:${S.headGap}px;background:${S.tzFill==='canvas'?'var(--canvas)':(S.tzFill==='blur'?`color-mix(in srgb,var(--canvas) ${dark?S.tzAD:S.tzAL}%,transparent)`:'transparent')}${S.tzFill==='blur'?`;backdrop-filter:blur(${S.tzBlur}px) saturate(${S.tzSat}%)`:''}}  /* пошук=${S.srch} · місто=${S.city} · сорт=${S.sort} · матеріал зони=${({canvas:'канва (аврора перекрита)',none:'ПРОЗОРО (аврора видна, текст ріже рядки)',blur:'СКЛО (аврора видна крізь блюр)',body:'ТІЛО під контролами (аврора видна навколо)'})[S.tzFill]} · поле=${S.mat} */${S.tzFill==='body'?`
