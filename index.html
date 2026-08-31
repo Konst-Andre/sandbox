@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0e">
-<title>EquipLens · headbench v17_27</title>
+<title>EquipLens · headbench v17_28</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1009,6 +1009,19 @@ details[open] summary::before{transform:rotate(90deg)}
         <button data-v="hybrid">гібрид</button>
         </div>
         <div class="bx-note" id="aurMap"></div>
+        <div class="bx-pick" id="pkPreLight">
+        <button data-v="glow">СВІТЛА · чисте світіння</button>
+        <button data-v="paper">СВІТЛА · тепла тінь</button>
+        <button data-v="fog">СВІТЛА · холодний туман</button>
+        <button data-v="back">СВІТЛА · назад до LOCK</button>
+        </div>
+        <div class="bx-pick" id="pkPreBand">
+        <button data-v="halo">СМУГИ · німб шапки</button>
+        <button data-v="even">СМУГИ · дві рівні</button>
+        <button data-v="deep">СМУГИ · важкий низ</button>
+        <button data-v="off">СМУГИ · нуль</button>
+        </div>
+        <div class="bx-note"><b>Пресети — стартові точки, не вироки.</b> Кнопка кладе набір чисел у важелі; далі крутиш руками, і замір показує, куди поїхало. <b>СВІТЛА:</b> <code>чисте світіння</code> — пляма світліша за канву (<code>L 84</code>), працює як лампа; <code>тепла тінь</code> — темніша й тепла, працює як сонячна тінь на папері; <code>холодний туман</code> — майже без насиченості, тільки перепад. <code>назад до LOCK</code> повертає device-залочені числа. <b>СМУГИ:</b> німб = світло тільки під шапкою; дві рівні = симетрія верх/низ; важкий низ = ставка на острівець і «+».</div>
         <div class="bx-note"><b>Гібрид (v17_27).</b> Дві полотняні плями <code>E1</code>/<code>E2</code> лишаються як були — баланс «синє зліва / фіолет справа» не чіпається. Знято <code>E3</code>, замість нього <b>дві смуги, прив'язані в пікселях</b> до верхнього і нижнього краю. <b>Чому px:</b> відсоток висоти прив'язує картинку до контейнера — ті самі числа в ряду 70px і на екрані 812px дають різне (<code>S33 §3</code>). Шапка й острівець мають фіксовану висоту в px — світло під ними міряється так само.<br><b>⚠ Замір вище — не краса, а <code>A100</code>:</b> <code>backdrop-filter</code> не має власного вигляду, його дає підкладка. Скляні в цьому продукті <b>усі</b>: шапка, плитка знака, чіпи, картки (<code>cdA</code> .40/.45), острівець. Значення <b>&lt;.06</b> означає, що під цим склом заломлювати нічого.</div>
         <div class="bx-lv" data-k="haY"><label>смуга верх &middot; центр <b style="color:#9a9aa8">·px від верху</b><i></i></label><input type="range" id="haY" min="-40" max="160" step="4"><output></output></div>
         <div class="bx-lv" data-k="haYB"><label>смуга низ &middot; центр <b style="color:#9a9aa8">·px від низу</b><i></i></label><input type="range" id="haYB" min="-40" max="200" step="4"><output></output></div>
@@ -1016,10 +1029,7 @@ details[open] summary::before{transform:rotate(90deg)}
         <div class="bx-lv" data-k="haWd"><label>смуги &middot; ширина <b style="color:#9a9aa8">·% ширини екрана</b><i></i></label><input type="range" id="haWd" min="60" max="220" step="5"><output></output></div>
         <div class="bx-lv" data-k="haAL"><label>смуги &middot; сила &middot; <b style="color:#9a9aa8">СВІТЛА</b><i></i></label><input type="range" id="haAL" min="0" max="60" step="1"><output></output></div>
         <div class="bx-lv" data-k="haAD"><label>смуги &middot; сила &middot; <b style="color:#9a9aa8">ТЕМНА</b><i></i></label><input type="range" id="haAD" min="0" max="60" step="1"><output></output></div>
-        <div class="bx-pick" id="pkWmFont" data-dk="wmFont">
-        <button data-v="chillax">вордмарк Chillax</button>
-        <button data-v="manrope">вордмарк Manrope</button>
-        </div>
+
         <div class="bx-note"><b>Що тут судиться.</b> Не краса фону, а <b>чи є що заломлювати</b>. <code>backdrop-filter</code> не має власного вигляду &mdash; його дає підкладка (<code>A100</code>); на плоскому полотні скло вироджується в напівпрозору заливку. <b>Аркуш</b> = чинний стан. <b>Під хромом</b> = ті самі еліпси, зсунуті в зони острівця й шапки: середина полотна лишається аркушем.<br><b>⚠ Судити в тому режимі списку, який піде в продукт.</b> У <code>картки</code> плитки непрозорі й накривають фон, у <code>ряди</code> &mdash; прозорі. Та сама аврора дасть дві різні картинки, і це не баг, а <code>A100</code>.</div>
         <div class="bx-note"><b>⚠ Відтінки роздільні по темах (v17_4 · хід 2).</b> Це не зручність, а <b>фізика</b>: на темній канві пляма <b>світліша</b> за фон — це світіння; на канві 98 % світлішати нікуди, і щоб пляму було видно, вона мусить бути <b>темнішою</b> — це <b>кольорова тінь</b>. Два різні явища не можуть ділити відтінок, як не ділять його тінь і лампа. Правило вибору: не «який колір гарний», а <b>яка тінь буває на папері</b> — тепла (сонце) чи холодна (небо).<br><b>Крутити по одній темі за раз:</b> перемкни тему сегментом і працюй лише з її трійкою — друга гілка в цей момент оголошена мертвою, і сірий колір повзунка не бреше.</div>
         <div class="bx-lv" data-k="bgH1L"><label>еліпс 1 &middot; відтінок <b style="color:#c8b48a">·СВІТЛА</b> <b style="color:#9a9aa8">·низ-ліво ‖ низ-центр</b><i></i></label><input type="range" id="bgH1L" min="0" max="360" step="2"><output></output></div>
@@ -1525,7 +1535,12 @@ details[open] summary::before{transform:rotate(90deg)}
     <details>
       <summary>ЗНАК &middot; wordmark</summary>
       <div class="bx-grp">
-        <div class="bx-lv" data-k="wSize"><label>кегль<i></i></label><input type="range" id="wSize" min="14" max="22" step="0.5"><output></output></div>
+        <div class="bx-pick" id="pkWmFont" data-dk="wmFont">
+        <button data-v="chillax">Chillax</button>
+        <button data-v="manrope">Manrope</button>
+        </div>
+        <div class="bx-note"><b>Дім пікера — тут, не у ФОНІ (v17_28).</b> У <code>v17_27</code> він стояв поруч із авророю — за сусідством патча, не за предметом. Предмет пікера — <b>вордмарк</b>, отже дім — <code>ЗНАК</code>. <code>wsd 12.11</code>: дім називається до тексту.<br><b>⚠ Стеля кегля піднята 22 → 28.</b> Підстава не «мало» — <b>оптичний кегель</b>: у Chillax x-height нижча за Manrope, тож на однаковому <code>font-size</code> знак читається дрібнішим. Це не ілюзія і не привід «зробити більше про всяк» — це різниця скелетів. <code>21px</code> Manrope ≈ <b>23–24px</b> Chillax на око.</div>
+        <div class="bx-lv" data-k="wSize"><label>кегль<i></i></label><input type="range" id="wSize" min="14" max="28" step="0.5"><output></output></div>
         <div class="bx-lv" data-k="wEq"><label>вага Equip<i></i></label><input type="range" id="wEq" min="500" max="800" step="100"><output></output></div>
         <div class="bx-lv" data-k="wLeInkL"><label>чорнило «Lens» ☀︎ <b style='color:#9a9aa8'>·100 = ink · 0 = ink-3</b><i></i></label><input type="range" id="wLeInkL" min="0" max="100" step="5"><output></output></div>
         <div class="bx-lv" data-k="wLeInkD"><label>чорнило «Lens» ☾<i></i></label><input type="range" id="wLeInkD" min="0" max="100" step="5"><output></output></div>
@@ -3183,8 +3198,24 @@ function markLock(row, k){
   i.textContent = (k in LOCKS) ? (LOCKS[k] === S[k] ? '= ЛОК' : 'ЛОК ' + LOCKS[k])
                                : (REF[k] || 'нема ЛОКу');
 }
+/* v17_28 · реєстр форматів. Без нього пресет міг би покласти число у важіль,
+   але <output> лишився б зі старим текстом — важіль і його підпис розійшлись би,
+   і оператор судив би цифру, якої в S немає. */
+const FMT = {};
+function syncAll(){
+  document.querySelectorAll('.bx-lv[data-k]').forEach(row => {
+    const k = row.dataset.k, el = row.querySelector('input[type=range]');
+    if (!el || !(k in S)) return;
+    el.value = S[k]; S[k] = +el.value;   /* назад із DOM: min/max підрізають набір */
+    const out = row.querySelector('output');
+    if (out) out.textContent = FMT[k] ? FMT[k](S[k]) : S[k];
+    markLock(row, k);
+  });
+  syncPicks(); render();
+}
 function slider(id, fmt, live){
   const el = document.getElementById(id); if (!el) return;
+  FMT[id] = fmt;
   const row = el.closest('.bx-lv'), out = row.querySelector('output');
   el.value = S[id]; out.textContent = fmt ? fmt(S[id]) : S[id]; markLock(row, id);
   el.addEventListener('input', () => {
@@ -3297,6 +3328,43 @@ pick('pkPaint','n5Paint');
 pick('pkBq','bq'); pick('pkHgrp','hgrp'); pick('pkHbare','hbare'); pick('pkHdiv','hdiv');
 pick('pkChip','chipMat'); pick('pkCtlOn','ctlOn'); pick('pkAct','actTone'); pick('pkFabT','fabTone');
 pick('pkBg','bg');   /* v17 · К1 */
+/* v17_28 · ПРЕСЕТИ. Це НЕ пікер стану: `data-dk` у них немає навмисно —
+   кнопка виконує ДІЮ (кладе набір чисел), а не оголошує режим. Якби вони
+   несли data-dk, syncPicks() підсвічував би «активний пресет», якого не
+   існує: крутнув один важіль — набір уже інший, а підсвітка брехала б. */
+const PRE_LIGHT = {
+  /* Світла канва — 94% світлоти. Пляма СВІТЛІША за неї = світіння,
+     ТЕМНІША = кольорова тінь. Це два різні явища, і саме тому три пресети,
+     а не один із повзунком «сила» (A39). */
+  glow:  {bgLtL:84, bgSatL:58, bgA1L:22, bgA2L:26, bgA3L:20, bgTiltL:2,
+          bgH1L:216, bgH2L:262, bgH3L:196},
+  paper: {bgLtL:62, bgSatL:34, bgA1L:26, bgA2L:30, bgA3L:22, bgTiltL:4,
+          bgH1L:34,  bgH2L:14,  bgH3L:44},
+  fog:   {bgLtL:78, bgSatL:16, bgA1L:30, bgA2L:34, bgA3L:26, bgTiltL:5,
+          bgH1L:220, bgH2L:228, bgH3L:214},
+  back:  {bgLtL:60, bgSatL:36, bgA1L:32, bgA2L:38, bgA3L:30, bgTiltL:3,
+          bgH1L:216, bgH2L:232, bgH3L:196}
+};
+const PRE_BAND = {
+  halo: {haY:26, haYB:-40, haHt:150, haWd:120, haAL:30, haAD:30},
+  even: {haY:40, haYB:64,  haHt:180, haWd:130, haAL:26, haAD:26},
+  deep: {haY:56, haYB:44,  haHt:250, haWd:190, haAL:22, haAD:24},
+  off:  {haY:40, haYB:64,  haHt:180, haWd:130, haAL:0,  haAD:0}
+};
+function preset(id, table, needHybrid){
+  const el = document.getElementById(id); if (!el) return;
+  el.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.dataset.v === undefined) return;
+    const set = table[b.dataset.v]; if (!set) return;
+    /* Пресет смуг без гібрида поклав би числа у важелі, яких не малює жоден
+       шар — оператор крутив би мертве (той самий клас, що З-57). */
+    if (needHybrid) S.bg = 'hybrid';
+    Object.keys(set).forEach(k => { S[k] = set[k]; });
+    syncAll();
+  });
+}
+preset('pkPreLight', PRE_LIGHT, false);
+preset('pkPreBand',  PRE_BAND,  true);
 pick('pkWmFont','wmFont'); /* v17_27 · К28 */
 
 document.getElementById('pkThesis').addEventListener('click', e => {
