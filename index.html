@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#0b0b0e">
-<title>EquipLens · headbench v17_28</title>
+<title>EquipLens · headbench v17_29</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -523,10 +523,15 @@ details[open] summary::before{transform:rotate(90deg)}
    у різних шарах означає лишити між ними щілину 1…11, у яку рано чи пізно щось
    провалиться. Порядок усередині шару вирішує DOM: nav() йде перед fabHTML(). */
 .el-nav{position:absolute;left:calc(var(--navL,16px) + var(--navTrim,0px));right:calc(var(--navL,16px) + var(--fabS,56px) + var(--fabGap,12px));bottom:34px;height:var(--navH,60px);display:flex;z-index:12;
-  border-radius:24px;padding:6px;gap:2px;
-  background:var(--glass);border:1px solid var(--glass-rim);background-clip:padding-box;
-  backdrop-filter:blur(12px) saturate(170%);-webkit-backdrop-filter:blur(12px) saturate(170%);
-  box-shadow:var(--lift)}
+  /* v17_29 · К23-а/б. Геометрія і матеріал острівця були літералами — єдина
+     скляна поверхня продукту без жодного важеля, при тому що її ПІДКЛАДКА
+     (аврора `гібрид`) на важелях повністю. `S34 §3`: скло і підкладка судяться
+     одним набором за один виїзд, інакше оператор крутить одне наосліп щодо
+     іншого. Фолбеки в var() = точні числа v17_28: стенд без JS малює те саме. */
+  border-radius:var(--nav-r,24px);padding:var(--nav-pad,6px);gap:var(--nav-sp,2px);
+  background:var(--nav-bg,var(--glass));border:1px solid var(--nav-rim,var(--glass-rim));background-clip:padding-box;
+  backdrop-filter:blur(var(--nav-blur,12px)) saturate(var(--nav-sat,170%));-webkit-backdrop-filter:blur(var(--nav-blur,12px)) saturate(var(--nav-sat,170%));
+  box-shadow:var(--nav-sh,var(--lift))}
 /* v10 · КРОК 5 · нав-іконки й геометрія низу. --navH був прибитий до 60px,
    хоча ним міряється і висота бульбашки (--fabS), і нижній відступ списку. */
 .el-nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
@@ -1373,6 +1378,30 @@ details[open] summary::before{transform:rotate(90deg)}
         <div class="bx-lv" data-k="nvLbl"><label>низ: кегль підпису<i></i></label><input type="range" id="nvLbl" min="80" max="130" step="5"><output></output></div>
         <div class="bx-lv" data-k="nvGap"><label>низ: зазор іконка↔підпис<i></i></label><input type="range" id="nvGap" min="0" max="8" step="1"><output></output></div>
         <div class="bx-note"><b>Острівець і «+» — одна підсистема.</b> Три робочі відношення: <b>рівні</b> (<code>navH = fabS</code>) — читаються як одна система; <b>підпорядковане</b> (<code>fabS = navH − 8…10</code>) — «+» другорядний; <b>домінантне</b> (<code>fabS &gt; navH</code>) — «+» найгучніший об'єкт екрана, що для нотатника хибно. Поточні 60/56 — це <code>navH − 4</code>: не рівне і не явно менше, око бачить не ієрархію, а неточність. Рухати по одному (2.8).</div>
+        <div class="bx-note"><b>К23 · острівець став важельним (v17_29).</b> До цього патча це була <u>єдина скляна поверхня продукту без жодного важеля матеріалу</u> — і саме та, під якою лежить аврора. <code>backdrop-filter</code> власного вигляду не має (<code>A100</code>), тож вирок про скло — це вирок про <b>пару</b> «скло + підкладка». Тому смуги гібрида і цей набір мусять бути на важелях <b>одночасно</b>: крути смугу і дивись, як острівець на неї реагує (<code>S34 §3</code>).<br><b>Дефолти = вигляд <code>v17_28</code> один-в-один</b>, крім <code>кант · ТЕМНА</code>: там було <u>два носії однієї грані</u> — бордер <code>.11</code> і кільце <code>.055</code> усередині <code>--lift</code>. Згорнуто в один, <code>16</code> = композит <code>1&minus;(1&minus;.11)(1&minus;.055)</code>.</div>
+        <div class="bx-lv" data-k="navR"><label>острівець: радіус <b style="color:#9a9aa8">·мова форми, не смаку</b><i></i></label><input type="range" id="navR" min="0" max="34" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navPad"><label>острівець: поле<i></i></label><input type="range" id="navPad" min="0" max="12" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navSp"><label>острівець: зазор між табами<i></i></label><input type="range" id="navSp" min="0" max="10" step="1"><output></output></div>
+        <div class="bx-note"><b>Чому тіло острівця &mdash; альфа, а не тон.</b> Капсула шапки (<code>hpTone</code>) сидить <i>на склі шапки</i> і додає до нього тон дельтою <code>.08</code>. Острівець сидить на <b>канві й авророрі</b> — його тіло <code>.80</code>. Порт <code>hpTone</code> сюди дав би важіль, який не вміє відтворити поточний вигляд. Мова взята від <b>бульбашки</b> (<code>fabAL/fabAD</code>) — вони пара по <code>2.10</code>: ділять <code>bottom</code>, висоту й одну підкладку.<br><b>Ставка:</b> тіло <code>72</code> світла / <code>68</code> темна. Замір під склом дає альфу смуги <code>.17….22</code> — при тілі <code>.80</code> заломлювати нічого, гібрид зроблено даремно.</div>
+        <div class="bx-lv" data-k="navAL"><label>острівець: тіло · СВІТЛА<i></i></label><input type="range" id="navAL" min="30" max="100" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navAD"><label>острівець: тіло · ТЕМНА<i></i></label><input type="range" id="navAD" min="30" max="100" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navLiftD"><label>острівець: tone-lift · ТЕМНА <b style="color:#9a9aa8">·домішка білого в тіло</b><i></i></label><input type="range" id="navLiftD" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navRimL"><label>острівець: кант · СВІТЛА <b style="color:#9a9aa8">·темний</b><i></i></label><input type="range" id="navRimL" min="0" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navRimD"><label>острівець: кант · ТЕМНА <b style="color:#9a9aa8">·світлий · тримає елевацію</b><i></i></label><input type="range" id="navRimD" min="0" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navRidgeL"><label>острівець: блік верху · СВІТЛА<i></i></label><input type="range" id="navRidgeL" min="0" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navRidgeD"><label>острівець: блік верху · ТЕМНА<i></i></label><input type="range" id="navRidgeD" min="0" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navBlur"><label>острівець: скло blur<i></i></label><input type="range" id="navBlur" min="0" max="28" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navSat"><label>острівець: скло saturate<i></i></label><input type="range" id="navSat" min="100" max="220" step="5"><output></output></div>
+        <div class="bx-note"><b>Тінь темної &mdash; нова, і це не порушення <code>A45</code>.</b> Канон «на темній глибина = тон, не тінь» був правий, <u>поки під острівцем стояла порожня канва</u>: чорне на чорному не видно. Після <code>S34</code> там смуга хрому альфою <code>.22</code> — на світлій підкладці тінь читається знову. Дефолт <code>0</code> тримає нейтральність, важіль дає доступ.<br><b>Контактної тіні для темної немає навмисно</b> (<code>2.12</code>): при тілі <code>.68</code> її дельта нижча за поріг розрізнення — це був би важіль, на який не можна винести вирок. Якщо на девайсі ребро «висить» — три важелі добираються одним ходом.<br><b>Активна кнопка таба</b> (<code>--raised</code> + <code>--lift-s</code> + <code>r16</code>) лишається літералом <u>оголошено</u>: її дім &mdash; <code>К12</code>, і судити її треба разом з іконками, не з коробкою.</div>
+        <div class="bx-lv" data-k="navShAL"><label>острівець: дальня тінь · сила <b style="color:#9a9aa8">·світла</b><i></i></label><input type="range" id="navShAL" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navElevL"><label>острівець: дальня тінь · розмиття<i></i></label><input type="range" id="navElevL" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navShYL"><label>острівець: дальня тінь · зсув &darr;<i></i></label><input type="range" id="navShYL" min="0" max="12" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navShCA"><label>острівець: контактна · сила <b style="color:#9a9aa8">·світла</b><i></i></label><input type="range" id="navShCA" min="0" max="20" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navShCB"><label>острівець: контактна · розмиття<i></i></label><input type="range" id="navShCB" min="0" max="8" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navShCY"><label>острівець: контактна · зсув &darr;<i></i></label><input type="range" id="navShCY" min="0" max="6" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navShAD"><label>острівець: тінь · сила <b style="color:#9a9aa8">·темна</b><i></i></label><input type="range" id="navShAD" min="0" max="40" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navElevD"><label>острівець: тінь · розмиття <b style="color:#9a9aa8">·темна</b><i></i></label><input type="range" id="navElevD" min="0" max="30" step="1"><output></output></div>
+        <div class="bx-lv" data-k="navShYD"><label>острівець: тінь · зсув &darr; <b style="color:#9a9aa8">·темна</b><i></i></label><input type="range" id="navShYD" min="0" max="12" step="1"><output></output></div>
         <div class="bx-lv" data-k="bdH"><label>бейдж: висота<i></i></label><input type="range" id="bdH" min="20" max="34" step="1"><output></output></div>
         <div class="bx-lv" data-k="bdR"><label>бейдж: радіус <b style='color:#9a9aa8'>·17 = капсула</b><i></i></label><input type="range" id="bdR" min="4" max="17" step="1"><output></output></div>
         <div class="bx-lv" data-k="bdSize"><label>бейдж: кегль<i></i></label><input type="range" id="bdSize" min="110" max="170" step="5"><output></output></div>
@@ -1624,6 +1653,38 @@ const S = {
   bH:30, bR:18, hpPx:2, hbGap:2, hbW:0, bfill:'surf', hgrp:'glass', hbare:1, hdiv:1, hpBlur:12, hpSat:170,
   ctH:20, ctSize:105, ctR:16, ctPx:7, ctRimL:14, ctRimD:24, ctFill:0, ctInkL:50, ctInkD:10,
   navH:60, navL:16, navTrim:0, nvSz:21, nvSw:20, nvLbl:100, nvGap:3,
+  /* v17_29 · К23-а/б · ОСТРІВЕЦЬ. Дефолти = поточний вигляд v17_28, з ОДНИМ
+     оголошеним винятком (navRimD, див. нижче). Крок дає доступ, не вирок.
+     `navSp`, а не `navGap`: `nvGap` вже зайнятий зазором іконка↔підпис, і два
+     ключі на одну літеру різниці — це заготовка на помилку в патчі через місяць.
+     Простори розведено: `nav*` = коробка острівця, `nv*` = вміст кнопки. */
+  navR:24, navPad:6, navSp:2,
+  /* Тіло. `hp*` тут НЕ портується: капсула шапки рахує тіло тон-дельтою над
+     батьком (альфа .08), бо сидить НА СКЛІ шапки. Острівець сидить на канві й
+     авророрі — його тіло .80, і важеля тіла в наборі `hp*` не існує взагалі.
+     Мова тіла взята від бульбашки (`fabAL/fabAD`) — пари по `2.10`.
+     `navLiftD` — домішка білого в тіло темної (tone-lift, A45): на OLED глибину
+     повідомляє тон, а не тінь. Дефолт 0 = темна поки без ліфту. */
+  navAL:80, navAD:80, navLiftD:0,
+  /* Кант. ⚠ navRimD:16, а не 11 — ЄДИНЕ невиправлено-неточне місце в порті,
+     і воно навмисне. У v17_28 темний острівець мав ДВА носії однієї грані:
+     border `--glass-rim` .11 І кільце в `--lift` (0 0 0 1px rgba(255,255,255,.055)).
+     Це той самий клас, що `З-57`. Носій згорнуто в один; 16 = композит двох
+     альф: 1−(1−.11)(1−.055) = .159. Око отримує те саме, важіль — один. */
+  navRimL:18, navRimD:16,
+  /* Блік верхнього ребра. У v17_28 його не було — дефолт 0 тримає нейтральність. */
+  navRidgeL:0, navRidgeD:0,
+  navBlur:12, navSat:170,
+  /* Тінь СВІТЛОЇ = розкладений `--lift`: дальня 0 5px 14px .07 + контактна
+     0 1px 1px .05. Дальня каже висоту, контактна — місце дотику; порізно
+     виходить «літає без ваги» або «наліпка». */
+  navElevL:14, navShYL:5, navShAL:7, navShCB:1, navShCY:1, navShCA:5,
+  /* Тінь ТЕМНОЇ. Раніше її не було за каноном A45 — і канон був правий, поки під
+     острівцем стояла порожня канва. Після `S34` там смуга хрому альфою .22:
+     на світлій підкладці тінь читається. Дефолт 0 = нейтраль, важіль = доступ.
+     Контактної для темної НЕМА свідомо: при тілі .68 на темному її дельта нижча
+     за поріг розрізнення (`2.12`) — це був би важіль без вироку. */
+  navElevD:0, navShYD:0, navShAD:0,
   bdH:28, bdR:16, bdSize:145, bdFillL:12, bdFillD:18,
   ctlOn:'tint', ctlOnTintL:12, ctlOnTintD:18, ctlOnDep:8, ctlOnRim:20, ctlOnInk:80,
   hdvIn:5, hdvW:10, hdvGap:3, hdvAL:14, hdvAD:14,
@@ -2624,6 +2685,37 @@ function applyVars(){
   s.setProperty('--nv-sw', (S.nvSw/10).toFixed(1));
   s.setProperty('--nv-lbl', (S.nvLbl/10).toFixed(1)+'px');
   s.setProperty('--nv-gap', S.nvGap+'px');
+  /* v17_29 · К23-а/б · МАТЕРІАЛ ОСТРІВЦЯ.
+     Тіло темної: домішка білого рахується В КОЛЬОРІ, а не другим шаром через
+     background-image — той канал уже зайнятий шейдингом (--nav-shade), і два
+     носії одного тіла дали б клас З-57 удруге в тому самому елементі. */
+  s.setProperty('--nav-r',   S.navR+'px');
+  s.setProperty('--nav-pad', S.navPad+'px');
+  s.setProperty('--nav-sp',  S.navSp+'px');
+  const nvMix = (c) => Math.round(c + (255 - c) * S.navLiftD / 100);
+  s.setProperty('--nav-bg', dark
+    ? `rgba(${nvMix(23)},${nvMix(23)},${nvMix(30)},${(S.navAD/100).toFixed(2)})`
+    : `rgba(255,255,255,${(S.navAL/100).toFixed(2)})`);
+  s.setProperty('--nav-rim', dark
+    ? `rgba(255,255,255,${(S.navRimD/100).toFixed(2)})`
+    : `rgba(18,18,28,${(S.navRimL/200).toFixed(3)})`);
+  /* Порядок шарів у box-shadow значущий: inset-блік мусить іти першим, інакше
+     зовнішні тіні малюються поверх нього по верхньому ребру. */
+  const nvSh = [];
+  const nvRidge = dark ? S.navRidgeD : S.navRidgeL;
+  if (nvRidge > 0) nvSh.push(`inset 0 1px 0 rgba(255,255,255,${(nvRidge/100).toFixed(2)})`);
+  if (dark){
+    if (S.navShAD > 0)
+      nvSh.push(`0 ${S.navShYD}px ${S.navElevD}px rgba(0,0,0,${(S.navShAD/100).toFixed(2)})`);
+  } else {
+    if (S.navShCA > 0)
+      nvSh.push(`0 ${S.navShCY}px ${S.navShCB}px rgba(16,16,24,${(S.navShCA/100).toFixed(2)})`);
+    if (S.navShAL > 0)
+      nvSh.push(`0 ${S.navShYL}px ${S.navElevL}px rgba(16,16,24,${(S.navShAL/100).toFixed(2)})`);
+  }
+  s.setProperty('--nav-sh', nvSh.join(',') || 'none');
+  s.setProperty('--nav-blur', S.navBlur+'px');
+  s.setProperty('--nav-sat',  S.navSat+'%');
   /* Бейдж. Підкладка роздільна по темах: на OLED та сама альфа акценту світиться
      помітно гучніше (S — домінантний важіль придушення на темній). */
   s.setProperty('--bd-h', S.bdH+'px');
@@ -3037,6 +3129,22 @@ function conds(){
     ['фон · сили · тем.', 'фон ≠ аркуш і тема = темна', S.bg!=='sheet' && dark, ['bgA1D','bgA2D','bgA3D','bgTiltD','bgLtD','bgSatD']],
     ['знак · плитка', 'плитка увімкнена і знак є', S.bq==='tile' && S.mark!=='none', ['bqSz','bqR']],
     ['кнопки шапки', 'завжди', true, ['bH','bR','hbW']],
+    /* v17_29 · К23. Вакцина класу З-57: геометрія тіні при силі 0 живе за
+       версткою і мертва за оптикою — повзунок крутиться, на екрані нічого. */
+    ['острівець · геометрія', 'завжди', true, ['navR','navPad','navSp']],
+    ['острівець · скло', 'завжди', true, ['navBlur','navSat']],
+    ['острівець · тіло св.', 'тема = світла', !dark, ['navAL']],
+    ['острівець · тіло тем.', 'тема = темна', dark, ['navAD','navLiftD']],
+    ['острівець · кант св.', 'тема = світла', !dark, ['navRimL']],
+    ['острівець · кант тем.', 'тема = темна', dark, ['navRimD']],
+    ['острівець · блік св.', 'тема = світла', !dark, ['navRidgeL']],
+    ['острівець · блік тем.', 'тема = темна', dark, ['navRidgeD']],
+    ['острівець · дальня: сила св.', 'тема = світла', !dark, ['navShAL']],
+    ['острівець · дальня: форма св.', 'світла і сила > 0', !dark && S.navShAL>0, ['navElevL','navShYL']],
+    ['острівець · контактна: сила св.', 'тема = світла', !dark, ['navShCA']],
+    ['острівець · контактна: форма св.', 'світла і сила > 0', !dark && S.navShCA>0, ['navShCB','navShCY']],
+    ['острівець · тінь: сила тем.', 'тема = темна', dark, ['navShAD']],
+    ['острівець · тінь: форма тем.', 'темна і сила > 0', dark && S.navShAD>0, ['navElevD','navShYD']],
     ['капсула шапки · поле і зазор', 'пігулка увімкнена (не «немає», не «гола»)', S.hgrp!=='none' && S.hgrp!=='bare', ['hpPx','hbGap']],
     ['фон кнопок', 'кнопки окремо або пігулка з фоном', S.hgrp==='none' || !S.hbare, ['bfill']],
     ['пігулка шапки', 'кнопки згруповані', S.hgrp!=='none', ['hbare','hdiv']],
@@ -3315,7 +3423,19 @@ lockLoad(); lockSeedAudit(); lockSeed(); installLocks();
  ['cdGliftAD',v=>(v/100).toFixed(2),1],['cdGliftD',v=>'+'+v+' L',1],
  ['cdGliftHD',v=>v+'%',1],
  ['cdShY',v=>v+'px',1],['cdShB',v=>v+'px',1],['cdShA',v=>(v/100).toFixed(2),1],
- ['cdBlur',v=>v+'px',1],['cdSat',v=>v+'%',1]
+ ['cdBlur',v=>v+'px',1],['cdSat',v=>v+'%',1],
+ /* v17_29 · К23-а/б · острівець. Реєстрація їде В ТОМУ САМОМУ кроці, що й
+    розмітка (В-14): паритет К20 звіряє data-k з ключем S і дав би ✓ повзунку
+    без обробника — тобто важіль, який крутиться і не робить нічого. */
+ ['navR',v=>v+'px',1],['navPad',v=>v+'px',1],['navSp',v=>v+'px',1],
+ ['navAL',v=>(v/100).toFixed(2),1],['navAD',v=>(v/100).toFixed(2),1],
+ ['navLiftD',v=>v?'+'+v+'% білого':'нема',1],
+ ['navRimL',v=>(v/200).toFixed(3),1],['navRimD',v=>(v/100).toFixed(2),1],
+ ['navRidgeL',v=>(v/100).toFixed(2),1],['navRidgeD',v=>(v/100).toFixed(2),1],
+ ['navBlur',v=>v+'px',1],['navSat',v=>v+'%',1],
+ ['navShAL',v=>(v/100).toFixed(2),1],['navElevL',v=>v+'px',1],['navShYL',v=>v+'px',1],
+ ['navShCA',v=>(v/100).toFixed(2),1],['navShCB',v=>v+'px',1],['navShCY',v=>v+'px',1],
+ ['navShAD',v=>(v/100).toFixed(2),1],['navElevD',v=>v+'px',1],['navShYD',v=>v+'px',1]
 ].forEach(([id,fmt,live]) => slider(id, fmt, !!live));
 
 pick('pkMat','mat'); pick('pkRow','row'); pick('pkEdge','pkEdge'); pick('pkWb','wb'); pick('pkComp','comp');
@@ -3587,6 +3707,11 @@ function cssPassport(dark){
 .el-hgrp{--hp-bg:тон ${(dark?S.hpToneD:S.hpToneL)>0?'+':''}${dark?S.hpToneD:S.hpToneL}; --hp-rim:${dark?(S.hpRimD/100).toFixed(2):(S.hpRimL/200).toFixed(3)}; блік ${((dark?S.hpRidgeD:S.hpRidgeL)/100).toFixed(2)}${!dark?`; тінь 0 ${S.hpShY}px ${S.hpElev}px ${(S.hpShA/100).toFixed(2)}`:'; тінь НЕМАЄ (A45: глибина = тон)'}}
 .el-city{h ${S.ctH}px; бічні ${S.ctPx}px; кегль ${(S.ctSize/10).toFixed(1)}px; r ${S.ctR}px; кант ${dark?(S.ctRimD/100).toFixed(2):(S.ctRimL/200).toFixed(3)}; заливка ${S.ctFill||'нема'}; чорнило ${dark?S.ctInkD:S.ctInkL}%}
 .el-nav{поле ${S.navL}px; підріз ${S.navTrim}px; --navH:${S.navH}px; іконка ${S.nvSz}px/${(S.nvSw/10).toFixed(1)}; підпис ${(S.nvLbl/10).toFixed(1)}px; зазор ${S.nvGap}px} /* «+» ${S.fabS}px — пара до navH */
+.el-nav{r ${S.navR}px; поле ${S.navPad}px; зазор табів ${S.navSp}px}
+.el-nav{--nav-bg:${dark?`rgba(23,23,30 +${S.navLiftD}% білого, ${(S.navAD/100).toFixed(2)})`:`rgba(255,255,255,${(S.navAL/100).toFixed(2)})`}; --nav-rim:${dark?(S.navRimD/100).toFixed(2):(S.navRimL/200).toFixed(3)}; блік ${((dark?S.navRidgeD:S.navRidgeL)/100).toFixed(2)}; скло blur ${S.navBlur}px sat ${S.navSat}%}
+.el-nav{--nav-sh:${dark
+  ? (S.navShAD>0 ? `0 ${S.navShYD}px ${S.navElevD}px ${(S.navShAD/100).toFixed(2)}` : 'НЕМА (A45: глибина = тон)')
+  : `дальня 0 ${S.navShYL}px ${S.navElevL}px ${(S.navShAL/100).toFixed(2)} · контактна 0 ${S.navShCY}px ${S.navShCB}px ${(S.navShCA/100).toFixed(2)}`}}
 .el-badge{h ${S.bdH}px; r ${S.bdR}px; кегль ${(S.bdSize/10).toFixed(1)}px; підкладка ${((dark?S.bdFillD:S.bdFillL)/100).toFixed(2)}}
 /* активний стан контролів: ${S.ctlOn}${S.ctlOn==='tint'?' · тінт '+((dark?S.ctlOnTintD:S.ctlOnTintL)/100).toFixed(2):''}${S.ctlOn==='well'?' · глибина '+S.ctlOnDep:''}${S.ctlOn!=='solid'?' · кант '+(dark?(S.ctlOnRim/100).toFixed(2):(S.ctlOnRim/200).toFixed(3))+' · чорнило '+S.ctlOnInk+'%':''} */
 .el-hdiv{width:${(S.hdvW/10).toFixed(1)}px; вріз ${S.hdvIn}px; зазор ${S.hdvGap}px; сила ${dark?(S.hdvAD/100).toFixed(2):(S.hdvAL/100).toFixed(2)}}
