@@ -1,1 +1,1229 @@
-<html><head><meta content="text/html; charset=UTF-8" http-equiv="content-type"><style type="text/css">ol{margin:0;padding:0}table td,table th{padding:0}.c1{color:#000000;font-weight:400;text-decoration:none;vertical-align:baseline;font-size:11pt;font-family:"Arial";font-style:normal}.c0{padding-top:0pt;padding-bottom:0pt;line-height:1.15;text-align:left;height:11pt}.c2{background-color:#ffffff;max-width:468pt;padding:72pt 72pt 72pt 72pt}.title{padding-top:24pt;color:#000000;font-weight:700;font-size:36pt;padding-bottom:6pt;font-family:"Arial";line-height:1.0;page-break-after:avoid;text-align:left}.subtitle{padding-top:18pt;color:#666666;font-size:24pt;padding-bottom:4pt;font-family:"Georgia";line-height:1.0;page-break-after:avoid;font-style:italic;text-align:left}li{color:#000000;font-size:11pt;font-family:"Arial"}p{margin:0;color:#000000;font-size:11pt;font-family:"Arial"}h1{padding-top:12pt;color:#000000;font-weight:700;font-size:24pt;padding-bottom:12pt;font-family:"Arial";line-height:1.0;text-align:left}h2{padding-top:11.2pt;color:#000000;font-weight:700;font-size:18pt;padding-bottom:11.2pt;font-family:"Arial";line-height:1.0;text-align:left}h3{padding-top:12pt;color:#000000;font-weight:700;font-size:14pt;padding-bottom:12pt;font-family:"Arial";line-height:1.0;text-align:left}h4{padding-top:12.8pt;color:#000000;font-weight:700;font-size:12pt;padding-bottom:12.8pt;font-family:"Arial";line-height:1.0;text-align:left}h5{padding-top:12.8pt;color:#000000;font-weight:700;font-size:9pt;padding-bottom:12.8pt;font-family:"Arial";line-height:1.0;text-align:left}h6{padding-top:18pt;color:#000000;font-weight:700;font-size:8pt;padding-bottom:18pt;font-family:"Arial";line-height:1.0;text-align:left}</style></head><body class="c2 doc-content"><p class="c0"><span class="c1"></span></p></body></html>
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AE-Simulator — Тренажер розмови біля каси</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0F6B4A">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<style>
+:root{
+--paper:#F1F4F1; --ink:#16211C; --soft:#5E6E66; --line:#C9D2CB;
+--vtm:#0F6B4A; --zf:#A0761B; --loss:#A8402B; --tape:#FBFCFA;
+}
+*{box-sizing:border-box}
+#root{font-family:"Inter","Segoe UI",-apple-system,system-ui,sans-serif;color:var(--ink);
+background:var(--paper);min-height:100vh;font-size:15px;line-height:1.5}
+.wrap{max-width:1180px;margin:0 auto;padding:28px 20px 60px}
+.num{font-family:"SFMono-Regular","Consolas",monospace;font-variant-numeric:tabular-nums}
+.lede{max-width:60ch;margin:0 0 6px;font-size:27px;font-weight:620;letter-spacing:-.02em}
+.sub{max-width:64ch;color:var(--soft);margin:0 0 22px}
+.rule{display:flex;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;
+width:max-content;margin-bottom:8px;background:#fff}
+.rule button{font:inherit;padding:8px 16px;border:none;background:#fff;cursor:pointer;color:var(--soft)}
+.rule button[aria-pressed="true"]{background:var(--ink);color:#EEF2EF}
+.rulenote{color:var(--soft);font-size:13px;max-width:64ch;margin:0 0 26px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.tabs button{font:inherit;font-size:13.5px;padding:6px 13px;border:1px solid var(--line);
+background:#fff;border-radius:20px;cursor:pointer;color:var(--soft)}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:#EEF2EF;border-color:var(--ink)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(292px,1fr));gap:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:3px;padding:14px 16px 16px;
+text-align:left;cursor:pointer;font:inherit;color:inherit;display:flex;flex-direction:column;gap:7px}
+.card:hover{border-color:var(--ink)}
+.card:focus-visible{outline:2px solid var(--vtm);outline-offset:2px}
+.ord{font-size:12.5px;color:var(--soft);letter-spacing:.03em}
+.card h3{margin:0;font-size:16.5px;font-weight:600}
+.card p{margin:0;color:var(--soft);font-size:13.5px}
+.cardfoot{margin-top:auto;padding-top:9px;border-top:1px dashed var(--line);
+font-size:13px;display:flex;justify-content:space-between;gap:10px}
+.trap{color:var(--loss)}
+.top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin-bottom:16px}
+.back{background:none;border:none;font:inherit;color:var(--soft);cursor:pointer;padding:0;text-decoration:underline}
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 302px;gap:22px;align-items:start}
+@media(max-width:880px){.stage{grid-template-columns:1fr}}
+.brief{background:#fff;border:1px solid var(--line);border-radius:3px;padding:13px 16px;margin-bottom:14px;font-size:13.5px}
+.brief dl{display:grid;grid-template-columns:96px 1fr;gap:3px 12px;margin:0}
+.brief dt{color:var(--soft)}
+.brief dd{margin:0}
+.log{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.turn{max-width:82%;padding:10px 14px;border-radius:3px;white-space:pre-wrap}
+.client{background:#fff;border:1px solid var(--line);align-self:flex-start}
+.me{background:var(--ink);color:#EEF2EF;align-self:flex-end}
+.sys{align-self:center;color:var(--soft);font-size:13px;font-style:italic;text-align:center;max-width:90%}
+.who{display:block;font-size:11.5px;letter-spacing:.04em;color:var(--soft);margin-bottom:3px}
+.me .who{color:#93A79B}
+.composer{display:flex;gap:8px}
+textarea{flex:1;font:inherit;padding:11px 13px;border:1px solid var(--line);border-radius:3px;
+resize:vertical;min-height:62px;background:#fff;color:inherit}
+textarea:focus{outline:none;border-color:var(--vtm)}
+button.send,button.primary{font:inherit;font-weight:560;padding:11px 20px;border:none;border-radius:3px;
+background:var(--vtm);color:#fff;cursor:pointer}
+button.send:disabled{background:var(--line);color:var(--soft);cursor:default}
+button.ghost{font:inherit;padding:10px 18px;border:1px solid var(--line);background:#fff;border-radius:3px;cursor:pointer;color:inherit}
+.tape{background:var(--tape);padding:18px 18px 26px;font-size:13px;position:sticky;top:20px;
+box-shadow:0 1px 0 var(--line),0 0 0 1px var(--line);
+clip-path:polygon(0 0,100% 0,100% calc(100% - 7px),92% 100%,83% calc(100% - 7px),75% 100%,66% calc(100% - 7px),58% 100%,50% calc(100% - 7px),41% 100%,33% calc(100% - 7px),25% 100%,16% calc(100% - 7px),8% 100%,0 calc(100% - 7px))}
+.tape h4{margin:0 0 4px;font-size:13px;font-weight:600}
+.tape .hdr{color:var(--soft);font-size:11.5px;padding-bottom:8px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.line{display:flex;justify-content:space-between;gap:10px;padding:5px 0;align-items:baseline}
+.line .nm{flex:1}
+.line small{display:block;color:var(--soft);font-size:11.5px}
+.dash{border-top:1px dashed var(--line);margin:9px 0}
+.total{font-weight:640;font-size:15px}
+.tag{font-size:10.5px;padding:1px 5px;border-radius:2px;color:#fff;vertical-align:1px}
+.t-vtm{background:var(--vtm)}.t-zf{background:var(--zf)}.t-none{background:#97A39B}
+.star{color:var(--zf)}
+.empty{color:var(--soft);font-style:italic;padding:6px 0}
+.gate{background:#fff;border:1px solid var(--line);border-radius:3px;padding:24px 26px;max-width:460px}
+.gate label{display:block;font-size:13px;color:var(--soft);margin:14px 0 5px}
+.gate input{width:100%;font:inherit;padding:10px 12px;border:1px solid var(--line);border-radius:3px;background:#fff;color:inherit}
+.gate input:focus{outline:none;border-color:var(--vtm)}
+.team{width:100%;border-collapse:collapse;font-size:13.5px;background:#fff;border:1px solid var(--line)}
+.team th{text-align:left;font-weight:600;font-size:12px;color:#EEF2EF;background:var(--ink);padding:9px 12px}
+.team td{padding:9px 12px;border-top:1px solid var(--line)}
+.team td.r{text-align:right}
+.tapebar{position:sticky;top:0;z-index:5;background:var(--tape);
+box-shadow:0 0 0 1px var(--line);margin-bottom:12px}
+.tapesum{width:100%;font:inherit;text-align:left;background:none;border:none;cursor:pointer;
+padding:11px 14px;display:flex;align-items:center;gap:10px;color:inherit}
+.tapesum .lbl{font-size:11.5px;color:var(--soft);display:block}
+.tapesum .big{font-size:17px;font-weight:640}
+.tapesum .chev{margin-left:auto;color:var(--soft);font-size:12px}
+.tapebody{padding:0 14px 14px;border-top:1px dashed var(--line);font-size:13px}
+.teamwrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+@media(max-width:860px){
+.wrap{padding:16px 14px 40px}
+.lede{font-size:22px}
+.sub{font-size:14.5px;margin-bottom:18px}
+.stage{grid-template-columns:1fr;gap:0}
+.grid{grid-template-columns:1fr;gap:10px}
+.card{padding:13px 15px 15px}
+.turn{max-width:92%;padding:9px 12px}
+.composer{flex-direction:column;gap:8px}
+textarea{font-size:16px;min-height:56px}
+button.send{width:100%;padding:14px}
+button.primary,button.ghost{padding:13px 18px;font-size:15px}
+.tabs{flex-wrap:nowrap;overflow-x:auto;padding-bottom:5px}
+.tabs button{flex:0 0 auto;padding:8px 14px}
+.rule button{padding:11px 14px;font-size:14px}
+.brief dl{grid-template-columns:1fr;gap:0}
+.brief dt{margin-top:8px}
+.brief dt:first-child{margin-top:0}
+.gate{max-width:none;padding:18px 16px}
+.gate input{font-size:16px;padding:12px}
+.bignum{font-size:32px}
+.result{padding:18px 16px}
+.top{gap:8px;margin-bottom:12px}
+.team{min-width:640px}
+}
+.result{background:#fff;border:1px solid var(--line);border-radius:3px;padding:22px 24px;margin-bottom:16px}
+.bignum{font-size:40px;font-weight:640;letter-spacing:-.03em;line-height:1.1}
+.bar{height:7px;background:var(--line);border-radius:4px;overflow:hidden;margin:12px 0 16px}
+.bar span{display:block;height:100%;background:var(--vtm)}
+.fb{white-space:pre-wrap;border-top:1px solid var(--line);padding-top:14px;margin-top:14px}
+.err{color:var(--loss)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+const {useState,useRef,useEffect}=React, h=React.createElement;
+
+const CAT={
+throat:[
+{c:'strep',n:'Стрепсілс інтенсив 8,75 мг №16',p:180,b:16.90,k:'ЗФ'},
+{c:'hexa',n:'Гексаспрей аероз. 30 мл',p:404,b:20.00,k:'ЗФ'},
+{c:'lisobakt',n:'Лісобакт дуо льодяники №20',p:null,b:18.20,k:'ЗФ'},
+{c:'lizak',n:'Лізак табл. д/розс. малина №20',p:240,b:23.21,k:'ВТМ'},
+{c:'zipelor',n:'Зіпелор льодяники 3 мг №30 лимон',p:null,b:28.00,k:'ВТМ'},
+{c:'farisil',n:'Фарисил табл. д/сос. лимон №20',p:274,b:19.57,k:'ВТМ'},
+{c:'fortalor',n:'Форталор спрей 1,5 мг/мл 30 мл',p:274,b:22.00,k:'ВТМ'},
+{c:'coldspr',n:'Колдефролл спрей д/горла 30 мл',p:187,b:18.70,k:'ВТМ'},
+{c:'oralor',n:'Оралор спрей д/горла 50 мл',p:188,b:18.18,k:'ВТМ'},
+{c:'furacil',n:'Фурацилін плюс пор. пак. 1 г №20',p:172,b:10.31,k:'ВТМ'},
+{c:'chloro',n:'Хлорофіліпт Євро спрей 30 мл',p:82,b:8.20,k:'ВТМ'}],
+cough:[
+{c:'bromg',n:'Бромгексин-8 др. №25',p:55,b:0,k:'—'},
+{c:'coldpast',n:'Колдефролл пастилки з ісл. мохом №30',p:397,b:40.50,k:'ВТМ',f:'⭐'},
+{c:'respiks',n:'Респікс табл. №20',p:267,b:24.50,k:'ВТМ'},
+{c:'fluimuc',n:'Флуїмуцил табл. шип. 600 мг №10',p:415,b:20.50,k:'ВТМ'},
+{c:'bronhom',n:'Бронхомед пастилки, чорна смородина №30',p:302,b:20.00,k:'ВТМ'},
+{c:'rapira',n:'Рапіра 200 пор. саше 1 г №20',p:null,b:19.50,k:'ВТМ',f:'⭐'},
+{c:'mukolit',n:'Муколітик (мукалтин) табл. №30',p:100,b:9.90,k:'ВТМ'},
+{c:'ambrox',n:'Амброксол сироп 15 мг/5 мл 100 мл',p:123,b:7.00,k:'ВТМ'}],
+pain:[
+{c:'nurofen',n:'Нурофен форте табл. 400 мг №12',p:182,b:13.00,k:'ЗФ'},
+{c:'askofen',n:'Аскофен-Д №10',p:48,b:0.80,k:'ЗФ'},
+{c:'zotek',n:'Зотек табл. 400 мг №10 (дексібупрофен)',p:172,b:13.56,k:'ВТМ'},
+{c:'taffa',n:'Таффа класична табл. 400 мг №10',p:118,b:10.00,k:'ВТМ'},
+{c:'ibu',n:'Ібупрофен табл. 200 мг №30',p:60,b:4.22,k:'ВТМ'},
+{c:'bolran',n:'Бол-Ран табл. №100',p:null,b:52.50,k:'ВТМ',f:'⭐'}],
+nose:[
+{c:'farmazol',n:'Фармазолін спрей 0,1% 10 мл',p:166,b:0,k:'—'},
+{c:'galazol',n:'Галазолін комбі спрей 10 мл',p:184,b:10.29,k:'ЗФ'},
+{c:'ksilorif',n:'Ксилоріф спрей наз. 0,1% 10 мл',p:153,b:16.50,k:'ВТМ',f:'⭐'},
+{c:'aqua125',n:'Аква Солін аероз. наз. 125 мл',p:282,b:42.00,k:'ВТМ',f:'⭐'},
+{c:'aqua45',n:'Аква Солін спрей наз. 45 мл',p:null,b:27.75,k:'ВТМ',f:'⭐'},
+{c:'aquacikl',n:'Аква Солін спрей з цикламеном 15 мл',p:null,b:38.25,k:'ВТМ',f:'⭐'},
+{c:'evkaspr',n:'Евкаспрей турбо назал. 1 мг/мл 10 мл',p:164,b:10.83,k:'ВТМ'},
+{c:'oksirif',n:'Оксиріф спрей наз. 0,05% 10 мл',p:null,b:10.50,k:'ВТМ',f:'🆕'}],
+uro:[
+{c:'kanefron',n:'Канефрон Н табл. №60',p:647,b:0,k:'—'},
+{c:'uroholum',n:'Урохолум капс. №60',p:460,b:47.06,k:'ЗФ'},
+{c:'espa',n:'Еспа-Фоцин 3000 мг саше 8 г №1',p:451,b:26.00,k:'ЗФ'},
+{c:'lespira',n:'Леспіра капс. 400 мг №60',p:600,b:40.00,k:'ВТМ'},
+{c:'fitourin',n:'Фітоурин капс. 420 мг №30',p:450,b:40.00,k:'ВТМ'},
+{c:'nefrolak',n:'Нефролак капс. №60',p:409,b:37.85,k:'ВТМ'},
+{c:'nefrokap',n:'Нефролак краплі 100 мл',p:null,b:47.25,k:'ВТМ',f:'⭐'},
+{c:'urocil',n:'Уроцил капсули №60',p:364,b:32.30,k:'ВТМ'},
+{c:'cystafoc',n:'Цистафоцин гран. пакет 8 г №1',p:303,b:22.00,k:'ВТМ'}],
+ab:[
+{c:'novoks',n:'Новокс-500 табл. 500 мг №5',p:234,b:10.40,k:'ЗФ'},
+{c:'sumamed',n:'Сумамед табл. 500 мг №3',p:null,b:15.00,k:'ЗФ'},
+{c:'abiflox',n:'Абіфлокс табл. 500 мг №10',p:null,b:17.03,k:'ЗФ'},
+{c:'aztek',n:'Азтек 500 мг табл. №3 (азитроміцин)',p:406,b:23.03,k:'ВТМ'},
+{c:'zoksi',n:'Зоксі табл. 500 мг №3',p:360,b:20.92,k:'ВТМ'},
+{c:'levoflox',n:'Левофлоксацин 500 мг таб. №10',p:277,b:15.00,k:'ВТМ'},
+{c:'azitro',n:'Азитроміцин табл. 500 мг №3',p:161,b:15.00,k:'ВТМ'},
+{c:'ormax',n:'Ормакс пор. д/сусп. 100 мг/5 мл 20 мл',p:null,b:15.60,k:'ЗФ'},
+{c:'cefinacsusp',n:'Цефінак пор. д/сусп. 100 мг/5 мл 100 мл',p:null,b:19.12,k:'ЗФ'},
+{c:'dinir',n:'3-Дінір пор. д/сусп. 250 мг/5 мл 60 мл',p:null,b:17.00,k:'ЗФ'},
+{c:'amoxiklav875',n:'Амоксиклав 2Х табл. 875+125 мг №14',p:null,b:14.50,k:'ЗФ'},
+{c:'abiklav',n:'Абіклав табл. 875+125 мг №10',p:null,b:17.48,k:'ЗФ'},
+{c:'cefma',n:'Цефма табл. 200 мг №10',p:null,b:27.30,k:'ЗФ'},
+{c:'linezolid',n:'Лінезолідин табл. 600 мг №10',p:null,b:30.00,k:'ЗФ'},
+{c:'meratin',n:'Мератин табл. 500 мг №10',p:null,b:13.00,k:'ЗФ'},
+{c:'unidoks',n:'Юнідокс Солютаб табл. 100 мг №10',p:null,b:13.00,k:'ЗФ'},
+{c:'ceftr5',n:'Цефтріаксон пор. д/ін. 1 г фл. №5',p:null,b:10.00,k:'ЗФ'},
+{c:'ceftr10',n:'Цефтріаксон пор. д/ін. 1 г фл. №10',p:null,b:17.00,k:'ЗФ'},
+{c:'sanzidim',n:'Санзидим-1000 пор. д/ін. 1000 мг фл. №1',p:null,b:9.00,k:'ВТМ'},
+{c:'cefepim',n:'Цефепім Ананта пор. д/ін. 1000 мг №1',p:null,b:14.00,k:'ВТМ'},
+{c:'amoxi',n:'Амоксицилін капс. 500 мг №10',p:145,b:7.00,k:'ВТМ'}],
+probio:[
+{c:'linex',n:'Лінекс форте капс. №14',p:null,b:55.90,k:'ЗФ'},
+{c:'laktiale',n:'Лактіале капс. №30',p:null,b:29.22,k:'ЗФ'},
+{c:'floragud',n:'Флорагуд капсули №20',p:null,b:35.00,k:'ВТМ'},
+{c:'linorm',n:'Лінорм Екстра капс. №30',p:null,b:32.58,k:'ВТМ'},
+{c:'eurobio',n:'Євро-Біотик сусп. орал. 5 мл №10',p:null,b:31.00,k:'ВТМ'},
+{c:'normina',n:'Норміна сусп. 5 мл №10',p:null,b:20.00,k:'ВТМ'},
+{c:'yogurt',n:'Йогурт Lacto Smart капс. №30',p:null,b:15.11,k:'ВТМ'}],
+sorb:[
+{c:'entero',n:'Ентеросгель паста пак. 15 г №15',p:347,b:0,k:'—'},
+{c:'atoksil',n:'Атоксіл гель стик-пак. 20 г №20',p:635,b:0,k:'—'},
+{c:'filtrum',n:'Фільтрум Гастро гель саше 15 мл №12',p:504,b:71.00,k:'ЗФ'},
+{c:'detoks',n:'Детоксорб гель стик 20 г №20',p:328,b:14.30,k:'ВТМ'},
+{c:'sorbi',n:'Сорбі-Норм білий капс. №20',p:92,b:5.90,k:'ВТМ'}],
+immun:[
+{c:'aflubin',n:'Афлубін краплі 50 мл',p:408,b:0,k:'—'},
+{c:'immunsil',n:'Імунсил D3 дуо капс. №60',p:null,b:49.40,k:'ЗФ'},
+{c:'detrimax',n:'Детримакс 2000 Імуно капс. №30',p:null,b:16.90,k:'ЗФ'},
+{c:'immungud',n:'Імуногуд капс. №30',p:null,b:35.63,k:'ВТМ',f:'🆕'},
+{c:'immunsyr',n:'Імуногуд сироп 100 мл',p:null,b:28.50,k:'ВТМ',f:'🆕'},
+{c:'vitczn',n:'Вітамін С 500 мг + цинк + D3 №30',p:null,b:21.00,k:'ВТМ'}],
+cold:[
+{c:'fervex',n:'Фервекс д/дор. гран. №8',p:null,b:6.50,k:'ЗФ'},
+{c:'milistan',n:'Мілістан мультисимптомний каплети №12',p:null,b:19.50,k:'ЗФ'},
+{c:'gripflu',n:'Гріпфлю табл. №10',p:null,b:19.50,k:'ВТМ',f:'🆕'},
+{c:'amicitron',n:'Аміцитрон пор. д/орал. р-ну 23 г №10',p:null,b:25.00,k:'ВТМ'},
+{c:'tet366',n:'ТЕТ 36,6 лимон пор. пакет №10',p:null,b:25.00,k:'ВТМ'},
+{c:'combigripp',n:'Комбігрип хот сіп саше 5 г №10',p:null,b:20.00,k:'ВТМ'}],
+heart:[
+{c:'sekrepat',n:'Секрепат форте табл. №50 м’ята',p:null,b:32.50,k:'ЗФ'},
+{c:'renidsas',n:'Ренід саше 10 мл №20, м’ята',p:null,b:21.88,k:'ВТМ'},
+{c:'gastrogud',n:'Гастрогуд сусп. саше №20, м’ята',p:null,b:20.84,k:'ВТМ'},
+{c:'renidtab',n:'Ренід жув. табл. м’ята №24',p:null,b:14.25,k:'ВТМ'},
+{c:'gastrotab',n:'Гастрогуд табл. жув. №30, м’ята',p:null,b:14.00,k:'ВТМ'},
+{c:'izzhoga',n:'Таблетки від печії №20, м’ята',p:null,b:4.70,k:'ВТМ'}],
+fungal:[
+{c:'flukotev',n:'Флуконазол-Тева капс. 150 мг №1',p:null,b:1.90,k:'ЗФ'},
+{c:'terbinaf',n:'Тербінафін-КВ табл. 250 мг №14',p:null,b:13.33,k:'ЗФ'},
+{c:'fluzak1',n:'Флюзак табл. 150 мг №1',p:null,b:9.90,k:'ВТМ',f:'⭐'},
+{c:'fluzak3',n:'Флюзак табл. 150 мг №3',p:null,b:10.73,k:'ВТМ'},
+{c:'fluzak200',n:'Флюзак табл. 200 мг №4',p:null,b:17.15,k:'ВТМ',f:'⭐'},
+{c:'flunol2',n:'Флунол капс. 150 мг №2',p:null,b:25.00,k:'ВТМ'}],
+liver:[
+{c:'darsil',n:'Дарсіл-Д табл. 22,5 мг №100',p:null,b:7.00,k:'ЗФ'},
+{c:'galstena',n:'Галстена краплі 50 мл',p:null,b:52.00,k:'ЗФ'},
+{c:'gepazak',n:'Гепазак р-н саше 10 мл №20',p:null,b:37.32,k:'ЗФ'},
+{c:'abeginf',n:'А-Бегін форте Енерджі 15 мл №20',p:null,b:58.50,k:'ВТМ'},
+{c:'abegin',n:'А-Бегін р-н стик 10 мл №20',p:null,b:40.00,k:'ВТМ'},
+{c:'essengrale',n:'Ессенгралє форте капс. №30',p:null,b:30.00,k:'ВТМ'},
+{c:'gepais',n:'Гепайс капс. 45 мг №80',p:null,b:25.42,k:'ВТМ'},
+{c:'artitoks',n:'Артітокс Детокс табл. №60',p:null,b:18.00,k:'ВТМ'}],
+diar:[
+{c:'nifsusp',n:'Ніфуроксазид сусп. 220 мг/5 мл 90 мл',p:null,b:22.52,k:'ВТМ'},
+{c:'nifkaps',n:'Ніфуроксазид капс. 200 мг №20',p:null,b:20.00,k:'ВТМ'},
+{c:'levomic',n:'Левоміцетин табл. 0,5 №10',p:null,b:4.56,k:'ВТМ'},
+{c:'ftalazol',n:'Фталазол 500 мг №10',p:null,b:2.20,k:'ВТМ'}],
+beauty:[
+{c:'doppel',n:'Доппельгерц Бьюті Колаген Система 25 мл №30',p:null,b:143.00,k:'ЗФ'},
+{c:'novel60',n:'Новел «Волосся, шкіра і нігті» табл. жув. №60',p:null,b:71.50,k:'ЗФ'},
+{c:'zestbeauty',n:'Зест Бьюті «Волосся, нігті, шкіра» капс. №30',p:null,b:50.00,k:'ЗФ'},
+{c:'arederma',n:'Аредерма Колаген стик 15 мл №28',p:null,b:80.00,k:'ВТМ'},
+{c:'collagen',n:'Колаген Глоу питний стик 10 мл №30',p:null,b:55.70,k:'ВТМ'},
+{c:'biotin60',n:'Біотин В7 5000 мкг Алвітал табл. №60',p:null,b:54.00,k:'ВТМ',f:'⭐'},
+{c:'alvital60',n:'Комплекс вітамінів для краси Алвітал капс. №60',p:null,b:44.20,k:'ВТМ'},
+{c:'biotin30',n:'Біотин В7 5000 мкг Алвітал табл. №30',p:null,b:30.00,k:'ВТМ',f:'⭐'}],
+syrup:[
+{c:'alteyka',n:'Алтейка сироп 200 мл',p:null,b:4.00,k:'ЗФ'},
+{c:'ambroxzf',n:'Амброксол сироп 30 мг/5 мл 100 мл',p:null,b:4.94,k:'ЗФ'},
+{c:'solodka',n:'Сироп кореня солодки 200 мл',p:null,b:5.22,k:'ЗФ'},
+{c:'mukotek',n:'Мукотек сироп 100 мл',p:null,b:12.53,k:'ЗФ'},
+{c:'gerbion',n:'Гербіон плюща сироп 150 мл',p:null,b:13.00,k:'ЗФ'},
+{c:'evkabal',n:'Евкабал сироп 100 мл',p:null,b:13.00,k:'ЗФ'},
+{c:'pektolvan',n:'Пектолван плющ сироп 100 мл',p:null,b:13.91,k:'ЗФ'},
+{c:'pektolvanc',n:'Пектолван Ц сироп 100 мл',p:null,b:14.30,k:'ЗФ'},
+{c:'taiss100',n:'Сироп від кашлю 100 мл Др. Тайсс, екстракт плюща',p:null,b:16.90,k:'ЗФ'},
+{c:'langes200',n:'Ланґес р-н орал. 50 мг/мл 200 мл',p:null,b:20.80,k:'ЗФ'},
+{c:'taiss250',n:'Сироп від кашлю 250 мл Др. Тайсс, екстракт плюща',p:null,b:26.00,k:'ЗФ'},
+{c:'ambroxvtm',n:'Амброксол сироп 15 мг/5 мл 100 мл',p:123,b:7.00,k:'ВТМ'},
+{c:'plyusha100',n:'Плюща сироп 100 мл',p:null,b:10.50,k:'ВТМ'},
+{c:'gederin',n:'Гедерин Плющ сироп 90 мл',p:null,b:18.00,k:'ВТМ'},
+{c:'plyushastik',n:'Плюща сироп стик 7,5 мл №10',p:null,b:18.60,k:'ВТМ'}],
+gastro:[
+{c:'famotidin',n:'Фамотидин-Д табл. 0,02 г №20',p:null,b:1.00,k:'ЗФ'},
+{c:'omeztev',n:'Омепразол-Тева капс. 0,04 №30',p:null,b:8.00,k:'ЗФ'},
+{c:'espaprazol20',n:'Еспа-празол табл. 20 мг №28',p:null,b:15.90,k:'ЗФ'},
+{c:'panocid',n:'Паноцид табл. 40 мг №30 (пантопразол)',p:null,b:17.51,k:'ЗФ'},
+{c:'omezzf',n:'Омепразол капс. 0,02 №30',p:null,b:22.00,k:'ЗФ'},
+{c:'espaprazol40',n:'Еспа-празол табл. 40 мг №28',p:null,b:28.00,k:'ЗФ'},
+{c:'omevtm',n:'Омепразол капс. 0,02 №30 УСТМ',p:null,b:4.00,k:'ВТМ'},
+{c:'ranitidin',n:'Ранітидин Євро табл. 150 мг №100',p:null,b:9.37,k:'ВТМ'},
+{c:'pulcet14',n:'Пульцет табл. 40 мг №14',p:null,b:18.00,k:'ВТМ'},
+{c:'pantozol',n:'Пантозол табл. 40 мг №30',p:null,b:19.99,k:'ВТМ'},
+{c:'pulcet28',n:'Пульцет табл. 40 мг №28',p:null,b:35.00,k:'ВТМ'}],
+digest:[
+{c:'enzibar6',n:'Ензібар 6 табл. №20',p:null,b:11.00,k:'ЗФ'},
+{c:'verdiogast',n:'Вердіогаст капс. №20',p:null,b:13.65,k:'ЗФ'},
+{c:'fermentaza',n:'Ферментаза Дуо капс. №20',p:null,b:19.50,k:'ЗФ'},
+{c:'enzibargold',n:'Ензібар Голд табл. №20',p:null,b:26.00,k:'ЗФ'},
+{c:'enzibargluten',n:'Ензібар Глютен Форте табл. №20',p:null,b:97.50,k:'ЗФ'},
+{c:'pankreatin',n:'Панкреатин-форте табл. №60',p:null,b:6.00,k:'ВТМ'},
+{c:'enziton',n:'Ензітон капс. №20',p:null,b:27.00,k:'ВТМ'},
+{c:'panzim',n:'Панзім форте 25000 капс. №20',p:null,b:29.70,k:'ВТМ'}],
+spasm:[
+{c:'andipa',n:'Андипа (анальгін-дибазол-папаверин) табл. №10',p:null,b:6.00,k:'ЗФ'},
+{c:'kombispazm',n:'Комбіспазм табл. №20',p:null,b:7.15,k:'ЗФ'},
+{c:'spazmalgon50',n:'Спазмалгон Дуо табл. №50',p:null,b:11.30,k:'ЗФ'},
+{c:'spazmoliks',n:'Спазмолікс табл. №20',p:null,b:6.76,k:'ВТМ'}],
+epi:[
+{c:'pregabd',n:'Прегабалін-Д 300 мг капс. №21',p:null,b:20.00,k:'ЗФ'},
+{c:'linbag150',n:'Лінбаг капс. 150 мг №30',p:null,b:19.76,k:'ЗФ'},
+{c:'pregtev150',n:'Прегабалін-Тева 150 мг капс. №28',p:null,b:21.17,k:'ЗФ'},
+{c:'ogranija300',n:'Огранія капс. 300 мг №30',p:null,b:34.25,k:'ЗФ'},
+{c:'linefor150',n:'Лінефор капс. 150 мг №56',p:null,b:113.00,k:'ЗФ'},
+{c:'linefor300',n:'Лінефор капс. 300 мг №56',p:null,b:141.00,k:'ЗФ'},
+{c:'bapre150',n:'Бапре капс. 150 мг №30',p:null,b:26.00,k:'ВТМ'},
+{c:'bapre300',n:'Бапре капс. 300 мг №30',p:null,b:29.00,k:'ВТМ'}],
+press:[
+{c:'nebimak',n:'Небімак-5 табл. 5 мг №30',p:null,b:19.50,k:'ЗФ'},
+{c:'kantab16',n:'Кантаб табл. 16 мг №28',p:null,b:22.10,k:'ЗФ'},
+{c:'onorio',n:'Онорiо табл. 5 мг №90',p:null,b:30.77,k:'ЗФ'},
+{c:'enalapril',n:'Еналаприл табл. 10 мг №20',p:null,b:1.98,k:'ВТМ'},
+{c:'lizinopril20',n:'Лізиноприл табл. 20 мг №30',p:null,b:7.00,k:'ВТМ'},
+{c:'moksonidin',n:'Моксонідин табл. 0,4 мг №30',p:null,b:20.00,k:'ВТМ'}],
+throm:[
+{c:'magnikor100',n:'Магнікор табл. 75 мг №100',p:null,b:5.00,k:'ЗФ'},
+{c:'klopidtev90',n:'Клопідогрел-Тева табл. 75 мг №90',p:null,b:10.67,k:'ЗФ'},
+{c:'kardiomagnil',n:'Кардіомагніл табл. 75 мг №100',p:null,b:10.78,k:'ЗФ'},
+{c:'klopidvtm',n:'Клопідогрель табл. 75 мг №30',p:null,b:4.50,k:'ВТМ'}],
+tech:[
+{c:'tonmeh',n:'Тонометр 2В МС-20 механічний з фонендоскопом',p:null,b:27.96,k:'ЗФ'},
+{c:'rossmax',n:'Тонометр Rossmax X3 автомат',p:null,b:300.00,k:'ЗФ'},
+{c:'promedica',n:'Тонометр Promedica Classic автомат',p:null,b:151.00,k:'ЗФ'},
+{c:'vega',n:'Тонометр Vega BP106A автомат',p:null,b:70.00,k:'ВТМ'},
+{c:'paramed',n:'Тонометр Paramed Top автомат',p:null,b:60.00,k:'ВТМ'},
+{c:'termo',n:'Термометр інфрачервоний безконтактний NC600',p:null,b:53.00,k:'ЗФ'}],
+};
+
+const ALL={};
+Object.entries(CAT).forEach(([cat,arr])=>arr.forEach(i=>{ALL[i.c]={...i,cat}}));
+
+const SCEN=[
+{id:1,grp:'Базові',no:4417,bv:["nefrolak"],bm:["uroholum"],title:'Призначення лікаря',cats:['uro'],main:'uro',order:['kanefron'],
+open:'Добрий день. Чотири-чотири-один-сім.',
+who:'Жінка, 38 років',mood:'Опір високий. «Мені це лікар виписав, я нічого міняти не буду.»',
+mode:'Зібране наперед, черги немає',
+goal:'Пояснити, що це та сама рослинна група, дати вибір, не тиснути. Рішення лишається за клієнткою.'},
+{id:2,grp:'Базові',no:2842,bv:["zipelor","furacil"],bm:["zipelor","furacil"],title:'Тільки цифри',cats:['throat'],main:'throat',order:['strep'],
+open:'2842.',
+who:'Чоловік, 44 роки',mood:'Називає номер і мовчить. Не вітається, відповідає односкладово.',
+mode:'Зібране наперед',
+goal:'Ініціатива контакту. Мовчки віддати пакет — нуль. Розмову відкриваєте ви.'},
+{id:3,grp:'Базові',no:1194,bv:["ksilorif","aqua125"],bm:["ksilorif","aqua125"],title:'Черга за спиною',cats:['nose'],main:'nose',order:['farmazol'],
+open:'1194, мені тільки забрати.',
+who:'Чоловік, 36 років',mood:'За ним троє людей. Поспішає, дивиться на годинник.',
+mode:'Зібране наперед, черга',
+goal:'Вкластися в одну фразу. Три питання на виявлення потреби — і клієнт піде.'},
+{id:4,grp:'Базові',no:7103,bv:["ambrox","aqua125"],bm:["ambrox","aqua125"],title:'Дитина в машині',cats:['cough','nose'],main:'cough',order:['bromg'],
+open:'Сьомий-один-нуль-три. Тільки швидко, дитина в машині сама.',
+who:'Мама, дитина чекає в машині',mood:'Дуже поспішає, дратується від довгих пояснень.',
+mode:'Збирається при клієнті',
+goal:'Стислість. Одна фраза, одна позиція. Довга аргументація провалюється навіть коли вона правильна.'},
+{id:5,grp:'Базові',no:5560,bv:["levoflox"],bm:["abiflox"],title:'Курс, а не упаковка',cats:['ab'],main:'ab',order:['novoks'],
+open:'5560. І скажіть відразу, скільки вийде.',
+who:'Чоловік, 51 рік',mood:'Рахує гроші, питає прямо: «а чому ваше дорожче?»',
+mode:'Зібране наперед',
+goal:'ВТМ дорожча за упаковку, але це 10 таблеток проти 5 — повний курс замість половини. Рецептурна позиція: дозування не змінюємо.'},
+{id:6,grp:'Базові',no:3391,bv:["zotek","tet366"],bm:["zotek","tet366"],title:'Дешевше — значить гірше',cats:['pain','cold'],main:'pain',order:['nurofen'],trap:true,
+open:'3391. Нурофен, я так розумію?',
+who:'Чоловік, 47 років',mood:'Відкрита недовіра: «це ж ваша власна марка, хто це взагалі робить?»',
+mode:'Зібране наперед',
+goal:'Обережно. Нурофен форте вже дає 13 ₴ по ЗФ. Таффа дає 10 — перемикання коштує аптеці 3 ₴. Тут виграє комплекс, а не заміна.'},
+{id:7,grp:'Базові',no:null,bv:["detoks"],bm:["filtrum"],title:'Кошик уже зібрано',cats:['sorb'],main:'sorb',order:['entero'],
+open:'Я вже все обрала в застосунку, оформіть, будь ласка.',
+who:'Жінка, 29 років',mood:'Упевнена, що вибір зроблено.',
+mode:'Оформлення прямо на касі',
+goal:'Найважчий режим. Пояснити логіку за фармопікою, а не просто перебити вибір.'},
+{id:8,grp:'Базові',no:6208,bv:["immungud","aqua125"],bm:["immunsil","aqua125"],title:'Відкрита розмова',cats:['immun','nose'],main:'immun',order:['aflubin'],
+open:'Доброго дня! Шість-два-нуль-вісім.',
+who:'Жінка, 33 роки',mood:'Слухає із зацікавленням, ставить питання, легко погоджується, якщо пояснити.',
+mode:'Зібране наперед',
+goal:'Сценарій на успіх. Відчути, скільки дає одна повноцінна розмова.'},
+{id:9,grp:'Базові',no:8025,bv:["azitro","floragud"],bm:["azitro","linex"],title:'Курс без прикриття',cats:['ab','probio'],main:'ab',order:['azitro'],
+open:'8025. Це антибіотик, лікар призначив на три дні.',
+who:'Чоловік, 42 роки',mood:'Спокійний, довіряє аптеці, але сам нічого не питає.',
+mode:'Зібране наперед',
+goal:'Заміна тут не потрібна — клієнт уже взяв ВТМ. Уся розмова про комплекс: антибіотик без пробіотика.'},
+{id:10,grp:'Базові',no:4630,bv:["filtrum","sorbi"],bm:["filtrum","sorbi"],title:'Не чіпайте, що працює',cats:['sorb'],main:'sorb',order:['filtrum'],trap:true,
+open:'4630. Це від отруєння, чоловікові.',
+who:'Жінка, 45 років',mood:'Спокійна, готова слухати. Погодиться майже на що завгодно.',
+mode:'Зібране наперед',
+goal:'Пастка. Фільтрум Гастро вже дає 71 ₴ по ЗФ. Перемикання на Детоксорб спалює 57 ₴. Правильна дія — не міняти, а додати.'},
+{id:11,grp:'Базові',no:null,bv:["renidsas"],bm:["sekrepat"],title:'Просто щось від печії',cats:['heart'],main:'heart',order:[],
+open:'Мені щось від печії. Що у вас є?',
+who:'Чоловік, 39 років',mood:'Прийшов без замовлення, вибору не має, чекає поради.',
+mode:'Оформлення прямо на касі',
+goal:'Вільний вибір — найлегші гроші в наборі. Питання лише в тому, чи фармацевт назве найдорожчу за бонусом позицію, чи першу, що згадає.'},
+{id:12,grp:'Базові',no:5108,bv:["fluzak200"],bm:["fluzak200"],title:'Незручна тема',cats:['fungal'],main:'fungal',order:['flukotev'],
+open:'5108. (тихо) Тільки без коментарів, будь ласка.',
+who:'Жінка, 31 рік',mood:'Соромиться, говорить упівголоса, за нею стоять люди.',
+mode:'Зібране наперед, черга',
+goal:'Тактовність. Не називати діагноз уголос, не перепитувати. Одна коротка фраза про повний курс замість однієї таблетки.'},
+{id:13,grp:'Базові',no:6741,bv:["abeginf"],bm:["abeginf"],title:'Після курсу',cats:['liver'],main:'liver',order:['darsil'],
+open:'6741. Терапевт сказав пропити щось для печінки після лікування.',
+who:'Чоловік, 55 років',mood:'Розгублений, точного призначення не має, готовий слухати.',
+mode:'Зібране наперед',
+goal:'Клієнт сам не знає, чого хоче — це найкращі умови для розмови. Розрив між Дарсілом і Ессенгралє — 23 ₴.'},
+{id:14,grp:'Базові',no:3856,bv:["nifsusp","normina"],bm:["nifsusp","normina"],title:'Дитина, пронос',cats:['diar','probio'],main:'diar',order:['nifsusp'],
+open:'3856. Це доньці, другий день уже.',
+who:'Мама, 34 роки',mood:'Хвилюється за дитину, слухає уважно, боїться нашкодити.',
+mode:'Зібране наперед',
+goal:'Замовлення вже ВТМ. Комплекс — відновлення флори. Тон має бути про дитину, а не про упаковку.'},
+{id:15,grp:'Базові',no:null,bv:["biotin60"],bm:["doppel"],title:'Вільний вибір',cats:['beauty'],main:'beauty',order:[],
+open:'Порадьте щось для волосся, дуже сиплеться після літа.',
+who:'Жінка, 27 років',mood:'Готова витратити гроші, якщо повірить у результат.',
+mode:'Оформлення прямо на касі',
+goal:'Найгостріший сценарій для правила оцінки. Біотин Алвітал (ВТМ) — 54 ₴. Доппельгерц (ЗФ) — 143 ₴. Перемкніть правило вгорі й пройдіть двічі.'},
+{id:16,grp:'Базові',no:9302,bv:["tet366","vitczn"],bm:["tet366","immunsil"],title:'Застуда на ногах',cats:['cold','immun'],main:'cold',order:['fervex'],
+open:'9302. Мені працювати треба, злягти не можу.',
+who:'Чоловік, 40 років',mood:'Прагматик. Цікавить тільки одне: щоб швидко відпустило.',
+mode:'Зібране наперед',
+goal:'Фервекс дає 6,5 ₴ — найнижчий старт у наборі. Майже будь-яка розмова тут у плюс.'},
+{id:17,grp:'Базові',no:2517,bv:["vega"],bm:["rossmax"],title:'Тонометр для мами',cats:['tech'],main:'tech',order:['tonmeh'],
+open:'2517. Це мамі, вона сама собі міряє.',
+who:'Жінка, 43 роки',mood:'Взяла найдешевше, бо не розбирається. Не проти доплатити, якщо пояснити навіщо.',
+mode:'Зібране наперед',
+goal:'Літня людина не намірить механічним тонометром сама. Аргумент медичний, не грошовий. Різниця в бонусі тут більша, ніж у будь-якому іншому сценарії.'},
+{id:18,grp:'Антибіотики',no:7264,title:'Суспензія для чотирирічної',cats:['ab','probio'],main:'ab',order:['ormax'],
+bv:['ormax','eurobio'],bm:['ormax','eurobio'],
+open:'7264. Це доньці, чотири роки, лікар виписав.',
+who:'Мама, 30 років',mood:'Уважна, все перепитує, боїться нашкодити дитині.',
+mode:'Зібране наперед',
+goal:'Заміни немає: дитячої суспензії азитроміцину у ВТМ не існує. Уся розмова про пробіотик, і саме в тій формі, яку дитина вип’є.'},
+{id:19,grp:'Антибіотики',no:5138,title:'Уколи вдома',cats:['ab','probio'],main:'ab',order:['ceftr5'],
+bv:['ceftr5','floragud'],bm:['ceftr5','linex'],
+open:'5138. П’ять уколів, медсестра ходитиме додому.',
+who:'Чоловік, 58 років',mood:'Спокійний, довіряє лікарю, нічого не питає сам.',
+mode:'Зібране наперед',
+goal:'Рецептурна ін’єкційна позиція. МНН не міняємо взагалі. Розмова — тільки про те, що йде поруч із курсом.'},
+{id:20,grp:'Антибіотики',no:9471,title:'Навпроти дешевше',cats:['ab','probio'],main:'ab',order:['amoxiklav875'],
+bv:['amoxiklav875','floragud'],bm:['amoxiklav875','linex'],
+open:'9471. Слухайте, я в аптеці навпроти бачив дешевше.',
+who:'Чоловік, 34 роки',mood:'Роздратований, налаштований торгуватися.',
+mode:'Зібране наперед',
+goal:'Ціна в аптеці навпроти — не привід міняти рецептурну молекулу. Захищати ціну безглуздо, розмову треба перевести на те, чого в чеку немає.'},
+{id:21,grp:'Антибіотики',no:null,title:'Антибіотик без рецепта',cats:['ab','throat'],main:'throat',order:[],
+bv:['zipelor','furacil'],bm:['zipelor','furacil'],
+open:'Дайте мені щось сильне, антибіотик. Горло тиждень не проходить.',
+who:'Жінка, 36 років',mood:'Наполеглива, дратується від відмови, посилається на те, що «раніше давали».',
+mode:'Оформлення прямо на касі',
+goal:'Головний сценарій групи. Антибіотик без рецепта не відпускається, і це не обговорюється. Але відмова не означає порожній чек: безрецептурна група тут дає більше, ніж половина антибіотиків.'},
+{id:22,grp:'Антибіотики',no:6015,title:'Весілля в суботу',cats:['ab','probio','liver'],main:'ab',order:['meratin'],
+bv:['meratin','floragud'],bm:['meratin','linex'],
+open:'6015. І скажіть чесно — у суботу весілля, по чарці можна?',
+who:'Чоловік, 45 років',mood:'Настроєний добре, питає напівжартома, але відповідь йому потрібна.',
+mode:'Зібране наперед',
+goal:'Питання про алкоголь із цією групою — не жарт. Відповідь має бути однозначна і без пом’якшень. Комплекс далі виникає сам собою.'},
+{id:23,grp:'Сиропи від кашлю',no:4182,title:'Сироп, який дитина вип’є',cats:['syrup'],main:'syrup',order:['alteyka'],
+bv:['plyushastik'],bm:['taiss250'],
+open:'4182. Синові п’ять, кашляє третю ніч.',
+who:'Мама, 32 роки',mood:'Не виспалася, хоче, щоб просто подіяло.',
+mode:'Зібране наперед',
+goal:'Алтейка — найдешевший сироп у файлі, 4 ₴ бонусу. Тут майже будь-яка розмова в плюс. Питання одне: чи запитає фармацевт вік і характер кашлю.'},
+{id:24,grp:'Сиропи від кашлю',no:8330,title:'Дорослий і сироп',cats:['syrup','cough'],main:'syrup',order:['ambroxzf'],
+bv:['fluimuc'],bm:['taiss250'],
+open:'8330. Терпіти не можу ці сиропи, солодка гидота.',
+who:'Чоловік, 48 років',mood:'Прямий, іронічний, довгих пояснень не слухає.',
+mode:'Зібране наперед',
+goal:'Доросла людина не зобов’язана пити сироп. Зміна форми — не заміна лікування, і це найпростіший аргумент у групі.'},
+{id:25,grp:'Сиропи від кашлю',no:1507,title:'Плющ проти плюща',cats:['syrup'],main:'syrup',order:['gerbion'],
+bv:['gederin'],bm:['taiss250'],
+open:'1507. Мені Гербіон завжди допомагає, я його й беру.',
+who:'Жінка, 41 рік',mood:'Лояльна до бренду, не конфліктна, але й не бачить причини щось міняти.',
+mode:'Зібране наперед',
+goal:'Той самий екстракт плюща, різні бренди, розрив по ВТМ — 5 ₴. Тренуємо не техніку переконання, а оцінку: чи варта ця розмова п’яти гривень і зіпсованої лояльності.'},
+{id:26,grp:'Сиропи від кашлю',no:7749,title:'Кашель третій тиждень',cats:['syrup','cough'],main:'syrup',order:['solodka'],
+bv:['solodka','fluimuc'],bm:['solodka','fluimuc'],
+open:'7749. Кашляю вже тижнів зо три, дайте щось сильніше.',
+who:'Чоловік, 52 роки',mood:'Курець, до лікаря йти не збирається.',
+mode:'Зібране наперед',
+goal:'Три тижні кашлю в курця — це направлення до лікаря, а не «щось сильніше». Пропозиція можлива, але тільки після того, як прозвучало направлення.'},
+{id:27,grp:'Біль у животі',no:3624,title:'Печія щовечора',cats:['gastro','heart'],main:'gastro',order:['omezzf'],
+bv:['pulcet28'],bm:['pulcet28'],
+open:'3624. Омепразол, я його вже пів року п’ю.',
+who:'Чоловік, 46 років',mood:'Звик, вважає, що все під контролем.',
+mode:'Зібране наперед',
+goal:'Пів року ІПП без нагляду — привід сказати про гастроентеролога. Пульцет №28 дає 35 ₴, найдорожча ВТМ у групі, і тут вона ще й дорожча за будь-яку ЗФ.'},
+{id:28,grp:'Біль у животі',no:null,title:'Після свята',cats:['digest'],main:'digest',order:[],
+bv:['panzim'],bm:['enzibargluten'],
+open:'Дайте щось для травлення, вчора перестаралася за столом.',
+who:'Жінка, 38 років',mood:'У доброму гуморі, готова слухати, часу вдосталь.',
+mode:'Оформлення прямо на касі',
+goal:'Найбільший розрив між двома правилами оцінки в цій групі: 29,70 ₴ по ВТМ проти 97,50 ₴ по ЗФ. Пройдіть двічі.'},
+{id:29,grp:'Біль у животі',no:8817,title:'Болить, але незрозуміло де',cats:['spasm','digest'],main:'spasm',order:['spazmalgon50'],
+bv:['spazmalgon50'],bm:['spazmalgon50'],noSale:true,
+open:'8817. Живіт болить другий день, температури немає.',
+who:'Жінка, 29 років',mood:'Стривожена, але до лікаря йти не хоче: «саме пройде».',
+mode:'Зібране наперед',
+goal:'Невизначений біль у животі другу добу — спазмолітик тут може змазати картину гострої хірургії. Правильний результат цієї розмови — направлення, а не чек.'},
+{id:30,grp:'Біль у животі',no:2158,title:'Пронос перед поїздкою',cats:['diar','probio','sorb'],main:'diar',order:['nifkaps'],
+bv:['nifkaps','floragud'],bm:['nifkaps','linex'],
+open:'2158. У мене завтра поїзд о шостій, тільки швидко.',
+who:'Чоловік, 37 років',mood:'Поспішає, розмову згортає.',
+mode:'Зібране наперед',
+goal:'Замовлення вже ВТМ, заміна не потрібна. Комплекс очевидний, але часу на пояснення — одна фраза.'},
+{id:31,grp:'Біль у животі',no:6403,title:'Найдешевше з нашого',cats:['gastro'],main:'gastro',order:['omevtm'],
+bv:['pantozol'],bm:['omezzf'],
+open:'6403. Мені щоб недорого, я студентка.',
+who:'Жінка, 21 рік',mood:'Рахує кожну гривню, але слухає.',
+mode:'Зібране наперед',
+goal:'Замовлення вже ВТМ — і це найдешевша ВТМ у групі, 4 ₴. Усередині власної марки різниця теж є, і тут вона 16 ₴. Тренуємо те, про що зазвичай не думають: ВТМ на ВТМ.'},
+{id:32,grp:'Рецептурні',no:9055,title:'Не чіпайте прегабалін',cats:['epi'],main:'epi',order:['linefor300'],
+bv:['linefor300'],bm:['linefor300'],noSale:true,trap:true,
+open:'9055. Це мені невролог виписав, приймаю постійно.',
+who:'Жінка, 52 роки',mood:'Спокійна, довірлива, погодиться майже на що завгодно.',
+mode:'Зібране наперед',
+goal:'Найгостріша пастка у файлі. Лінефор дає 141 ₴, Бапре — 29. Перемикання коштує 112 ₴ і водночас є заміною рецептурного протиепілептичного препарату без невролога. Правильний результат — чек без змін.'},
+{id:33,grp:'Рецептурні',no:4712,title:'Тиск у мами',cats:['press','tech'],main:'press',order:['enalapril'],
+bv:['enalapril','vega'],bm:['enalapril','rossmax'],
+open:'4712. Це мамі, їй сімдесят один.',
+who:'Жінка, 44 роки',mood:'Турботлива дочка, готова витратити гроші на маму.',
+mode:'Зібране наперед',
+goal:'Гіпотензивне не міняємо. Але людина, яка щодня приймає еналаприл, має чимось міряти тиск — ось де розмова. Найбільша різниця між правилами: 70 ₴ проти 300 ₴.'},
+{id:34,grp:'Рецептурні',no:1836,title:'Рецепт на бланку',cats:['ab','probio'],main:'ab',order:['linezolid'],
+bv:['linezolid','floragud'],bm:['linezolid','linex'],
+open:'1836. Ось рецепт, мені сказали, що це тільки за ним.',
+who:'Чоловік, 49 років',mood:'Уважний, тримає папери напоготові, ставить точні питання.',
+mode:'Зібране наперед',
+goal:'Антибіотик резерву за бланком. Заміна МНН неможлива в принципі. Тренуємо саме те, що можна робити в такій розмові — і чого не можна.'},
+{id:35,grp:'Рецептурні',no:5567,title:'А є дешевший аналог?',cats:['epi'],main:'epi',order:['bapre300'],
+bv:['bapre300'],bm:['bapre300'],noSale:true,
+open:'5567. А є щось таке саме, тільки дешевше?',
+who:'Чоловік, 40 років',mood:'Ввічливий, але наполегливий: питання про ціну повторить.',
+mode:'Зібране наперед',
+goal:'Клієнт сам просить замінити рецептурний препарат — і замовлення вже ВТМ. За формулою «максимальна дельта» відповіддю був би Лінефор із бонусом 141 ₴. Це і є межа, за яку правило заводити не можна: рішення про заміну приймає невролог, а не бонусна ставка.'},
+{id:36,grp:'Списки позицій',no:3208,title:'Захворіли всі',cats:['pain','throat','nose','immun'],main:'nose',
+order:['nurofen','strep','farmazol'],
+bv:['nurofen','zipelor','ksilorif','aqua125'],bm:['nurofen','zipelor','ksilorif','aqua125'],
+open:'3208. Тут на всіх нас, ми втрьох злягли.',
+who:'Жінка, 35 років',mood:'Втомлена, але говорити готова. Купує на всю родину.',
+mode:'Зібране наперед',
+goal:'Три позиції — і жодної для промивання носа. Спочатку прочитайте список цілком, а вже потім говоріть: він сам показує, кого і чим лікують удома.'},
+{id:37,grp:'Списки позицій',no:6134,title:'Антибіотик у списку',cats:['ab','pain','throat','probio'],main:'ab',
+order:['aztek','nurofen','strep'],
+bv:['aztek','nurofen','strep','floragud'],bm:['aztek','nurofen','strep','linex'],
+open:'6134. Це все за призначенням, лікар учора виписав.',
+who:'Чоловік, 41 рік',mood:'Спокійний, довіряє призначенню, зайвого не питає.',
+mode:'Зібране наперед',
+goal:'Найчастіша діра в інтернет-замовленнях. У списку є антибіотик і немає нічого для флори — клієнт про це не подумав, бо в застосунку ніхто не підказує.'},
+{id:38,grp:'Списки позицій',no:8471,title:'Список на дитину',cats:['syrup','pain','nose'],main:'syrup',
+order:['ambroxvtm','ibu','oksirif'],
+bv:['plyushastik','ibu','oksirif','aqua45'],bm:['plyushastik','ibu','oksirif','aqua45'],
+open:'8471. Це синові, йому сім.',
+who:'Мама, 33 роки',mood:'Зібрана, все обрала сама в застосунку, впевнена у виборі.',
+mode:'Зібране наперед',
+goal:'Три позиції на дитину, підібрані грамотно, — і жодного промивання носа. Тут не треба нічого міняти, треба доповнити.'},
+{id:39,grp:'Списки позицій',no:2265,title:'Отруєння',cats:['sorb','diar','spasm','probio'],main:'sorb',
+order:['entero','nifkaps','spazmalgon50'],
+bv:['detoks','nifkaps','spazmalgon50','floragud'],bm:['filtrum','nifkaps','spazmalgon50','linex'],
+open:'2265. Учора всією сім’єю щось з’їли не те.',
+who:'Жінка, 40 років',mood:'Стривожена, готова докупити що завгодно, аби швидше минуло.',
+mode:'Зібране наперед',
+goal:'Найбільший розрив між двома правилами оцінки в наборі: 49 ₴ проти 127 ₴. Той самий список, дві різні відповіді. Пройдіть двічі.'},
+{id:40,grp:'Списки позицій',no:5719,title:'Три хронічні',cats:['press','throm','gastro','tech'],main:'press',
+order:['enalapril','magnikor100','omevtm'],
+bv:['enalapril','magnikor100','omevtm','vega'],bm:['enalapril','magnikor100','omevtm','rossmax'],
+open:'5719. Це я щомісяця беру, одне й те саме.',
+who:'Чоловік, 67 років',mood:'Постійний клієнт, звик до свого списку, змін не любить.',
+mode:'Зібране наперед',
+goal:'Три хронічні позиції, і жодну з них ми не міняємо — крапка. Але сам список показує людину, якій щодня треба міряти тиск. Ось про що розмова.'},
+{id:41,grp:'Списки позицій',no:9840,title:'Дві позиції для себе',cats:['beauty','immun'],main:'beauty',
+order:['biotin30','vitczn'],
+bv:['biotin60','vitczn'],bm:['doppel','immunsil'],
+open:'9840. Це я собі, курсом пропити.',
+who:'Жінка, 34 роки',mood:'Розбирається, читає склад, ставить конкретні питання.',
+mode:'Зібране наперед',
+goal:'Обидві позиції вже ВТМ, міняти начебто нема на що. Але курс — це два місяці, а в замовленні фасування на один. Апгрейд усередині власної марки — те, про що зазвичай не думають.'},
+{id:42,grp:'Списки позицій',no:4053,title:'П’ять позицій і черга',cats:['throat','pain','nose','cough'],main:'nose',
+order:['strep','nurofen','farmazol','bromg','askofen'],
+bv:['strep','nurofen','farmazol','bromg','askofen','aqua125'],
+bm:['strep','nurofen','farmazol','bromg','askofen','aqua125'],
+open:'4053. Тільки швидко, будь ласка, я на роботу спізнююся.',
+who:'Чоловік, 38 років',mood:'Поспішає по-справжньому. За ним ще двоє.',
+mode:'Зібране наперед, черга',
+goal:'П’ять позицій, часу на одну фразу. Головне вміння тут — не аргументація, а швидкість погляду: побачити в списку одну дірку, яка коштує найбільше, і назвати саме її.'},
+{id:43,grp:'Списки позицій',no:1627,title:'Замовлення на двох',cats:['uro','ab','syrup','probio'],main:'uro',
+order:['kanefron','amoxiklav875','gerbion'],
+bv:['nefrolak','amoxiklav875','gederin','floragud'],
+bm:['uroholum','amoxiklav875','taiss250','linex'],
+open:'1627. Тут і моє, і чоловікове разом.',
+who:'Жінка, 44 роки',mood:'Розмовна, охоче пояснює, кому що.',
+mode:'Зібране наперед',
+goal:'Один список на двох людей. Перше, що треба зробити, — розділити його: що для неї, що для нього. Без цього будь-яка пропозиція звучатиме навмання.'},
+];
+
+const CURATOR_CODE='anc-2026';
+const RULE='vtm';
+const INTERNET=SCEN.filter(x=>x.no);
+
+function pickShift(n){
+const mix=a=>a.sort(()=>Math.random()-0.5);
+const take=(pool,used)=>{const c=mix(pool.filter(x=>!used.has(x.id)));return c[0]||null};
+const out=[],used=new Set();
+[INTERNET.filter(x=>x.trap||x.noSale),
+INTERNET.filter(x=>x.order.length>1),
+INTERNET.filter(x=>x.grp==='Рецептурні')].forEach(pool=>{
+const x=take(pool,used); if(x){out.push(x);used.add(x.id)}
+});
+while(out.length<n){const x=take(INTERNET,used); if(!x)break; out.push(x);used.add(x.id)}
+return mix(out).slice(0,n);
+}
+
+function useNarrow(){
+const q='(max-width:860px)';
+const [n,setN]=useState(window.matchMedia(q).matches);
+useEffect(()=>{
+const m=window.matchMedia(q), f=e=>setN(e.matches);
+m.addEventListener?m.addEventListener('change',f):m.addListener(f);
+return()=>{m.removeEventListener?m.removeEventListener('change',f):m.removeListener(f)};
+},[]);
+return n;
+}
+
+const slug=t=>t.toLowerCase().replace(/[^a-zа-яіїєґ0-9]+/gi,'-').replace(/^-|-$/g,'').slice(0,60);
+
+// Заміна window.storage на localStorage
+async function loadEmp(key){
+try {
+const r = localStorage.getItem('emp:'+key);
+return r ? JSON.parse(r) : null;
+} catch(e) { return null; }
+}
+
+async function saveRun(me, run){
+const key = slug(me.pharmacy+'--'+me.name);
+const prev = await loadEmp(key) || {name:me.name, pharmacy:me.pharmacy, runs:[]};
+prev.name = me.name;
+prev.pharmacy = me.pharmacy;
+prev.runs = [...prev.runs, run].slice(-40);
+localStorage.setItem('emp:'+key, JSON.stringify(prev));
+}
+
+async function loadTeam(){
+const out = [];
+for (let i = 0; i < localStorage.length; i++) {
+const k = localStorage.key(i);
+if (k.startsWith('emp:')) {
+try {
+const v = localStorage.getItem(k);
+if (v) out.push(JSON.parse(v));
+} catch(e) {}
+}
+}
+return out;
+}
+
+const uah=n=>(Math.round(n*100)/100).toFixed(2).replace('.',',');
+const bonusOf=cs=>cs.reduce((s,c)=>s+(ALL[c]?ALL[c].b:0),0);
+const idealOf=(sc,rule)=>rule==='vtm'?sc.bv:sc.bm;
+
+function potential(sc,rule){
+return Math.max(1,Math.round(bonusOf(idealOf(sc,rule))-bonusOf(sc.order)));
+}
+
+function buildSystem(sc,pot){
+const cat = sc.cats.flatMap(k => CAT[k]).map(i => `${i.c} | ${i.n}`).join('\n');
+const ord = sc.order.length
+? sc.order.map((c,i) => `${i+1}. ${ALL[c].n}`).join('\n')
+: 'нічого, замовлення ще не оформлене';
+const numLine = sc.no
+? `Твоє замовлення зібране наперед, його номер ${sc.no}. Ти називаєш цей номер на касі — так тебе ідентифікують. Номер ти пам'ятаєш і можеш повторити, якщо перепитають.`
+: 'Замовлення оформлюється просто зараз, при фармацевтові. Номера ще немає.';
+
+return `Ти — рушій тренажера для фармацевтів аптечної мережі. Роль подвійна.
+РОЛЬ 1: ти граєш КЛІЄНТА в аптеці.
+Хто: ${sc.who}
+Поведінка: ${sc.mood}
+Режим обслуговування: ${sc.mode}
+${numLine}
+Що в замовленні (${sc.order.length} ${sc.order.length===1?'позиція':sc.order.length<5?'позиції':'позицій'}):
+${ord}
+Ти вже сказав першу репліку: «${sc.open}». Не повторюй її.
+
+Правила гри клієнта:
+- Жива розмовна українська, короткі репліки, 1–3 речення, як реальна людина біля каси.
+- Ти НЕ знаєш нічого про бонуси, ВТМ, СТМ, ЗФ чи маркетингові проєкти аптеки. Тебе цікавлять здоров'я, ціна і час.
+- Про ціни говори тільки відносно: «дорого», «а дешевше є?», «скільки з мене». Ніколи не називай конкретних сум у гривнях — ціни в різних аптеках різні, і точні цифри тут не грають ролі.
+- Опір реалістичний. Погоджуєшся лише тоді, коли отримав причину, зрозумілу тобі.
+- Тиск, нав'язування, аргумент «це наша власна марка» чи ігнорування твого поспіху — псують настрій.
+- Якщо режим із чергою або поспіхом, а фармацевт затягує (більше 3–4 реплік чи довгі лекції) — ти йдеш.
+- Якщо фармацевт мовчить або просто віддає замовлення — забираєш і йдеш.
+- Розмова закінчується, коли ти розплатився або пішов. Реальна розмова біля каси — 3–7 реплік.
+
+РОЛЬ 2: ти суддя. Після кожної репліки фіксуєш, що клієнт реально погодився купити.
+Асортимент, доступний у цій розмові (код | назва):
+${cat}
+
+Відповідай ЛИШЕ валідним JSON, без markdown:
+{"reply":"репліка клієнта","cart":["коди позицій у чеку"],"ended":false,"endReason":"","feedback":""}
+cart — повний список кодів, включно з початковим замовленням, якщо клієнт від нього не відмовився.
+Якщо в замовленні кілька позицій, клієнт сприймає його як цілісний список: він може погодитися додати щось до списку, замінити одну позицію і залишити решту, або відмовитися від усього одразу, якщо його переконують надто наполегливо.
+endReason — "paid" або "left".
+Коли ended=true, заповни feedback: 3–5 речень розбору для фармацевта українською. Що спрацювало, що ні, яка конкретна фраза змінила б результат. Прямо, без похвали заради похвали. Орієнтир для цього сценарію — приріст близько ${pot} ₴.
+Початковий cart: ${JSON.stringify(sc.order)};`;
+}
+
+// Адаптовано під Groq API (OpenAI-compatible)
+async function call(messages){
+let r;
+try {
+r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+method: 'POST',
+headers: {
+'Content-Type': 'application/json',
+'Authorization': 'Bearer ' + (localStorage.getItem('groq_api_key') || 'YOUR_API_KEY_HERE')
+},
+body: JSON.stringify({
+model: 'qwen/qwen3-32b', // Перевірте актуальну назву моделі в Groq Console
+max_tokens: 1000,
+messages: messages,
+response_format: { type: "json_object" }
+})
+});
+} catch(e) {
+throw new Error('Немає зв’язку з моделлю: ' + e.message);
+}
+let d;
+try { d = await r.json(); } catch(e) { throw new Error('Відповідь не читається, код ' + r.status); }
+if (!r.ok || d.error) {
+throw new Error('Модель повернула помилку' + (r.status ? ' ' + r.status : '') + ': ' +
+((d.error && (d.error.message || d.error.type)) || JSON.stringify(d).slice(0,200)));
+}
+const t = (d.choices || []).map(x => x.message?.content || '').join('').trim();
+if (!t) throw new Error('Модель відповіла порожнім текстом');
+return t;
+}
+
+function extractJSON(t){
+const a = t.indexOf('{'), b = t.lastIndexOf('}');
+if (a < 0 || b <= a) throw new Error('Відповідь без JSON: ' + t.slice(0,140));
+return JSON.parse(t.slice(a, b+1));
+}
+
+function toMessages(sc, pot, history){
+const sys = buildSystem(sc, pot);
+const msgs = [{ role: 'system', content: sys }];
+history.forEach(m => {
+const role = m.role === 'user' ? 'user' : 'assistant';
+msgs.push({ role: role, content: m.content || m.t || '' });
+});
+return msgs;
+}
+
+async function ask(sc, pot, history){
+const msgs = toMessages(sc, pot, history);
+let t = await call(msgs);
+try {
+return extractJSON(t);
+} catch(e){
+const t2 = await call([...msgs, {role: 'assistant', content: t},
+{role: 'user', content: 'Поверни лише JSON-об’єкт із полями reply, cart, ended, endReason, feedback. Без пояснень і без markdown.'}]);
+return extractJSON(t2);
+}
+}
+
+async function synthesize(rows){
+const body = rows.map((r,i) =>
+`Замовлення ${i+1}. «${r.sc.title}»${r.sc.no ? ', № ' + r.sc.no : ''}.\n` +
+`У списку: ${r.sc.order.map(c => ALL[c].n).join('; ') || 'нічого'}.\n` +
+(r.sc.noSale
+? `Правильна дія — нічого не міняти. Фармацевт ${r.delta > 0 ? 'усе-таки змінив чек' : 'чек не змінив'}.\n`
+: `Приріст ${uah(r.delta)} ₴ з орієнтира ${r.pot} ₴.\n`) +
+`Розбір розмови: ${r.fb || '—'}`).join('\n\n');
+
+const prompt = `Ти — наставник фармацевтів аптечної мережі. Співробітник щойно відпрацював зміну з п’яти інтернет-замовлень. Завдання було: фармазаміна на власну марку і додатковий продаж до замовлення.
+${body}
+Дай розбір усієї зміни цілком. Пиши українською, звертайся на «ви», без загальних слів і без похвали заради похвали. Спирайся тільки на те, що описано вище.
+Відповідай ЛИШЕ валідним JSON, без markdown:
+{"overall":"2–3 речення загальної оцінки зміни",
+"mistakes":["до трьох повторюваних помилок, конкретно"],
+"strengths":["до двох речей, що вийшли добре"],
+"rules":["три правила роботи з інтернет-замовленнями, які саме цій людині варто застосувати наступного разу"],
+"curator":"1–2 речення для куратора: на що звернути увагу з цим співробітником і як опрацьовувати далі"}`;
+
+const t = await call([{role: 'user', content: prompt}]);
+return extractJSON(t);
+}
+
+async function ping(){
+const t = await call([{role: 'user', content: 'Відповідай одним словом: працює'}]);
+return t.slice(0,60);
+}
+
+function Tape({sc, cart, pot, compact}){
+const base = bonusOf(sc.order), now = bonusOf(cart), delta = now - base;
+const [open, setOpen] = useState(false);
+const badge = k => h('span', {className: 'tag ' + (k === 'ВТМ' ? 't-vtm' : k === 'ЗФ' ? 't-zf' : 't-none')}, k);
+const dcol = delta < 0 ? 'var(--loss)' : delta > 0 ? 'var(--vtm)' : 'var(--ink)';
+const lines = () => cart.length === 0
+? h('p', {className: 'empty'}, 'Порожньо')
+: cart.map((c,i) => {
+const it = ALL[c];
+if (!it) return null;
+return h('div', {className: 'line', key: i}, [
+h('span', {className: 'nm', key: 'n'}, [it.n, ' ', it.f ? h('span', {className: 'star', key: 'f'}, it.f) : null,
+h('small', {key: 's'}, [badge(it.k)])]),
+h('span', {className: 'num', key: 'b'}, uah(it.b))
+]);
+});
+if (compact) return h('aside', {className: 'tapebar'}, [
+h('button', {className: 'tapesum', key: 's', onClick: () => setOpen(!open)}, [
+h('span', {key: 1}, [h('span', {className: 'lbl', key: 'a'}, 'Приріст розмови'),
+h('span', {className: 'big num', key: 'b', style: {color: dcol}}, (delta > 0 ? '+' : '') + uah(delta) + ' ₴')]),
+h('span', {key: 2, style: {borderLeft: '1px solid var(--line)', paddingLeft: 10}},
+[h('span', {className: 'lbl', key: 'a'}, 'Разом'),
+h('span', {className: 'big num', key: 'b'}, uah(now))]),
+h('span', {className: 'chev num', key: 3}, (open ? 'згорнути ▲' : 'чек ▼'))]),
+open ? h('div', {className: 'tapebody', key: 'b'}, [
+h('div', {key: 'n', style: {color: 'var(--soft)', fontSize: '11.5px', padding: '8px 0 2px'}},
+sc.no ? 'Замовлення № ' + sc.no : 'Оформлення на касі'),
+lines(),
+h('div', {className: 'dash', key: 'd'}),
+h('div', {className: 'line', key: 'l1'}, [h('span', {key: 'a'}, 'Було в замовленні'),
+h('span', {className: 'num', key: 'b'}, uah(base))]),
+h('div', {className: 'line', key: 'l2', style: {color: 'var(--soft)', fontSize: '12px'}},
+[h('span', {key: 'a'}, 'Орієнтир сценарію'), h('span', {className: 'num', key: 'b'}, sc.noSale ? 'без продажу' : '≈ ' + pot)])
+]) : null
+]);
+return h('aside', {className: 'tape'}, [
+h('h4', {key: 't'}, 'Бонус фармацевта'),
+h('div', {className: 'hdr', key: 'n'}, sc.no ? 'Замовлення № ' + sc.no : 'Оформлення на касі'),
+h('div', {key: 'items'}, lines()),
+h('div', {className: 'dash', key: 'd1'}),
+h('div', {className: 'line', key: 'l1'}, [h('span', {key: 'a'}, 'Було в замовленні'), h('span', {className: 'num', key: 'b'}, uah(base))]),
+h('div', {className: 'line total', key: 'l2'}, [h('span', {key: 'a'}, 'Стало'), h('span', {className: 'num', key: 'b'}, uah(now))]),
+h('div', {className: 'line', key: 'l3', style: {color: delta < 0 ? 'var(--loss)' : delta > 0 ? 'var(--vtm)' : 'inherit'}},
+[h('span', {key: 'a'}, 'Приріст розмови'), h('span', {className: 'num', key: 'b'}, (delta > 0 ? '+' : '') + uah(delta))]),
+h('div', {className: 'dash', key: 'd2'}),
+h('div', {className: 'line', key: 'l4', style: {color: 'var(--soft)', fontSize: '12px'}},
+[h('span', {key: 'a'}, 'Орієнтир сценарію'), h('span', {className: 'num', key: 'b'}, '≈ ' + pot)]),
+]);
+}
+
+function Game({sc, rule, onBack, shift, onNext}){
+const narrow = useNarrow();
+const pot = potential(sc, rule);
+const [log, setLog] = useState([{who: 'client', t: sc.open}]);
+const [cart, setCart] = useState(sc.order);
+const [draft, setDraft] = useState('');
+const [busy, setBusy] = useState(false);
+const [done, setDone] = useState(null);
+const [err, setErr] = useState('');
+const hist = useRef([]), end = useRef(null), lastLine = useRef('');
+
+useEffect(() => {
+if (end.current) end.current.scrollIntoView({behavior: 'smooth', block: 'end'});
+}, [log, done]);
+
+async function send(){
+const line = draft.trim();
+if (!line || busy || done) return;
+setDraft('');
+setErr('');
+lastLine.current = line;
+setLog(l => [...l, {who: 'me', t: line}]);
+hist.current.push({role: 'user', content: line});
+setBusy(true);
+try {
+const res = await ask(sc, pot, hist.current);
+hist.current.push({role: 'assistant', content: JSON.stringify(res)});
+setLog(l => [...l, {who: 'client', t: res.reply}]);
+if (Array.isArray(res.cart)) setCart(res.cart.filter(c => ALL[c]));
+if (res.ended) setDone({reason: res.endReason, fb: res.feedback});
+} catch(e){
+setErr(e.message || String(e));
+hist.current.pop();
+setLog(l => l.slice(0, -1));
+}
+setBusy(false);
+}
+
+const delta = bonusOf(cart) - bonusOf(sc.order);
+const pct = sc.noSale ? (delta <= 0 ? 100 : 0) : Math.max(0, Math.min(100, Math.round(delta / pot * 100)));
+
+return h('div', {className: 'wrap'}, [
+h('div', {className: 'top', key: 't'}, [
+h('h2', {key: 'h', style: {margin: 0, fontSize: '21px', fontWeight: 620}}, sc.title),
+h('span', {key: 'n', className: 'num', style: {color: 'var(--soft)', fontSize: '14px'}},
+sc.no ? 'замовлення № ' + sc.no : 'без номера, оформлення на касі'),
+shift ? h('span', {key: 'sh', style: {color: 'var(--soft)', fontSize: '14px'}},
+`клієнт ${shift.n} з ${shift.total}`) : null,
+h('button', {className: 'back', key: 'b', onClick: onBack}, 'вийти')]),
+narrow ? h(Tape, {sc, cart, pot, compact: true, key: 'tapeTop'}) : null,
+h('div', {className: 'stage', key: 's'}, [
+h('main', {key: 'm'}, [
+h('div', {className: 'brief', key: 'br'}, h('dl', {}, [
+h('dt', {key: 1}, sc.order.length > 1 ? 'У замовленні' : 'Замовлення'),
+h('dd', {key: 2}, sc.order.length
+? (sc.order.length > 1
+? h('ol', {style: {margin: '2px 0 0', paddingLeft: 18}},
+sc.order.map((c,i) => h('li', {key: i, style: {marginBottom: 2}}, ALL[c].n)))
+: ALL[sc.order[0]].n)
+: 'нічого, клієнт прийшов без замовлення'),
+h('dt', {key: 3}, 'Клієнт'), h('dd', {key: 4}, sc.who + '. ' + sc.mood),
+h('dt', {key: 5}, 'Режим'), h('dd', {key: 6}, sc.mode),
+h('dt', {key: 7}, 'Тренуємо'), h('dd', {key: 8}, sc.goal)])),
+h('div', {className: 'log', key: 'lg'}, [
+...log.map((m,i) => h('div', {className: 'turn ' + m.who, key: i}, [
+h('span', {className: 'who', key: 'w'}, m.who === 'me' ? 'Ви' : 'Клієнт'), m.t])),
+busy ? h('div', {className: 'sys', key: 'b'}, 'клієнт думає…') : null,
+err ? h('div', {className: 'sys err', key: 'e'}, [
+h('div', {key: 1, style: {fontStyle: 'normal', fontWeight: 600}}, 'Репліку не надіслано'),
+h('div', {key: 2, style: {fontSize: '12px', marginTop: 4}}, err),
+h('div', {key: 3, style: {marginTop: 8}},
+h('button', {className: 'ghost', onClick: () => {setDraft(lastLine.current); setErr('')}},
+'Повернути текст і спробувати ще'))]) : null]),
+done ? h('div', {className: 'result', key: 'r'}, [
+h('div', {key: 'a', style: {color: 'var(--soft)', fontSize: '13.5px'}},
+done.reason === 'left' ? 'Клієнт пішов' : 'Клієнт розплатився'),
+h('div', {className: 'bignum num', key: 'b'}, (delta > 0 ? '+' : '') + uah(delta) + ' ₴'),
+h('div', {className: 'bar', key: 'c'}, h('span', {style: {width: pct + '%'}})),
+h('div', {key: 'd', style: {fontSize: '13.5px', color: 'var(--soft)'}},
+sc.noSale
+? (delta <= 0 ? 'Чек не змінився — так і мало бути.'
+: 'Чек змінився. У цьому сценарії заміна була неправильною дією.')
+: `${pct}% від орієнтира (≈ ${pot} ₴ за правилом «${rule === 'vtm' ? 'ВТМ пріоритетний' : 'максимальна дельта'}»))`),
+h('div', {className: 'fb', key: 'e'}, done.fb),
+h('div', {key: 'g', style: {marginTop: 14, paddingTop: 12, borderTop: '1px dashed var(--line)', fontSize: '13.5px', color: 'var(--soft)'}},
+sc.noSale
+? ['Правильний результат: ', h('span', {key: 'x', style: {color: 'var(--ink)'}},
+'чек без змін, клієнта направлено до лікаря')]
+: ['Ідеальний чек за цим правилом: ', h('span', {key: 'x', style: {color: 'var(--ink)'}},
+idealOf(sc, rule).map(c => ALL[c].n).join(' + '))]),
+h('div', {key: 'f', style: {marginTop: 16, display: 'flex', gap: 8}},
+shift
+? [h('button', {className: 'primary', key: 1, onClick: () => onNext(delta, pot, done.fb)},
+shift.n < shift.total ? 'Наступний клієнт' : 'Підсумок зміни'),
+h('button', {className: 'ghost', key: 2, onClick: onBack}, 'Вийти')]
+: [h('button', {className: 'primary', key: 1, onClick: () => window.location.reload()}, 'Пройти ще раз'),
+h('button', {className: 'ghost', key: 2, onClick: onBack}, 'Інший сценарій')])])
+: h('div', {className: 'composer', key: 'c'}, [
+h('textarea', {key: 't', value: draft,
+placeholder: log.length < 2 ? 'Клієнт назвав номер. Що кажете?' : 'Ваша репліка',
+onChange: e => setDraft(e.target.value),
+onKeyDown: e => {if (e.key === 'Enter' && (e.metaKey || e.ctrlKey || narrow) && !e.shiftKey) {e.preventDefault(); send()}}}),
+h('button', {className: 'send', key: 'b', onClick: send, disabled: busy || !draft.trim()}, 'Сказати')]),
+h('div', {ref: end, key: 'anchor'})]),
+narrow ? null : h(Tape, {sc, cart, pot, key: 'tape'})])]);
+}
+
+function Gate({onReady, onCurator}){
+const [n, setN] = useState(''), [a, setA] = useState(''), [t, setT] = useState('');
+const [code, setCode] = useState(null), [cv, setCv] = useState(''), [cerr, setCerr] = useState('');
+const [apiKey, setApiKey] = useState(localStorage.getItem('groq_api_key') || '');
+
+const go = () => {if (n.trim() && a.trim()) onReady({name: n.trim(), pharmacy: a.trim()})};
+
+const test = async () => {
+setT('…');
+try {
+const r = await ping();
+setT('Зв’язок є. Модель відповіла: «' + r + '»');
+} catch(e) {
+setT('Помилка. ' + (e.message || e));
+}
+};
+
+const enter = () => {
+if (cv.trim().toLowerCase() === CURATOR_CODE) onCurator();
+else setCerr('Код не підходить.');
+};
+
+return h('div', {className: 'wrap'}, [
+h('h1', {className: 'lede', key: 'h'}, 'AE-Simulator'),
+h('p', {className: 'sub', key: 's'}, 'Тренажер роботи з інтернет-замовленнями: фармзаміна і додатковий продаж. Клієнта грає модель, ви говорите від себе — так, як сказали б у зміну.'),
+h('div', {className: 'gate', key: 'g'}, [
+h('label', {key: 1, htmlFor: 'nm'}, 'Прізвище та ім’я'),
+h('input', {key: 2, id: 'nm', value: n, placeholder: 'Коваленко Ірина',
+onChange: e => setN(e.target.value), onKeyDown: e => {if (e.key === 'Enter') go()}}),
+h('label', {key: 3, htmlFor: 'ap'}, 'Аптека'),
+h('input', {key: 4, id: 'ap', value: a, placeholder: '67, Калинова, 1',
+onChange: e => setA(e.target.value), onKeyDown: e => {if (e.key === 'Enter') go()}}),
+h('label', {key: 8, htmlFor: 'ak'}, 'API ключ Groq (необов\'язково, зберігається локально)'),
+h('input', {key: 9, id: 'ak', value: apiKey, type: 'password', placeholder: 'gsk_...',
+onChange: e => {setApiKey(e.target.value); localStorage.setItem('groq_api_key', e.target.value);}}),
+h('div', {key: 5, style: {marginTop: 20, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap'}}, [
+h('button', {key: 1, className: 'primary', onClick: go, disabled: !n.trim() || !a.trim()}, 'Почати'),
+h('button', {key: 2, className: 'ghost', onClick: test, disabled: t === '…'}, 'Перевірити зв’язок')]),
+t ? h('p', {key: 7, style: {marginTop: 12, fontSize: '12.5px',
+color: t.indexOf('Помилка') === 0 ? 'var(--loss)' : 'var(--vtm)'}}, t) : null,
+h('p', {key: 6, style: {marginTop: 16, fontSize: '12.5px', color: 'var(--soft)'}},
+'Свій результат ви побачите одразу після зміни. Зведення по аптеці доступне лише куратору.')]),
+code === null
+? h('p', {key: 'cl', style: {marginTop: 22, fontSize: '13px'}},
+h('button', {className: 'back', onClick: () => setCode('')}, 'Вхід для куратора'))
+: h('div', {className: 'gate', key: 'cd', style: {marginTop: 18}}, [
+h('label', {key: 1, htmlFor: 'cc'}, 'Код доступу куратора'),
+h('input', {key: 2, id: 'cc', value: cv, type: 'password', autoComplete: 'off',
+onChange: e => {setCv(e.target.value); setCerr('')},
+onKeyDown: e => {if (e.key === 'Enter') enter()}}),
+cerr ? h('p', {key: 3, style: {marginTop: 8, fontSize: '12.5px', color: 'var(--loss)'}}, cerr) : null,
+h('div', {key: 4, style: {marginTop: 16, display: 'flex', gap: 8}}, [
+h('button', {key: 1, className: 'primary', onClick: enter}, 'Увійти'),
+h('button', {key: 2, className: 'ghost', onClick: () => {setCode(null); setCv(''); setCerr('')}}, 'Скасувати')])])
+]);
+}
+
+function TaskBrief({me, onStart}){
+return h('div', {className: 'wrap'}, [
+h('h1', {className: 'lede', key: 'h'}, 'Завдання на зміну'),
+h('p', {className: 'sub', key: 's'}, me.name + ', аптека ' + me.pharmacy + '.'),
+h('div', {className: 'result', key: 'r'}, [
+h('p', {key: 1, style: {marginTop: 0, fontSize: '16px'}},
+'Вам видано п’ять інтернет-замовлень. Опрацюйте кожне на фармзаміну або додатковий продаж.'),
+h('ul', {key: 2, style: {paddingLeft: 18, color: 'var(--soft)', fontSize: '14px'}}, [
+h('li', {key: 1}, 'Замовлення обирає система — пропустити чи обміняти не можна.'),
+h('li', {key: 2}, 'Клієнт називає номер і чекає. Розмову відкриваєте ви.'),
+h('li', {key: 3}, 'Після кожного замовлення — короткий розбір розмови.'),
+h('li', {key: 4}, 'Після п’ятого — підсумок і рекомендації на наступну зміну.')]),
+h('p', {key: 3, style: {fontSize: '13.5px', color: 'var(--soft)', borderTop: '1px dashed var(--line)', paddingTop: 12}},
+'Не в кожному замовленні заміна доречна. Іноді правильна дія — нічого не міняти, і це теж зараховується.'),
+h('div', {key: 4, style: {marginTop: 18}},
+h('button', {className: 'primary', onClick: onStart}, 'Взяти перше замовлення'))])
+]);
+}
+
+function Curator({onBack}){
+const [rows, setRows] = useState(null), [err, setErr] = useState(''), [open, setOpen] = useState(null);
+useEffect(() => {loadTeam().then(setRows).catch(() => setErr('Дані недоступні.'))}, []);
+if (err) return h('div', {className: 'wrap'}, [h('p', {key: 1, className: 'err'}, err),
+h('button', {key: 2, className: 'ghost', onClick: onBack}, 'Назад')]);
+if (!rows) return h('div', {className: 'wrap'}, h('p', {className: 'sys'}, 'Завантажую…'));
+const emp = rows.map(r => {
+const runs = [...r.runs].reverse();
+const got = r.runs.reduce((a,x) => a + x.got, 0), pot = r.runs.reduce((a,x) => a + x.pot, 0) || 1;
+return {...r, runs, n: r.runs.length, got, pct: Math.round(got / pot * 100),
+slips: r.runs.reduce((a,x) => a + (x.slips || 0), 0), last: runs[0]};
+}).sort((a,b) => a.pct - b.pct);
+return h('div', {className: 'wrap'}, [
+h('div', {className: 'top', key: 't'}, [
+h('h2', {key: 'h', style: {margin: 0, fontSize: '21px', fontWeight: 620}}, 'Кабінет куратора'),
+h('button', {className: 'back', key: 'b', onClick: onBack}, 'вийти')]),
+h('p', {className: 'sub', key: 's'}, 'Відсортовано від найслабшого результату. Натисніть на рядок, щоб побачити останню зміну і рекомендацію.'),
+emp.length === 0
+? h('p', {key: 'e', className: 'sub'}, 'Поки жодної зміни не відпрацьовано.')
+: h('div', {key: 'l'}, emp.map((r,i) => h('div', {key: i,
+style: {background: '#fff', border: '1px solid var(--line)', borderRadius: 3, marginBottom: 8}}, [
+h('button', {key: 'hd', onClick: () => setOpen(open === i ? null : i),
+style: {width: '100%', font: 'inherit', textAlign: 'left', background: 'none', border: 'none',
+cursor: 'pointer', padding: '13px 15px', display: 'flex', gap: 10, alignItems: 'baseline', color: 'inherit'}}, [
+h('span', {key: 1, style: {flex: 1}}, [r.name,
+h('small', {key: 'p', style: {display: 'block', color: 'var(--soft)', fontSize: '12px'}},
+r.pharmacy + ' · змін: ' + r.n + (r.slips ? ' · заміна зашкодила: ' + r.slips : ''))]),
+h('span', {key: 2, className: 'num', style: {fontWeight: 640,
+color: r.pct < 40 ? 'var(--loss)' : r.pct < 70 ? 'var(--zf)' : 'var(--vtm)'}}, r.pct + '%'),
+h('span', {key: 3, className: 'num', style: {color: 'var(--soft)', fontSize: '12px'}},
+open === i ? '▲' : '▼')]),
+open === i ? h('div', {key: 'bd', style: {padding: '0 15px 15px', borderTop: '1px dashed var(--line)', fontSize: '13.5px'}}, [
+r.last ? h('div', {key: 1, style: {marginTop: 12}}, [
+h('div', {key: 'd', style: {color: 'var(--soft)', fontSize: '12px', marginBottom: 6}},
+'Остання зміна: ' + r.last.date + ' · ' + (r.last.got > 0 ? '+' : '') + uah(r.last.got) + ' ₴ з ' + r.last.pot + ' ₴'),
+h('table', {key: 't', style: {width: '100%', borderCollapse: 'collapse', fontSize: '13px', marginBottom: 10}},
+h('tbody', {}, (r.last.orders || []).map((o,j) => h('tr', {key: j,
+style: {borderTop: '1px dashed var(--line)'}}, [
+h('td', {key: 1, className: 'num', style: {padding: '5px 0', color: 'var(--soft)', width: 58}}, '№ ' + o.no),
+h('td', {key: 2, style: {padding: '5px 0'}}, o.title),
+h('td', {key: 3, className: 'num', style: {padding: '5px 0', textAlign: 'right',
+color: o.delta < 0 ? 'var(--loss)' : 'inherit'}},
+o.pot === null ? (o.delta > 0 ? 'заміна зайва' : 'вірно') : (o.delta > 0 ? '+' : '') + uah(o.delta))])))),
+r.last.curator ? h('p', {key: 'c', style: {background: 'var(--paper)', padding: '10px 12px',
+borderLeft: '3px solid var(--vtm)', margin: '0 0 10px'}}, r.last.curator) : null,
+r.last.mistakes && r.last.mistakes.length ? h('div', {key: 'm'}, [
+h('div', {key: 1, style: {fontSize: '12px', color: 'var(--soft)', marginBottom: 4}}, 'Повторювані помилки'),
+h('ul', {key: 2, style: {margin: 0, paddingLeft: 18}},
+r.last.mistakes.map((x,k) => h('li', {key: k}, x)))]) : null,
+]) : h('p', {key: 2}, 'Дані змін відсутні.'),
+]) : null]))
+);
+}
+
+function ShiftResult({rows, me, onBack}){
+const scored = rows.filter(r => !r.sc.noSale);
+const got = scored.reduce((a,r) => a + r.delta, 0);
+const pot = scored.reduce((a,r) => a + r.pot, 0) || 1;
+const pct = Math.max(0, Math.min(100, Math.round(got / pot * 100)));
+const slips = rows.filter(r => r.delta < 0 || (r.sc.noSale && r.delta > 0));
+const [an, setAn] = useState(null), [st, setSt] = useState('work');
+
+useEffect(() => {(async () => {
+let a = null;
+try {
+a = await synthesize(rows);
+setAn(a);
+} catch(e) {
+setSt('nofb');
+}
+try {
+await saveRun(me, {date: new Date().toISOString().slice(0,16).replace('T',' '),
+got: Math.round(got * 100) / 100, pot: Math.round(pot), slips: slips.length, clients: rows.length,
+pct, orders: rows.map(r => ({no: r.sc.no, title: r.sc.title, delta: Math.round(r.delta * 100) / 100,
+pot: r.sc.noSale ? null : r.pot})),
+overall: a ? a.overall : '', mistakes: a ? a.mistakes : [], rules: a ? a.rules : [],
+curator: a ? a.curator : ''});
+setSt(x => x === 'nofb' ? 'nofb' : 'ok');
+} catch(e) {
+setSt('nosave');
+}
+})()}, []);
+
+const bullets = (t, arr) => arr && arr.length ? h('div', {style: {marginTop: 16}}, [
+h('div', {key: 1, style: {fontSize: '12px', letterSpacing: '.04em', color: 'var(--soft)', marginBottom: 6}}, t),
+h('ul', {key: 2, style: {margin: 0, paddingLeft: 18}}, arr.map((x,i) => h('li', {key: i, style: {marginBottom: 5}}, x)))]) : null;
+
+return h('div', {className: 'wrap'}, [
+h('h1', {className: 'lede', key: 'h'}, 'Зміну відпрацьовано'),
+h('div', {className: 'result', key: 'r'}, [
+h('div', {key: 'a', style: {color: 'var(--soft)', fontSize: '13.5px'}},
+rows.length + ' інтернет-замовлень'),
+h('div', {className: 'bignum num', key: 'b', style: {color: got < 0 ? 'var(--loss)' : 'inherit'}},
+(got > 0 ? '+' : '') + uah(got) + ' ₴'),
+h('div', {className: 'bar', key: 'c'}, h('span', {style: {width: pct + '%'}})),
+h('div', {key: 'd', style: {fontSize: '13.5px', color: 'var(--soft)'}},
+pct + '% від того, що ця зміна могла дати (' + Math.round(pot) + ' ₴)'),
+h('table', {key: 't', style: {width: '100%', marginTop: 18, borderCollapse: 'collapse', fontSize: '13.5px'}},
+h('tbody', {}, rows.map((r,i) => h('tr', {key: i, style: {borderTop: '1px dashed var(--line)'}}, [
+h('td', {key: 1, className: 'num', style: {padding: '7px 0', color: 'var(--soft)', width: 62}}, '№ ' + r.sc.no),
+h('td', {key: 2, style: {padding: '7px 0'}}, r.sc.title),
+h('td', {key: 3, className: 'num', style: {padding: '7px 0', textAlign: 'right',
+color: r.delta < 0 ? 'var(--loss)' : r.delta > 0 ? 'var(--vtm)' : 'var(--soft)'}},
+r.sc.noSale ? (r.delta > 0 ? 'заміна зайва' : 'вірно') : (r.delta > 0 ? '+' : '') + uah(r.delta)),
+h('td', {key: 4, className: 'num', style: {padding: '7px 0 7px 12px', textAlign: 'right',
+color: 'var(--soft)', width: 66}}, r.sc.noSale ? '—' : 'з ' + r.pot)])))),
+slips.length ? h('p', {key: 'l', style: {marginTop: 14, color: 'var(--loss)', fontSize: '13.5px'}},
+'Заміна зменшила бонус або була зайвою у ' + slips.length + ': ' + slips.map(r => r.sc.title).join(', ') + '.') : null,
+h('div', {key: 'fb', style: {borderTop: '1px solid var(--line)', marginTop: 18, paddingTop: 16}},
+an ? [
+h('p', {key: 0, style: {marginTop: 0}}, an.overall),
+bullets('Що повторюється', an.mistakes),
+bullets('Що вийшло', an.strengths),
+bullets('На наступну зміну', an.rules)]
+: st === 'nofb'
+? h('p', {className: 'err', style: {margin: 0, fontSize: '13.5px'}}, 'Підсумковий розбір не сформувався. Результат зміни збережено.')
+: h('p', {className: 'sys', style: {margin: 0}}, 'Готую розбір зміни…')),
+h('p', {key: 'sv', style: {marginTop: 14, fontSize: '12.5px',
+color: st === 'nosave' ? 'var(--loss)' : 'var(--soft)'}},
+st === 'nosave' ? 'Результат не вдалося записати — повідомте куратора.'
+: st === 'work' ? 'Записую…' : 'Результат передано куратору.'),
+h('div', {key: 'f', style: {marginTop: 14, display: 'flex', gap: 8}}, [
+h('button', {className: 'primary', key: 1, onClick: () => window.location.reload()}, 'Нова зміна'),
+h('button', {className: 'ghost', key: 2, onClick: onBack}, 'Вийти')])])
+]);
+}
+
+function Picker({rule, setRule, onPick, onShift, onTeam, me}){
+const groups = ['Усі', ...new Set(SCEN.map(s => s.grp))];
+const [g, setG] = useState('Усі');
+const list = g === 'Усі' ? SCEN : SCEN.filter(s => s.grp === g);
+return h('div', {className: 'wrap'}, [
+h('h1', {className: 'lede', key: 'h'}, 'Тренажер розмови біля каси'),
+h('p', {className: 'sub', key: 's'}, (me ? me.name + ', аптека ' + me.pharmacy + '. ' : '') + 'Клієнт підходить і називає номер інтернет-замовлення. Ви бачите його список і говорите — так, як сказали б у зміну. Рахується бонус фармацевта: скільки принесло саме замовлення і скільки додала розмова. Ставки — вересень 2026. Цін тут немає навмисно: вони різні по аптеках і на бонус не впливають.'),
+h('div', {className: 'rule', key: 'r'}, [
+h('button', {key: 1, onClick: () => setRule('vtm'), 'aria-pressed': rule === 'vtm'}, 'ВТМ пріоритетний'),
+h('button', {key: 2, onClick: () => setRule('max'), 'aria-pressed': rule === 'max'}, 'Максимальна дельта')]),
+h('div', {key: 'sb', style: {margin: '0 0 22px', display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap'}}, [
+h('button', {key: 1, className: 'primary', onClick: onShift}, 'Відпрацювати зміну — 5 клієнтів поспіль'),
+h('button', {key: 2, className: 'ghost', onClick: onTeam}, 'Зведення по змінах')]),
+h('p', {className: 'rulenote', key: 'rn'}, rule === 'vtm'
+? 'Орієнтир рахується тільки по ВТМ. ЗФ у чеку зараховується, але не вважається правильною відповіддю. Простіше пояснити персоналу, дорожче обходиться аптеці.'
+: 'Орієнтир рахується по всьому асортименту з бонусом. Економічно чесно, але рамка «пропонуємо своє» зникає — ВТМ і ЗФ стають рівні.'),
+h('div', {className: 'tabs', key: 'tb'}, groups.map(x =>
+h('button', {key: x, onClick: () => setG(x), 'aria-pressed': g === x},
+x + (x === 'Усі' ? ' (' + SCEN.length + ')' : ' (' + SCEN.filter(s => s.grp === x).length + ')')))),
+h('div', {className: 'grid', key: 'g'}, list.map(sc =>
+h('button', {className: 'card', key: sc.id, onClick: () => onPick(sc)}, [
+h('span', {className: 'ord num', key: 0},
+(sc.no ? '№ ' + sc.no : 'без номера') +
+(sc.order.length > 1 ? ' · ' + sc.order.length + ' позиції'.replace('позиції', sc.order.length < 5 ? 'позиції' : 'позицій') : '')),
+h('h3', {key: 1}, sc.title),
+h('p', {key: 2}, sc.who + '. ' + sc.mood),
+h('div', {className: 'cardfoot', key: 3}, [
+h('span', {key: 'a', style: {color: 'var(--soft)'}},
+sc.trap ? h('em', {className: 'trap'}, 'пастка') : sc.noSale ? h('em', {}, 'без продажу') : sc.mode),
+h('span', {className: 'num', key: 'b'}, sc.noSale ? '—' : '≈ ' + potential(sc, rule) + ' ₴')])]))
+]);
+}
+
+function App(){
+const [me, setMe] = useState(null);
+const [view, setView] = useState('brief');
+const [sc, setSc] = useState(null);
+const [shift, setShift] = useState(null);
+const [rule, setRule] = useState(RULE);
+
+function startShift(){
+const q = pickShift(5);
+setShift({queue: q, idx: 0, rows: []});
+setSc(q[0]);
+setView('game');
+}
+
+function nextClient(delta, pot, fb){
+const rows = [...shift.rows, {sc, delta, pot, fb}];
+const idx = shift.idx + 1;
+if (idx >= shift.queue.length) {
+setShift({...shift, rows, done: true});
+setSc(null);
+} else {
+setShift({...shift, idx, rows});
+setSc(shift.queue[idx]);
+}
+}
+
+const reset = () => {setMe(null); setShift(null); setSc(null); setView('brief')};
+
+if (view === 'curator') return h(Curator, {onBack: () => {setView('brief')}});
+if (!me) return h(Gate, {onReady: setMe, onCurator: () => setView('curator')});
+if (shift && shift.done) return h(ShiftResult, {rows: shift.rows, me, onBack: reset});
+if (sc) return h(Game, {sc, rule, onBack: reset, onNext: nextClient,
+shift: {n: shift.idx + 1, total: shift.queue.length}, key: sc.id});
+return h(Picker, {rule, setRule, onPick: sc => {setSc(sc); setView('game')}, onShift: startShift, onTeam: () => setView('curator'), me});
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(h(App));
+</script>
+</body>
+</html>
