@@ -1,0 +1,567 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AirLens Mini App · мокап v2</title>
+<!--
+  AirLens — мокап Mini App, хід 5а, версія 2. Прев'ю-стенд: sandbox/AirLens/miniapp_v2.html
+  живе доки: вирок Konst → v3 або промоція дизайну в AirLens/miniapp/ (хід 5в). Дані синтетичні.
+  Service worker: не реєструється (PREVIEW §3 п.5).
+  v1 → v2: ієрархія змістом (герой = де/що/скільки), три вкладки, акцент Telegram, матеріал за кукбуком
+  (A65 well/lift · A66 асиметрія тем · A54 повзунок · A56 капсула · A67 прес · A84 без декоративних смуг).
+-->
+<style>
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r-xl:18px;--r-lg:14px;--r-md:11px;--r-sm:8px;
+  --seg-dur:450ms;--seg-ease:cubic-bezier(.34,1.56,.64,1);     /* A54 */
+  --nav-dur:400ms;--nav-ease:cubic-bezier(.34,1.3,.64,1);       /* A56 */
+  --page:#e9e9ee;--page-ink:#3a3a40;
+}
+@media (prefers-color-scheme:dark){:root{--page:#0e0e10;--page-ink:#c9c9cf}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page);color:var(--page-ink);font-family:var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+
+/* ───────── стенд мокапа (не частина застосунку) ───────── */
+.stage{display:flex;gap:28px;justify-content:center;align-items:flex-start;padding:24px 16px 48px;flex-wrap:wrap}
+.controls{width:280px;max-width:100%;font-size:14px;line-height:1.4}
+.controls h1{font-size:17px;margin:0 0 4px}
+.controls p{margin:0 0 16px;opacity:.7}
+.ctl{margin:0 0 14px}
+.ctl-label{display:block;font-weight:600;font-size:12px;opacity:.65;margin-bottom:6px}
+.seg-demo{display:flex;flex-wrap:wrap;gap:6px}
+.seg-demo button{border:1px solid color-mix(in srgb,var(--page-ink) 25%,transparent);background:transparent;border-radius:999px;padding:8px 12px;min-height:36px;cursor:pointer}
+.seg-demo button[aria-pressed="true"]{background:var(--page-ink);color:var(--page);border-color:var(--page-ink)}
+
+.phone{width:390px;max-width:100%;height:844px;max-height:calc(100dvh - 48px);border-radius:32px;overflow:hidden;position:relative;display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 12px 36px rgba(0,0,0,.18);background:var(--bg);color:var(--text)}
+@media (max-width:520px){
+  .stage{padding:0;gap:0}
+  .phone{width:100%;height:100dvh;max-height:none;border-radius:0;box-shadow:none}
+  .controls{padding:20px 16px 40px;width:100%}
+}
+
+/* ───────── тема Telegram (живий застосунок бере --tg-theme-* від Telegram) ───────── */
+.phone[data-theme="light"]{
+  --tg-theme-bg-color:#ffffff;--tg-theme-secondary-bg-color:#efeff4;--tg-theme-section-bg-color:#ffffff;
+  --tg-theme-text-color:#000000;--tg-theme-hint-color:#6d6d72;--tg-theme-section-separator-color:#e3e3e8;
+  --tg-theme-link-color:#2481cc;--tg-theme-button-color:#2481cc;--tg-theme-button-text-color:#ffffff;--tg-theme-header-bg-color:#f7f7f9;
+  --st-alert:#C4221A;--st-alert-ink:#A51C15;--st-alert-tint:#fdecea;
+  --st-yellow:#E0940A;--st-yellow-ink:#8A5300;--st-yellow-tint:#fdf3df;
+  --st-nodata:#6B7079;--st-nodata-tint:#eceef1;
+  --st-calm:#1E8A4C;
+  /* матеріал — світла: широка м'яка drop (A66) */
+  --card-bg:var(--tg-theme-section-bg-color);
+  --card-sh:0 1px 2px rgba(0,0,0,.04),0 4px 16px rgba(0,0,0,.05);
+  --hero-sh:0 1px 2px rgba(0,0,0,.05),0 10px 30px var(--hero-glow,rgba(0,0,0,.08));
+  --well-bg:#e4e4ea;--well-sh:inset 0 1px 4px rgba(0,0,0,.11);                          /* A65 */
+  --lift-bg:linear-gradient(180deg,#fff,#f6f6f8);--lift-sh:0 1px 2px rgba(0,0,0,.10),0 3px 10px rgba(0,0,0,.08); /* A66.1 */
+  --glass-bg:rgba(247,247,249,.82);--glass-rim:rgba(0,0,0,.07);
+  --hit-bg:rgba(255,255,255,.72);--hit-sh:none;--hm-zero:#eef0f4;
+  --btn-sh:0 1px 2px rgba(0,0,0,.12),0 4px 12px rgba(36,129,204,.30);
+}
+.phone[data-theme="dark"]{
+  --tg-theme-bg-color:#1c1c1e;--tg-theme-secondary-bg-color:#000000;--tg-theme-section-bg-color:#1c1c1e;
+  --tg-theme-text-color:#ffffff;--tg-theme-hint-color:#98989e;--tg-theme-section-separator-color:#343437;
+  --tg-theme-link-color:#3e88f7;--tg-theme-button-color:#3e88f7;--tg-theme-button-text-color:#ffffff;--tg-theme-header-bg-color:#1c1c1e;
+  --st-alert:#FF6B5E;--st-alert-ink:#FF8A7F;--st-alert-tint:#3a1714;
+  --st-yellow:#F5B94A;--st-yellow-ink:#F7C565;--st-yellow-tint:#33270f;
+  --st-nodata:#9A9FA8;--st-nodata-tint:#2a2b2f;
+  --st-calm:#3DD68C;
+  /* матеріал — темна: тон і світло зверху, не тінь (A45) */
+  --card-bg:linear-gradient(180deg,#232326,#1c1c1e);
+  --card-sh:inset 0 1px 0 rgba(255,255,255,.06);
+  --hero-sh:inset 0 1px 0 rgba(255,255,255,.10),inset 0 -1px 0 rgba(0,0,0,.25);
+  --well-bg:#111113;--well-sh:inset 0 1.5px 2px rgba(0,0,0,.30),inset 0 -1px 0 rgba(255,255,255,.098); /* A65 */
+  --lift-bg:linear-gradient(180deg,#3a3a3e,#2e2e32);--lift-sh:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -1px 0 rgba(0,0,0,.2),0 4px 12px rgba(0,0,0,.25);
+  --glass-bg:rgba(28,28,30,.82);--glass-rim:rgba(255,255,255,.05);
+  --hit-bg:rgba(255,255,255,.05);--hit-sh:inset 0 1px 0 rgba(255,255,255,.05);--hm-zero:#2a2b30;
+  --btn-sh:inset 0 1px 0 rgba(255,255,255,.2);
+}
+.phone{
+  --bg:var(--tg-theme-secondary-bg-color);--text:var(--tg-theme-text-color);--hint:var(--tg-theme-hint-color);
+  --sep:var(--tg-theme-section-separator-color);--accent:var(--tg-theme-button-color);--on-accent:var(--tg-theme-button-text-color);
+  --accent-ink:var(--tg-theme-link-color);
+}
+
+/* ───────── смуга Telegram (не наша: її малює сам Telegram) ───────── */
+.tg-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:48px;padding:0 14px;background:var(--tg-theme-header-bg-color);border-bottom:1px solid var(--sep);font-size:16px}
+.tg-bar .l{color:var(--accent-ink)}
+.tg-bar .c{text-align:center;line-height:1.1}
+.tg-bar .c b{display:block;font-size:16px}
+.tg-bar .c small{font-size:12px;color:var(--hint)}
+.tg-bar .r{justify-self:end;color:var(--accent-ink);font-size:20px;letter-spacing:1px}
+
+/* ───────── вміст ───────── */
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:14px 16px 104px;-webkit-overflow-scrolling:touch}
+.screen[hidden]{display:none}
+.title{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:2px 2px 14px}
+.title h1{font-size:28px;line-height:1.1;margin:0;letter-spacing:-.02em}
+.fresh{font-size:13px;color:var(--hint);font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.fresh.stale{color:var(--text);font-weight:600}
+.sec{margin:22px 2px 8px;font-size:15px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sec .aside{font-size:13px;font-weight:400;color:var(--hint)}
+.card{background:var(--card-bg);border-radius:var(--r-lg);box-shadow:var(--card-sh);overflow:hidden}
+.num{font-variant-numeric:tabular-nums}
+.foot{font-size:13px;color:var(--hint);text-align:center;margin:26px 8px 0;line-height:1.5;text-wrap:balance}
+.foot b{color:var(--text);font-weight:600}
+
+/* ───────── ГЕРОЙ стану: відповідає на «що · де · яка загроза · скільки» ───────── */
+.hero{border-radius:var(--r-xl);padding:16px 16px 6px;box-shadow:var(--hero-sh);position:relative}
+.hero[data-s="alert"]{background:var(--st-alert-tint);--hero-glow:rgba(196,34,26,.16)}
+.hero[data-s="yellow"]{background:var(--st-yellow-tint);--hero-glow:rgba(224,148,10,.16)}
+.hero[data-s="nodata"]{background:var(--st-nodata-tint)}
+.hero[data-s="calm"]{background:var(--card-bg);padding-bottom:16px}
+.hero-top{display:flex;gap:12px;align-items:center}
+.hero-top svg{width:36px;height:36px;flex:none}
+.hero h2{margin:0;font-size:22px;line-height:1.2;letter-spacing:-.01em}
+.hero[data-s="alert"] h2{color:var(--st-alert-ink)}
+.hero[data-s="yellow"] h2{color:var(--st-yellow-ink)}
+.hero[data-s="calm"] h2{font-size:19px}
+.hero .call{margin:2px 0 0;font-size:17px;font-weight:600}
+.hero .call.soft{font-weight:400;font-size:15px;color:var(--hint)}
+.hits{margin:14px -4px 0;display:grid;gap:6px;padding-bottom:10px}
+.hit{display:flex;align-items:center;gap:12px;background:var(--hit-bg);box-shadow:var(--hit-sh);border-radius:var(--r-md);padding:10px 12px;min-height:56px}
+.hit .b{flex:1;min-width:0}
+.hit .n{font-size:17px;font-weight:600}
+.hit .t{font-size:14px;color:var(--text);opacity:.78;margin-top:1px}
+.hit .d{text-align:right;white-space:nowrap}
+.hit .d b{display:block;font-size:17px;font-variant-numeric:tabular-nums}
+.hit .d small{font-size:12px;color:var(--hint)}
+.hero[data-s="alert"] .hit .d b{color:var(--st-alert-ink)}
+.hero[data-s="yellow"] .hit .d b{color:var(--st-yellow-ink)}
+
+/* тихі громади — компактно, без конкуренції з тривогою */
+.row{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:46px;position:relative}
+.row + .row::before{content:"";position:absolute;top:0;left:44px;right:0;height:1px;background:var(--sep)}
+.row .ic{width:18px;height:18px;flex:none}
+.row .n{flex:1;font-size:16px;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .v{font-size:14px;color:var(--hint);white-space:nowrap}
+.i-alert{color:var(--st-alert)}.i-yellow{color:var(--st-yellow)}.i-nodata{color:var(--st-nodata)}.i-calm{color:var(--st-calm)}
+
+/* ───────── звіти ───────── */
+.nudge{display:flex;align-items:center;gap:10px;width:100%;border:0;text-align:left;background:var(--st-alert-tint);border-radius:var(--r-md);padding:10px 12px;min-height:48px;margin-bottom:14px;cursor:pointer;font-size:15px}
+.nudge svg{width:22px;height:22px;flex:none}
+.nudge b{color:var(--st-alert-ink)}
+.nudge .go{margin-left:auto;color:var(--st-alert-ink);font-weight:600;white-space:nowrap}
+/* сегмент: таця-well + піднятий повзунок, що їде пружиною (A54 · A65) */
+.seg{position:relative;display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--well-bg);box-shadow:var(--well-sh)}
+.seg-i{flex:1;position:relative;z-index:1;border:0;background:transparent;min-height:38px;border-radius:9px;font-size:15px;font-weight:600;color:var(--hint);cursor:pointer;transition:color .14s}
+.seg-i[aria-selected="true"]{color:var(--text)}
+.thumb{position:absolute;top:3px;bottom:3px;left:0;width:0;border-radius:9px;background:var(--lift-bg);box-shadow:var(--lift-sh);opacity:0;pointer-events:none;
+  transition:transform var(--seg-dur) var(--seg-ease),width var(--seg-dur) var(--seg-ease)}
+.thumb.snap{transition:none}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.tile{padding:14px 14px 12px}
+.tile .v{font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile .v small{font-size:15px;font-weight:600;color:var(--hint);letter-spacing:0}
+.tile .k{font-size:13px;color:var(--hint);margin-top:4px}
+.bar-row{padding:12px 16px;position:relative}
+.bar-row + .bar-row::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
+.bar-top{display:flex;justify-content:space-between;gap:8px;font-size:16px}
+.bar-top .val{font-variant-numeric:tabular-nums;font-weight:600}
+.bar-sub{font-size:13px;color:var(--hint);margin:1px 0 8px;font-variant-numeric:tabular-nums}
+.bar{height:6px;border-radius:3px;background:var(--well-bg);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:3px;background:color-mix(in srgb,var(--accent) 70%,var(--hint))}
+/* чіпи громад: таця-recess, обраний — піднятий (A65 · A66.1) */
+.chips{display:flex;gap:6px;overflow-x:auto;padding:4px;border-radius:14px;background:var(--well-bg);box-shadow:var(--well-sh);scrollbar-width:none;margin-bottom:10px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:0;background:transparent;border-radius:10px;padding:0 12px;min-height:36px;font-size:14px;color:var(--hint);cursor:pointer;white-space:nowrap;transition:transform 280ms cubic-bezier(.34,1.5,.64,1),background-color .12s,color .12s}
+.chip[aria-pressed="true"]{background:var(--lift-bg);box-shadow:var(--lift-sh);color:var(--text);font-weight:600}
+/* теплова карта: одна вісь кольору = акцент, робочий час — смуга позаду колонок */
+.hm{padding:12px 12px 10px}
+.hm-wrap{position:relative}
+.hm-work{position:absolute;border-radius:5px;border:1.5px solid color-mix(in srgb,var(--text) 45%,transparent);pointer-events:none;margin:-3px 0 0 -3px;padding:0 3px 3px 0;box-sizing:content-box}
+.hm-worklbl{position:absolute;top:-20px;font-size:11px;color:var(--hint);white-space:nowrap}
+.hm-grid{position:relative;display:grid;grid-template-columns:24px repeat(24,1fr);gap:2px;align-items:center;margin-top:18px}
+.hm-grid .dl{font-size:11px;color:var(--hint)}
+.hm-cell{aspect-ratio:1/1.3;border-radius:3px;border:0;padding:0;cursor:pointer;min-width:0;background:color-mix(in srgb,var(--accent) var(--p,0%),var(--hm-zero))}
+.hm-cell.sel{outline:2px solid var(--text);outline-offset:1px}
+.hm-hours{display:grid;grid-template-columns:24px repeat(8,1fr);font-size:11px;color:var(--hint);margin-top:4px;font-variant-numeric:tabular-nums}
+.hm-legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--hint);margin-top:10px}
+.hm-legend i{width:14px;height:10px;border-radius:2px;background:color-mix(in srgb,var(--accent) var(--p),var(--hm-zero))}
+.hm-read{margin-top:10px;display:grid;gap:6px}
+.hm-read div{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 12px;border-radius:var(--r-sm);background:var(--well-bg)}
+.hm-read span{color:var(--hint)}
+.hm-read b{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+/* день: смужки 0–24 по громадах */
+.tl{padding:12px 16px 8px}
+.tl-row{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:10px;min-height:30px}
+.tl-row .n{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-track{position:relative;height:12px;border-radius:6px;background:var(--well-bg)}
+.tl-work{position:absolute;top:-3px;bottom:-3px;left:37.5%;width:37.5%;border-radius:4px;background:color-mix(in srgb,var(--text) 7%,transparent)}
+.tl-seg{position:absolute;top:0;bottom:0;border-radius:6px;background:color-mix(in srgb,var(--accent) 85%,var(--hint));min-width:4px}
+.tl-axis{display:grid;grid-template-columns:96px 1fr;gap:10px;font-size:11px;color:var(--hint);margin-top:4px}
+.tl-axis div{position:relative;height:14px;font-variant-numeric:tabular-nums}
+.tl-axis div span{position:absolute;transform:translateX(-50%)}
+.tl-axis div span:first-child{transform:none}
+.tl-axis div span:last-child{transform:translateX(-100%)}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:50px;border:0;border-radius:var(--r-md);background:var(--accent);color:var(--on-accent);font-size:16px;font-weight:600;cursor:pointer;margin-top:22px;
+  box-shadow:var(--btn-sh);transition:transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.btn svg{width:20px;height:20px}
+
+/* ───────── громади ───────── */
+.search{display:flex;align-items:center;gap:8px;background:var(--well-bg);box-shadow:var(--well-sh);border-radius:12px;padding:0 12px;min-height:46px}
+.search svg{width:18px;height:18px;color:var(--hint);flex:none}
+.search input{flex:1;border:0;background:transparent;font:inherit;font-size:17px;color:var(--text);min-height:46px;outline:none;min-width:0}
+.search input::placeholder{color:var(--hint)}
+.search:focus-within{box-shadow:var(--well-sh),0 0 0 2px var(--accent)}
+.res{display:flex;align-items:center;gap:12px;padding:0 8px 0 16px;min-height:56px;position:relative}
+.res + .res::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
+.res .b{flex:1;min-width:0}
+.res .n{font-size:16px}
+.res .o{font-size:13px;color:var(--hint)}
+.pill{border:0;border-radius:999px;min-height:36px;min-width:44px;padding:0 14px;font-size:14px;font-weight:600;background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent-ink);cursor:pointer;transition:transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.pill.done{background:transparent;color:var(--hint);font-weight:400;cursor:default}
+.nav-row{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:transparent;padding:0 16px;min-height:48px;font-size:16px;text-align:left;cursor:pointer;position:relative}
+.nav-row + .nav-row::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
+.nav-row .chev{color:var(--hint);font-size:20px}
+.nav-row .cnt{color:var(--hint);font-size:14px;margin-left:auto;margin-right:10px}
+.back{display:inline-flex;align-items:center;gap:2px;border:0;background:transparent;color:var(--accent-ink);font-size:16px;min-height:44px;padding:0 6px 0 0;cursor:pointer}
+.x{border:0;background:transparent;color:var(--hint);min-width:44px;min-height:44px;margin-right:-12px;cursor:pointer;display:grid;place-items:center}
+.x svg{width:18px;height:18px}
+.empty{padding:18px 16px;font-size:15px;color:var(--hint);text-wrap:pretty}
+
+/* ───────── таб-бар: скло + капсула, що їде (A56) ───────── */
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 8px calc(8px + env(safe-area-inset-bottom));z-index:5;
+  background:var(--glass-bg);-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);border-top:1px solid var(--glass-rim)}
+.cap{position:absolute;top:6px;left:0;height:52px;width:0;border-radius:14px;opacity:0;pointer-events:none;background:color-mix(in srgb,var(--accent) 12%,transparent);
+  transition:transform var(--nav-dur) var(--nav-ease),width var(--nav-dur) var(--nav-ease)}
+.cap.snap{transition:none}
+.tab{flex:1;position:relative;z-index:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;font-size:11px;font-weight:600;color:var(--hint);cursor:pointer;transition:color .15s,transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{color:var(--accent-ink)}
+.tab[hidden]{display:none}
+
+/* прес (A67): вниз швидко, назад пружиною */
+.pressing{transform:scale(.96);transition-duration:80ms!important}
+.chip.pressing,.pill.pressing{transform:scale(.92)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.thumb,.cap,.tab,.chip,.pill,.btn{transition:none!important}.pressing{transform:none}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <!-- стан: форма + колір + слово -->
+  <symbol id="s-alert" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3L10.3 3.4Z"/><path fill="#fff" d="M11 9h2v5.5h-2zM11 16.3h2v2h-2z"/></symbol>
+  <symbol id="s-yellow" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3L10.3 3.4Z"/><path fill="#1c1c1e" d="M11 9h2v5.5h-2zM11 16.3h2v2h-2z"/></symbol>
+  <symbol id="s-nodata" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3.2 2.6"/><path fill="currentColor" d="M11 15.8h2v2h-2zM12 6.3c2 0 3.4 1.2 3.4 2.9 0 1.3-.7 2-1.6 2.6-.7.5-.9.8-.9 1.6v.3h-1.9v-.5c0-1.3.5-1.9 1.3-2.5.7-.5 1.1-.8 1.1-1.5 0-.7-.6-1.2-1.4-1.2-.9 0-1.5.5-1.6 1.4H8.6c.1-1.9 1.5-3.1 3.4-3.1Z"/></symbol>
+  <symbol id="s-calm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m7.5 12.3 3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="t-now" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/></symbol>
+  <symbol id="t-rep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="t-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+</svg>
+
+<div class="stage">
+  <main class="phone" id="app" data-theme="light" aria-label="Мокап Mini App AirLens">
+    <div class="tg-bar" aria-hidden="true"><span class="l">Закрити</span><span class="c"><b>AirLens</b><small>міні-застосунок</small></span><span class="r">⋯</span></div>
+
+    <div class="screens">
+      <!-- ① ЗАРАЗ -->
+      <section class="screen" id="scr-now" role="tabpanel" aria-labelledby="tab-now">
+        <div class="title"><h1>Курилка</h1><div class="fresh" id="fresh" role="status"></div></div>
+        <div class="hero" id="hero" role="status" aria-live="polite"></div>
+        <div id="others"></div>
+        <p class="foot"><b>Сирена й офіційні застосунки — завжди перші.</b><br>Внутрішній інструмент команди · неофіційний</p>
+      </section>
+
+      <!-- ② ЗВІТИ -->
+      <section class="screen" id="scr-rep" role="tabpanel" aria-labelledby="tab-rep" hidden>
+        <div class="title"><h1>Звіти</h1><div class="fresh">облік з 28.09</div></div>
+        <button class="nudge" id="nudge" type="button" hidden><svg class="i-alert" aria-hidden="true"><use href="#s-alert"/></svg><span><b id="nudge-t"></b></span><span class="go" aria-hidden="true">›</span></button>
+        <div class="seg" id="seg" role="tablist" aria-label="Період">
+          <span class="thumb" aria-hidden="true"></span>
+          <button class="seg-i" role="tab" aria-selected="true" data-p="day">День</button>
+          <button class="seg-i" role="tab" aria-selected="false" data-p="week">Тиждень</button>
+          <button class="seg-i" role="tab" aria-selected="false" data-p="month">Місяць</button>
+        </div>
+        <div id="rep-body"></div>
+        <button class="btn" type="button" id="dl"><svg aria-hidden="true"><use href="#i-dl"/></svg><span>Завантажити Excel</span></button>
+        <p class="foot">Робочий час — будні 09:00–18:00 за Києвом.<br>Внутрішній інструмент команди · неофіційний</p>
+      </section>
+
+      <!-- ③ ГРОМАДИ (лише адміни) -->
+      <section class="screen" id="scr-set" role="tabpanel" aria-labelledby="tab-set" hidden>
+        <div class="title"><h1>Громади</h1></div>
+        <label class="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Додати: назва громади" aria-label="Пошук громади"></label>
+        <div id="set-body"></div>
+      </section>
+    </div>
+
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Розділи">
+      <span class="cap" aria-hidden="true"></span>
+      <button class="tab" role="tab" id="tab-now" aria-selected="true" aria-controls="scr-now"><svg aria-hidden="true"><use href="#t-now"/></svg>Зараз</button>
+      <button class="tab" role="tab" id="tab-rep" aria-selected="false" aria-controls="scr-rep"><svg aria-hidden="true"><use href="#t-rep"/></svg>Звіти</button>
+      <button class="tab" role="tab" id="tab-set" aria-selected="false" aria-controls="scr-set"><svg aria-hidden="true"><use href="#t-set"/></svg>Громади</button>
+    </nav>
+  </main>
+
+  <aside class="controls" aria-label="Панель мокапа">
+    <h1>Мокап v2 · для перегляду</h1>
+    <p>Панель — не частина застосунку. Дані синтетичні. Верхня смуга «Закрити · AirLens» — її малює сам Telegram.</p>
+    <div class="ctl"><span class="ctl-label">Стан громад</span><div class="seg-demo" data-k="state">
+      <button data-v="alert" aria-pressed="true">Тривога</button><button data-v="yellow">Жовта</button><button data-v="nodata">Нема даних</button><button data-v="calm">Тихо</button></div></div>
+    <div class="ctl"><span class="ctl-label">Тема Telegram</span><div class="seg-demo" data-k="theme">
+      <button data-v="light" aria-pressed="true">Світла</button><button data-v="dark">Темна</button></div></div>
+    <div class="ctl"><span class="ctl-label">Хто відкрив</span><div class="seg-demo" data-k="role">
+      <button data-v="admin" aria-pressed="true">Адмін</button><button data-v="member">Учасник</button></div></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const app = $("#app");
+  const S = { state: "alert", theme: "light", role: "admin", tab: "now", period: "day", q: "all", set: { level: "root", region: 0 } };
+  const MIN = 60e3, T0 = Date.now();
+
+  // ───── синтетичні дані (публічні назви громад; ні людей, ні ID) ─────
+  const GROUP = ["Дніпро", "Павлоград", "Кам’янське", "Самар", "Полтава", "Кропивницький"];
+  const SCEN = {
+    alert: { hits: [{ n: "Дніпро", s: "alert", t: "балістика", since: T0 - 4 * MIN }, { n: "Павлоград", s: "alert", t: "дрони · тривога на весь район", since: T0 - 16 * MIN }] },
+    yellow: { hits: [{ n: "Павлоград", s: "yellow", t: "дрони · тривога на весь район", since: T0 - 16 * MIN }] },
+    nodata: { nodata: true },
+    calm: {},
+  };
+  const REP = {
+    day: { rows: [["Павлоград", 2, 47], ["Дніпро", 1, 25], ["Кам’янське", 1, 25], ["Самар", 1, 25], ["Полтава", 0, 0], ["Кропивницький", 0, 0]], word: "за день",
+      tl: { "Дніпро": [[610, 635], [1375, 1400]], "Павлоград": [[602, 649], [1320, 1397]], "Кам’янське": [[611, 636]], "Самар": [[612, 637]], "Полтава": [], "Кропивницький": [] } },
+    week: { rows: [["Павлоград", 9, 212], ["Дніпро", 7, 168], ["Самар", 7, 160], ["Кам’янське", 6, 151], ["Полтава", 3, 74], ["Кропивницький", 2, 39]], word: "за тиждень", days: 7 },
+    month: { rows: [["Павлоград", 31, 790], ["Дніпро", 27, 655], ["Самар", 26, 640], ["Кам’янське", 24, 598], ["Полтава", 14, 322], ["Кропивницький", 9, 187]], word: "за місяць", days: 30 },
+  };
+  const WORK_MIN = { day: 540, week: 540 * 5, month: 540 * 22 };
+  const REGIONS = [
+    ["Схід", ["Дніпропетровська", "Харківська", "Донецька", "Луганська"]],
+    ["Південь", ["Запорізька", "Херсонська", "Миколаївська", "Одеська", "АР Крим", "Севастополь"]],
+    ["Центр", ["Полтавська", "Кіровоградська", "Черкаська", "Вінницька"]],
+    ["Північ", ["Київ", "Київська", "Чернігівська", "Сумська", "Житомирська"]],
+    ["Захід", ["Львівська", "Волинська", "Рівненська", "Тернопільська", "Хмельницька", "Івано-Франківська", "Закарпатська", "Чернівецька"]],
+  ];
+  const CAT = [
+    ["Дніпро", "Дніпропетровська"], ["Кам’янське", "Дніпропетровська"], ["Павлоград", "Дніпропетровська"], ["Самар", "Дніпропетровська"],
+    ["Кривий Ріг", "Дніпропетровська"], ["Нікополь", "Дніпропетровська"], ["Жовті Води", "Дніпропетровська"], ["Підгородне", "Дніпропетровська"],
+    ["Полтава", "Полтавська"], ["Кременчук", "Полтавська"], ["Миргород", "Полтавська"], ["Кропивницький", "Кіровоградська"], ["Олександрія", "Кіровоградська"],
+    ["Харків", "Харківська"], ["Запоріжжя", "Запорізька"], ["Київ", "Київ"], ["Черкаси", "Черкаська"], ["Вінниця", "Вінницька"], ["Львів", "Львівська"], ["Одеса", "Одеська"],
+    ["Самарівка", "Харківська"], ["Самарське", "Запорізька"],
+  ];
+  const mine = new Set(GROUP);
+
+  // ───── формати: тривалість словами, щоб «0:04» не читалось як годинник ─────
+  const dur = (m) => { m = Math.max(0, Math.round(m)); const h = Math.floor(m / 60), r = m % 60; return h ? `${h} год ${String(r).padStart(2, "0")} хв` : `${r} хв`; };
+  const durShort = (m) => { m = Math.round(m); const h = Math.floor(m / 60), r = m % 60; return h ? `${h}:${String(r).padStart(2, "0")}` : `0:${String(r).padStart(2, "0")}`; };
+  const hhmm = (t) => new Date(t).toLocaleTimeString("uk-UA", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Kyiv" });
+  const plural = (n, a, b, c) => { const d = n % 10, t = n % 100; return d === 1 && t !== 11 ? a : d >= 2 && d <= 4 && (t < 12 || t > 14) ? b : c; };
+  const gromad = (n) => `${n} ${plural(n, "громаді", "громадах", "громадах")}`;
+  const ico = (s, cls = "") => `<svg class="${cls} i-${s}" aria-hidden="true"><use href="#s-${s}"/></svg>`;
+
+  // ───── ① Зараз: герой відповідає на «що · де · загроза · скільки», решта — тихо й коротко ─────
+  function renderNow() {
+    const sc = SCEN[S.state], hits = sc.hits || [], M = GROUP.length;
+    const fr = $("#fresh");
+    if (sc.nodata) { fr.className = "fresh stale"; fr.textContent = `дані о ${hhmm(T0 - 4 * MIN)} · 4 хв тому`; }
+    else { fr.className = "fresh"; fr.textContent = `дані о ${hhmm(Date.now())}`; }
+    const h = $("#hero");
+    if (hits.length) {
+      const s = hits.every((x) => x.s === "yellow") ? "yellow" : "alert";
+      h.dataset.s = s;
+      h.innerHTML = `<div class="hero-top">${ico(s)}<div><h2>Тривога в ${hits.length} з ${M} ${plural(M, "громади", "громад", "громад")}</h2><p class="call">Пройдіть в укриття.</p></div></div>
+        <div class="hits">${hits.map((x) => `<div class="hit"><div class="b"><div class="n">${x.n}</div><div class="t">${x.t}</div></div>
+          <div class="d" data-since="${x.since}"><b>${dur((Date.now() - x.since) / MIN)}</b><small>триває</small></div></div>`).join("")}</div>`;
+    } else if (sc.nodata) {
+      h.dataset.s = "nodata";
+      h.innerHTML = `<div class="hero-top">${ico("nodata")}<div><h2>Нема свіжих даних</h2><p class="call">Орієнтуйтесь на сирену й офіційні застосунки.</p></div></div><div class="hits"></div>`;
+    } else {
+      h.dataset.s = "calm";
+      h.innerHTML = `<div class="hero-top">${ico("calm")}<div><h2>Тихо в усіх ${M} громадах</h2><p class="call soft">Тривоги почнуться — бот напише в групу зі звуком.</p></div></div>`;
+    }
+    const inHero = new Set(hits.map((x) => x.n));
+    const rest = GROUP.filter((n) => !inHero.has(n));
+    const st = sc.nodata ? "nodata" : "calm";
+    if (!hits.length && !sc.nodata) { $("#others").innerHTML = `<div class="sec">Громади</div><div class="card">${rest.map((n) => row(n, st)).join("")}</div>`; return; }
+    $("#others").innerHTML = rest.length ? `<div class="sec">${sc.nodata ? "Нема даних" : "Тихо"}<span class="aside">${rest.length} з ${M}</span></div><div class="card">${rest.map((n) => row(n, st)).join("")}</div>` : "";
+  }
+  const row = (n, s) => `<div class="row">${ico(s, "ic")}<span class="n">${n}</span></div>`;
+
+  // ───── ② Звіти ─────
+  function renderRep() {
+    const d = REP[S.period], hits = SCEN[S.state].hits || [];
+    const nd = $("#nudge"); nd.hidden = !hits.length;
+    if (hits.length) $("#nudge-t").textContent = `Тривога в ${gromad(hits.length)} — пройдіть в укриття`;
+    const total = d.rows.reduce((a, r) => a + r[2], 0), cnt = d.rows.reduce((a, r) => a + r[1], 0), cap = WORK_MIN[S.period], top = Math.max(1, ...d.rows.map((r) => r[2]));
+    const h = Math.floor(total / 60), m = total % 60;
+    let html = `<div class="tiles">
+      <div class="card tile"><div class="v">${h}<small> год </small>${String(m).padStart(2, "0")}<small> хв</small></div><div class="k">робочого часу під тривогою</div></div>
+      <div class="card tile"><div class="v">${cnt}</div><div class="k">${plural(cnt, "тривога", "тривоги", "тривог")} ${d.word}</div></div></div>
+      <div class="sec">По громадах<span class="aside">робочий час</span></div>
+      <div class="card">${d.rows.map(([n, c, mm]) => `<div class="bar-row"><div class="bar-top"><span>${n}</span><span class="val">${mm ? durShort(mm) : "—"}</span></div>
+        <div class="bar-sub">${c ? `${c} ${plural(c, "тривога", "тривоги", "тривог")} · ${Math.round((mm / cap) * 100)}% робочого часу` : "без тривог у робочий час"}</div>
+        <div class="bar" aria-hidden="true"><i style="width:${(mm / top) * 100}%"></i></div></div>`).join("")}</div>`;
+    html += S.period === "day" ? dayTimeline(d) : heatmap(d);
+    $("#rep-body").innerHTML = html;
+  }
+
+  function dayTimeline(d) {
+    const rows = Object.entries(d.tl).map(([n, segs]) => `<div class="tl-row"><span class="n">${n}</span><div class="tl-track"><span class="tl-work"></span>${segs.map(([a, b]) =>
+      `<span class="tl-seg" style="left:${(a / 1440) * 100}%;width:${((b - a) / 1440) * 100}%" title="${n}: ${durShort(a)}–${durShort(b)}"></span>`).join("")}</div></div>`).join("");
+    return `<div class="sec">Сьогодні по годинах<span class="aside">▮ тривога</span></div>
+      <div class="card tl">${rows}<div class="tl-axis"><span></span><div>${[0, 6, 9, 12, 18, 24].map((h) => `<span style="left:${(h / 24) * 100}%">${String(h).padStart(2, "0")}</span>`).join("")}</div></div></div>`;
+  }
+
+  // Теплова карта: сума хвилин тривоги в кожну годину тижня за період. Одна вісь кольору — акцент.
+  const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+  function seeded(seed) { let x = seed; return () => ((x = (x * 1103515245 + 12345) % 2147483648) / 2147483648); }
+  function heatData(key, days) {
+    const rnd = seeded([...key].reduce((a, c) => a + c.charCodeAt(0), days));
+    const k = days / 30;
+    return DAYS.map((_, dd) => Array.from({ length: 24 }, (_, h) => {
+      const v = rnd() * 22 + (h <= 5 ? 26 : h >= 22 ? 16 : 0) + (h >= 10 && h <= 13 ? 8 : 0) + (dd === 5 ? 6 : 0) - 12;
+      return Math.max(0, Math.round(v * k));
+    }));
+  }
+  function heatmap(d) {
+    const data = heatData(S.q, d.days), max = Math.max(1, ...data.flat());
+    let cells = "";
+    data.forEach((r, dd) => {
+      cells += `<span class="dl">${DAYS[dd]}</span>`;
+      r.forEach((m, h) => { const p = m ? Math.round(18 + (m / max) * 82) : 0;
+        cells += `<button class="hm-cell" style="--p:${p}%" data-d="${dd}" data-h="${h}" data-m="${m}" aria-label="${DAYS[dd]} ${h}:00–${h + 1}:00 — ${m} хв"></button>`; });
+    });
+    // найтихіша і найгучніша година в робочий час
+    let lo = null, hi = null;
+    data.forEach((r, dd) => r.forEach((m, h) => { if (dd < 5 && h >= 9 && h < 18) { if (!lo || m < lo.m) lo = { dd, h, m }; if (!hi || m > hi.m) hi = { dd, h, m }; } }));
+    const slot = (o) => `${DAYS[o.dd]} ${String(o.h).padStart(2, "0")}–${String(o.h + 1).padStart(2, "0")}`;
+    const chips = [["all", "Усі громади"], ...GROUP.map((n) => [n, n])].map(([k, t]) => `<button class="chip" data-q="${k}" aria-pressed="${S.q === k}">${t}</button>`).join("");
+    return `<div class="sec">По годинах тижня<span class="aside">хв тривоги ${d.word}</span></div>
+      <div class="chips" id="chips" role="group" aria-label="Громада">${chips}</div>
+      <div class="card hm"><div class="hm-wrap">
+        <div class="hm-grid" id="hm">${cells}
+          <span class="hm-work" style="left:calc(24px + (100% - 24px) * 9 / 24);width:calc((100% - 24px) * 9 / 24);top:-4px;height:calc(100% * 5 / 7 + 2px)"></span>
+          <span class="hm-worklbl" style="left:calc(24px + (100% - 24px) * 9 / 24)">робочий час</span>
+        </div>
+        <div class="hm-hours"><span></span>${[0, 3, 6, 9, 12, 15, 18, 21].map((h) => `<span>${String(h).padStart(2, "0")}</span>`).join("")}</div></div>
+        <div class="hm-legend"><span>0</span><i style="--p:0%"></i><i style="--p:30%"></i><i style="--p:55%"></i><i style="--p:78%"></i><i style="--p:100%"></i><span>${max} хв</span></div>
+        <div class="hm-read" id="hm-read">
+          <div><span>Найменше в робочий час</span><b>${slot(lo)} · ${lo.m} хв</b></div>
+          <div><span>Найбільше в робочий час</span><b>${slot(hi)} · ${hi.m} хв</b></div>
+        </div></div>
+      <p class="foot" style="margin-top:10px">Минуле, не прогноз: тривога може початись будь-коли.</p>`;
+  }
+
+  // ───── ③ Громади ─────
+  function renderSet() {
+    const b = $("#set-body"), q = $("#q").value.trim().toLowerCase().replace(/[’']/g, "");
+    if (q) {
+      const found = CAT.filter(([n]) => n.toLowerCase().replace(/[’']/g, "").includes(q)).slice(0, 8);
+      b.innerHTML = `<div class="sec">Знайдено<span class="aside">${found.length}</span></div>` + (found.length
+        ? `<div class="card">${found.map(([n, o]) => res(n, o)).join("")}</div>`
+        : `<div class="card empty">Такої громади не знайшли. Спробуйте коротше — перші літери назви.</div>`);
+      return;
+    }
+    if (S.set.level === "obl") {
+      const o = S.set.o, list = CAT.filter(([, oo]) => oo === o);
+      b.innerHTML = `<div class="sec"><button class="back" type="button" data-back>‹ ${REGIONS[S.set.region][0]}</button></div>
+        <div class="sec" style="margin-top:0">${o} область</div>
+        <div class="card">${list.length ? list.map(([n]) => res(n, "")).join("") : `<div class="empty">У живій версії — усі громади області з каталогу.</div>`}</div>`;
+      return;
+    }
+    const [, obls] = REGIONS[S.set.region];
+    b.innerHTML = `<div class="sec">Або за областю</div>
+      <div class="chips" id="reg" role="group" aria-label="Частина країни">${REGIONS.map(([r], i) => `<button class="chip" data-r="${i}" aria-pressed="${i === S.set.region}">${r}</button>`).join("")}</div>
+      <div class="card">${obls.map((o) => `<button class="nav-row" type="button" data-o="${o}"><span>${o}</span><span class="cnt">${((k) => (k ? `${k} у групі` : ""))(CAT.filter(([n, oo]) => oo === o && mine.has(n)).length)}</span><span class="chev" aria-hidden="true">›</span></button>`).join("")}</div>
+      <div class="sec">У групі<span class="aside">${mine.size}</span></div>
+      <div class="card">${[...mine].map((n) => `<div class="row"><span class="n">${n}</span><button class="x" type="button" data-del="${n}" aria-label="Прибрати ${n}"><svg><use href="#i-x"/></svg></button></div>`).join("")}</div>`;
+  }
+  const res = (n, o) => `<div class="res"><div class="b"><div class="n">${n}</div>${o ? `<div class="o">${o === "Київ" ? "місто" : o + " обл."}</div>` : ""}</div>${mine.has(n)
+    ? `<button class="pill done" type="button" disabled>У групі ✓</button>` : `<button class="pill" type="button" data-add="${n}">Додати</button>`}</div>`;
+
+  // ───── повзунок і капсула: міряємо геометрію; слайд на дію, снап на лейаут (A54 · A56 · A57) ─────
+  function place(container, sel, thumbSel, snap) {
+    const t = $(thumbSel, container), act = $(sel, container);
+    if (!t || !act) return;
+    const cr = container.getBoundingClientRect(), r = act.getBoundingClientRect();
+    if (!r.width) { t.style.opacity = "0"; return; }
+    const apply = () => { t.style.width = r.width + "px"; t.style.transform = `translateX(${r.left - cr.left}px)`; t.style.opacity = "1"; };
+    if (snap) { t.classList.add("snap"); apply(); requestAnimationFrame(() => requestAnimationFrame(() => t.classList.remove("snap"))); } else apply();
+  }
+  const placeSeg = (snap) => place($("#seg"), '.seg-i[aria-selected="true"]', ".thumb", snap);
+  const placeCap = (snap) => place($("#tabs"), '.tab[aria-selected="true"]', ".cap", snap);
+
+  function go(tab, snap = false) {
+    S.tab = tab;
+    $$(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.id === `tab-${tab}`)));
+    $$(".screen").forEach((s) => (s.hidden = s.id !== `scr-${tab}`));
+    placeCap(snap);
+    if (tab === "rep") placeSeg(true);
+  }
+  function renderRole() {
+    $("#tab-set").hidden = S.role !== "admin";
+    if (S.role !== "admin" && S.tab === "set") go("now", true);
+  }
+  function renderAll() {
+    app.dataset.theme = S.theme;
+    renderRole(); renderNow(); renderRep(); renderSet();
+    requestAnimationFrame(() => { placeCap(true); placeSeg(true); });
+  }
+
+  // ───── події (делеговано на постійні контейнери — A54 урок 3) ─────
+  $("#tabs").addEventListener("click", (e) => { const t = e.target.closest(".tab"); if (t) go(t.id.slice(4)); });
+  $("#seg").addEventListener("click", (e) => {
+    const b = e.target.closest(".seg-i"); if (!b || b.dataset.p === S.period) return;
+    S.period = b.dataset.p;
+    $$(".seg-i").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+    placeSeg(false); renderRep();       // у живій версії: Telegram.WebApp.HapticFeedback.selectionChanged()
+  });
+  $("#nudge").addEventListener("click", () => go("now"));
+  $("#rep-body").addEventListener("click", (e) => {
+    const c = e.target.closest(".chip"); if (c) { S.q = c.dataset.q; $$(".chip", $("#chips")).forEach((x) => x.setAttribute("aria-pressed", String(x === c))); renderRep(); return; }
+    const cell = e.target.closest(".hm-cell");
+    if (cell) {
+      $$(".hm-cell.sel").forEach((x) => x.classList.remove("sel")); cell.classList.add("sel");
+      const dd = +cell.dataset.d, h = +cell.dataset.h;
+      const box = $("#hm-read"), line = box.querySelector(".pick") || box.insertAdjacentElement("afterbegin", Object.assign(document.createElement("div"), { className: "pick" }));
+      line.innerHTML = `<span>${DAYS[dd]} ${String(h).padStart(2, "0")}–${String(h + 1).padStart(2, "0")}</span><b>${cell.dataset.m} хв тривоги ${REP[S.period].word}</b>`;
+    }
+  });
+  $("#dl").addEventListener("click", () => { const s = $("#dl span"); s.textContent = "У живій версії — вікно «Завантажити файл»"; setTimeout(() => (s.textContent = "Завантажити Excel"), 2200); });
+  $("#q").addEventListener("input", renderSet);
+  $("#set-body").addEventListener("click", (e) => {
+    const r = e.target.closest("[data-r]"); if (r) { S.set = { level: "root", region: +r.dataset.r }; renderSet(); return; }
+    const o = e.target.closest("[data-o]"); if (o) { S.set = { ...S.set, level: "obl", o: o.dataset.o }; renderSet(); return; }
+    if (e.target.closest("[data-back]")) { S.set = { level: "root", region: S.set.region }; renderSet(); return; }
+    const a = e.target.closest("[data-add]"); if (a) { mine.add(a.dataset.add); renderSet(); return; }
+    const d = e.target.closest("[data-del]"); if (d) { mine.delete(d.dataset.del); renderSet(); }
+  });
+  // прес: вниз швидко, назад пружиною; делеговано на весь застосунок (A67)
+  let pressed = null;
+  const release = () => { if (pressed) { pressed.classList.remove("pressing"); pressed = null; } };
+  app.addEventListener("pointerdown", (e) => { const el = e.target.closest(".tab,.chip,.pill:not(.done),.btn,.nudge"); if (el) { pressed = el; el.classList.add("pressing"); } });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => app.addEventListener(ev, release));
+  $$(".seg-demo").forEach((g) => g.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    S[g.dataset.k] = b.dataset.v; $$("button", g).forEach((x) => x.setAttribute("aria-pressed", String(x === b))); renderAll();
+  }));
+  addEventListener("resize", () => requestAnimationFrame(() => { placeCap(true); placeSeg(true); }));
+  // тривалість — хвилинна точність: оновлюємо раз на 15 с, без тикання секунд
+  setInterval(() => $$(".hit .d[data-since]").forEach((d) => (d.firstElementChild.textContent = dur((Date.now() - +d.dataset.since) / MIN))), 15e3);
+
+  const qs = new URLSearchParams(location.search);
+  ["state", "theme", "role"].forEach((k) => { if (qs.get(k)) { S[k] = qs.get(k); $$(`.seg-demo[data-k="${k}"] button`).forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === S[k]))); } });
+  if (qs.get("period")) { S.period = qs.get("period"); $$(".seg-i").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.p === S.period))); }
+  renderAll();
+  go(qs.get("tab") || "now", true);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { placeCap(true); placeSeg(true); });
+  // PREVIEW: service worker не реєструється.
+})();
+</script>
+</body>
+</html>
