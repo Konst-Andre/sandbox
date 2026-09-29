@@ -1,0 +1,637 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AirLens Mini App · мокап v3</title>
+<!--
+  AirLens — мокап Mini App, хід 5а, версія 3. Прев'ю-стенд: sandbox/AirLens/miniapp_v3.html
+  живе доки: вирок Konst → v4 або промоція дизайну в AirLens/miniapp/ (хід 5в). Дані синтетичні, час мокапа — 14:20.
+  Service worker: не реєструється (PREVIEW §3 п.5).
+  v2 → v3: зведення розборів Claude · Sonnet · GPT (29.09): тривога видна на кожній вкладці, «з 14:04 · 16 хв»,
+  «Без тривоги», об'єднаний час, день = смуга доби + події, тиждень = 7 днів, місяць = нейтральна теплова карта,
+  «У групі» з режимом «Змінити» і скасуванням, 4 частини країни, поверхні й стани — від теми Telegram (+ Tinted).
+-->
+<style>
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r-xl:18px;--r-lg:14px;--r-md:11px;--r-sm:8px;
+  --seg-dur:450ms;--seg-ease:cubic-bezier(.34,1.56,.64,1);   /* A54 */
+  --nav-dur:400ms;--nav-ease:cubic-bezier(.34,1.3,.64,1);     /* A56 */
+  --page-demo:#e9e9ee;--ink-demo:#3a3a40;
+}
+@media (prefers-color-scheme:dark){:root{--page-demo:#0e0e10;--ink-demo:#c9c9cf}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page-demo);color:var(--ink-demo);font-family:var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+
+/* ───────── стенд (не частина застосунку) ───────── */
+.stage{display:flex;gap:28px;justify-content:center;align-items:flex-start;padding:24px 16px 48px;flex-wrap:wrap}
+.controls{width:280px;max-width:100%;font-size:14px;line-height:1.4}
+.controls h1{font-size:17px;margin:0 0 4px}
+.controls p{margin:0 0 16px;opacity:.7}
+.ctl{margin:0 0 14px}
+.ctl-label{display:block;font-weight:600;font-size:12px;opacity:.65;margin-bottom:6px}
+.seg-demo{display:flex;flex-wrap:wrap;gap:6px}
+.seg-demo button{border:1px solid color-mix(in srgb,var(--ink-demo) 25%,transparent);background:transparent;border-radius:999px;padding:8px 12px;min-height:36px;cursor:pointer}
+.seg-demo button[aria-pressed="true"]{background:var(--ink-demo);color:var(--page-demo);border-color:var(--ink-demo)}
+.phone{width:390px;max-width:100%;height:844px;max-height:calc(100dvh - 48px);border-radius:32px;overflow:hidden;position:relative;display:flex;flex-direction:column;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08),0 12px 36px rgba(0,0,0,.18);background:var(--page);color:var(--text)}
+@media (max-width:520px){.stage{padding:0;gap:0}.phone{width:100%;height:100dvh;max-height:none;border-radius:0;box-shadow:none}.controls{padding:20px 16px 40px;width:100%}}
+
+/* ───────── теми Telegram (у живому застосунку --tg-theme-* ставить Telegram) ───────── */
+.phone[data-theme="light"]{
+  --tg-theme-bg-color:#ffffff;--tg-theme-secondary-bg-color:#efeff4;--tg-theme-section-bg-color:#ffffff;
+  --tg-theme-text-color:#000000;--tg-theme-hint-color:#6d6d72;--tg-theme-section-separator-color:#e3e3e8;
+  --tg-theme-link-color:#2481cc;--tg-theme-button-color:#2481cc;--tg-theme-button-text-color:#ffffff;--tg-theme-header-bg-color:#f7f7f9;
+}
+.phone[data-theme="dark"]{
+  --tg-theme-bg-color:#000000;--tg-theme-secondary-bg-color:#000000;--tg-theme-section-bg-color:#1c1c1e;
+  --tg-theme-text-color:#ffffff;--tg-theme-hint-color:#98989e;--tg-theme-section-separator-color:#38383a;
+  --tg-theme-link-color:#3e88f7;--tg-theme-button-color:#3e88f7;--tg-theme-button-text-color:#ffffff;--tg-theme-header-bg-color:#1c1c1e;
+}
+/* Tinted — наближення (точних themeParams не маємо, не перевірено) */
+.phone[data-theme="tinted"]{
+  --tg-theme-bg-color:#18222d;--tg-theme-secondary-bg-color:#131b24;--tg-theme-section-bg-color:#1c2733;
+  --tg-theme-text-color:#ffffff;--tg-theme-hint-color:#8595a6;--tg-theme-section-separator-color:#2b3947;
+  --tg-theme-link-color:#62bcf9;--tg-theme-button-color:#3e88f7;--tg-theme-button-text-color:#ffffff;--tg-theme-header-bg-color:#1c2733;
+}
+
+/* ───────── токени AirLens: усе виведено з теми; стани — фіксовані відтінки, змішані з поверхнею ───────── */
+.phone{
+  --page:var(--tg-theme-secondary-bg-color);--card:var(--tg-theme-section-bg-color);--sep:var(--tg-theme-section-separator-color);
+  --text:var(--tg-theme-text-color);--accent:var(--tg-theme-button-color);--on-accent:var(--tg-theme-button-text-color);
+}
+.phone[data-theme="light"]{
+  --hint:color-mix(in srgb,var(--tg-theme-hint-color) 88%,var(--text));                 /* 5.5:1 на page */
+  --accent-ink:color-mix(in srgb,var(--accent) 80%,#000);
+  --accent-tint:color-mix(in srgb,var(--accent) 12%,var(--card));
+  --accent-solid:color-mix(in srgb,var(--accent) 84%,#000);                               /* білий текст ≥ 4.5 */
+  --alert:#C4221A;--alert-ink:#A51C15;--alert-bg:color-mix(in srgb,#C4221A 9%,var(--card));--alert-sub:rgba(255,255,255,.72);
+  --warn:#B87200;--warn-ink:#8A5300;--warn-bg:color-mix(in srgb,#E0940A 12%,var(--card));
+  --nodata:#6B7079;--nodata-ink:#5F646D;--nodata-bg:color-mix(in srgb,#6B7079 12%,var(--card));
+  --calm:#1E8A4C;--ink-ramp:#2b2f36;
+  /* матеріал: світла — широка м'яка тінь (A66) */
+  --card-sh:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+  --hero-sh:0 1px 2px rgba(0,0,0,.05),0 12px 30px var(--glow,rgba(0,0,0,.06));
+  --well:color-mix(in srgb,var(--text) 6%,var(--page));--well-sh:inset 0 1px 3px rgba(0,0,0,.12);--well-bd:transparent;
+  --raised:linear-gradient(180deg,#fff,#f7f7f9);--raised-sh:0 1px 2px rgba(0,0,0,.10),0 3px 10px rgba(0,0,0,.08);
+  --btn-sh:0 1px 2px rgba(0,0,0,.12),0 6px 16px color-mix(in srgb,var(--accent) 35%,transparent);
+  --glass:rgba(247,247,249,.84);--glass-rim:rgba(0,0,0,.07);
+  --toast-bg:#2c2c2e;--toast-fg:#fff;
+  --hint-well:var(--hint);
+}
+.phone[data-theme="dark"],.phone[data-theme="tinted"]{
+  --hint:var(--tg-theme-hint-color);
+  --accent-ink:color-mix(in srgb,var(--accent) 70%,#fff);
+  --accent-tint:color-mix(in srgb,var(--accent) 18%,var(--card));
+  --accent-solid:color-mix(in srgb,var(--accent) 80%,#000);
+  --alert:#FF6B5E;--alert-ink:#FF8A7F;--alert-bg:color-mix(in srgb,#7a0d12 55%,var(--card));--alert-sub:rgba(255,255,255,.06);
+  --warn:#DFA43A;--warn-ink:#DFA43A;--warn-bg:color-mix(in srgb,#6b4a0a 50%,var(--card));   /* жовтий не яскравіший за червоний */
+  --nodata:#9A9FA8;--nodata-ink:#A4A9B2;--nodata-bg:color-mix(in srgb,#9A9FA8 11%,var(--card));
+  --calm:#23A05F;--ink-ramp:#dfe3ea;                                                         /* приглушений зелений */
+  /* матеріал: темна — тон і світло зверху, не тінь (A45) */
+  --card-sh:inset 0 1px 0 rgba(255,255,255,.06);
+  --hero-sh:inset 0 1px 0 rgba(255,255,255,.08);
+  --well:color-mix(in srgb,var(--page) 90%,#fff);--well-sh:inset 0 1px 2px rgba(0,0,0,.5);--well-bd:var(--sep);
+  --raised:color-mix(in srgb,var(--card) 82%,#fff);--raised-sh:inset 0 1px 0 rgba(255,255,255,.14),0 2px 8px rgba(0,0,0,.35);
+  --btn-sh:inset 0 1px 0 rgba(255,255,255,.18);
+  --glass:color-mix(in srgb,var(--card) 86%,transparent);--glass-rim:rgba(255,255,255,.06);
+  --toast-bg:color-mix(in srgb,var(--card) 88%,#fff);--toast-fg:#fff;
+  --hint-well:color-mix(in srgb,var(--hint) 80%,var(--text));
+}
+
+/* ───────── смуга Telegram (її малює Telegram) ───────── */
+.tg-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:48px;padding:0 14px;background:var(--tg-theme-header-bg-color);border-bottom:1px solid var(--sep);font-size:16px;color:var(--text)}
+.tg-bar .l{color:var(--tg-theme-link-color)}.tg-bar .c{text-align:center;line-height:1.1}.tg-bar .c b{display:block;font-size:16px}.tg-bar .c small{font-size:12px;color:var(--hint)}
+.tg-bar .r{justify-self:end;color:var(--tg-theme-link-color);font-size:20px}
+
+/* ───────── каркас ───────── */
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:0 16px 110px;-webkit-overflow-scrolling:touch}
+.screen[hidden]{display:none}
+.head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:16px 2px 12px}
+.head h1{font-size:24px;line-height:1.15;margin:0;letter-spacing:-.015em;font-weight:700}
+.meta{font-size:13px;color:var(--hint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.meta.stale{color:var(--nodata-ink);font-weight:600}
+.sec{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin:24px 2px 8px;font-size:15px;font-weight:600}
+.sec .aside{font-size:13px;font-weight:400;color:var(--hint)}
+.sec .act{border:0;background:transparent;color:var(--accent-ink);font-size:15px;font-weight:600;min-height:44px;margin:-12px -8px -12px 0;padding:0 8px;cursor:pointer}
+.card{background:var(--card);border-radius:var(--r-lg);box-shadow:var(--card-sh);overflow:hidden}
+.num{font-variant-numeric:tabular-nums}
+.foot{font-size:13px;color:var(--hint);text-align:center;margin:28px 8px 0;line-height:1.5;text-wrap:balance}
+.foot b{color:var(--text);font-weight:600}
+.i-alert{color:var(--alert)}.i-yellow{color:var(--warn)}.i-nodata{color:var(--nodata)}.i-calm{color:var(--calm)}
+
+/* рядок тривоги, що прилипає (Звіти, Громади): тривогу видно на кожній вкладці */
+.pin{position:sticky;top:0;z-index:4;margin:0 -16px;padding:8px 16px 0;background:var(--page)}
+.pin[hidden]{display:none}
+.pin button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;border:0;border-radius:var(--r-md);padding:0 12px;background:var(--alert-bg);color:var(--alert-ink);font-size:15px;font-weight:600;cursor:pointer;text-align:left}
+.pin[data-s="yellow"] button{background:var(--warn-bg);color:var(--warn-ink)}
+.pin svg{width:18px;height:18px;flex:none}
+.pin .go{margin-left:auto;font-size:20px;line-height:1}
+
+/* ───────── ГЕРОЙ стану ───────── */
+.hero{border-radius:var(--r-xl);padding:16px 14px 14px;box-shadow:var(--hero-sh);border:1px solid transparent}
+.hero[data-s="alert"]{background:var(--alert-bg);border-color:color-mix(in srgb,var(--alert) 30%,transparent);--glow:color-mix(in srgb,var(--alert) 16%,transparent)}
+.hero[data-s="yellow"]{background:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 32%,transparent);--glow:color-mix(in srgb,var(--warn) 16%,transparent)}
+.hero[data-s="nodata"]{background:var(--nodata-bg);border-color:color-mix(in srgb,var(--nodata) 30%,transparent)}
+.hero[data-s="calm"]{background:var(--card)}
+.hero-top{display:flex;gap:12px;align-items:center;padding:0 2px}
+.hero-top svg{width:34px;height:34px;flex:none}
+.hero h2{margin:0;font-size:21px;line-height:1.2;letter-spacing:-.01em}
+.hero[data-s="alert"] h2{color:var(--alert-ink)}.hero[data-s="yellow"] h2{color:var(--warn-ink)}.hero[data-s="nodata"] h2{color:var(--text)}
+.hero[data-s="calm"] h2{font-size:18px;font-weight:600}
+.hero .call{margin:2px 0 0;font-size:17px;font-weight:700}
+.hero .call.soft{font-weight:400;font-size:15px;color:var(--hint)}
+.hits{display:grid;gap:6px;margin-top:14px}
+.hit{display:flex;align-items:center;gap:12px;background:var(--alert-sub);border-radius:var(--r-md);padding:10px 12px;min-height:58px}
+.hit .b{flex:1;min-width:0}
+.hit .n{font-size:17px;font-weight:600}
+.hit .t{font-size:14px;margin-top:2px}
+.hit .t b{font-weight:600}
+.hit .t span,.hit .d small{color:color-mix(in srgb,var(--text) 74%,transparent)}
+.hit .d{text-align:right;white-space:nowrap}
+.hit .d b{display:block;font-size:19px;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.hit .d small{font-size:12px;font-variant-numeric:tabular-nums}
+.hero[data-s="alert"] .hit .d b{color:var(--alert-ink)}.hero[data-s="yellow"] .hit .d b{color:var(--warn-ink)}
+
+.row{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:48px;position:relative}
+.row + .row::before{content:"";position:absolute;top:0;left:46px;right:0;height:1px;background:var(--sep)}
+.row .ic{width:18px;height:18px;flex:none}
+.row .n{flex:1;font-size:16px;min-width:0}
+.row .n small{display:block;font-size:12px;color:var(--hint)}
+.row .v{font-size:13px;color:var(--hint);white-space:nowrap;font-variant-numeric:tabular-nums}
+.row .v.al{color:var(--alert-ink);font-weight:600}
+
+/* ───────── звіти ───────── */
+.seg{position:relative;display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--well);box-shadow:var(--well-sh);outline:1px solid var(--well-bd);outline-offset:-1px}
+.seg-i{flex:1;position:relative;z-index:1;border:0;background:transparent;min-height:40px;border-radius:9px;font-size:15px;font-weight:600;color:var(--hint-well);cursor:pointer;transition:color .14s}
+.seg-i[aria-selected="true"]{color:var(--text)}
+.thumb{position:absolute;top:3px;bottom:3px;left:0;width:0;border-radius:9px;background:var(--raised);box-shadow:var(--raised-sh);opacity:0;pointer-events:none;transition:transform var(--seg-dur) var(--seg-ease),width var(--seg-dur) var(--seg-ease)}
+.thumb.snap{transition:none}
+.scope{font-size:13px;color:var(--hint);margin:10px 2px 0}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tile{padding:14px 14px 12px}
+.tile .v{font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.1}
+.tile .v small{font-size:15px;font-weight:600;color:var(--hint);letter-spacing:0}
+.tile .k{font-size:13px;color:var(--hint);margin-top:6px;line-height:1.35}
+.tile .k b{color:var(--text);font-weight:600}
+.lst .r{display:flex;align-items:baseline;gap:10px;padding:12px 16px;position:relative}
+.lst .r + .r::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
+.lst .r .n{flex:1;font-size:16px}
+.lst .r .n small{display:block;font-size:13px;color:var(--hint);margin-top:1px}
+.lst .r .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lst .r .v.zero{color:var(--hint);font-weight:400}
+/* день: смуга доби */
+.day{padding:14px 16px 12px}
+.strip{position:relative;height:28px;border-radius:7px;background:var(--well);box-shadow:var(--well-sh);outline:1px solid var(--well-bd);outline-offset:-1px}
+.strip .work{position:absolute;top:0;bottom:0;left:37.5%;width:37.5%;background:color-mix(in srgb,var(--text) 7%,transparent)}
+.strip .ev{position:absolute;top:5px;bottom:5px;border-radius:4px;background:color-mix(in srgb,var(--ink-ramp) 70%,transparent);min-width:5px}
+.strip .ev.now{background:var(--alert)}
+.strip .nowline{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:1px;background:var(--text)}
+.axis{position:relative;height:16px;margin-top:6px;font-size:11px;color:var(--hint);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;transform:translateX(-50%)}
+.axis span:first-child{transform:none}.axis span:last-child{transform:translateX(-100%)}
+.axis .wk{top:0;color:var(--text);font-weight:600}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--hint);margin-top:8px}
+.legend i{display:inline-block;width:14px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0}
+.evs .e{display:grid;grid-template-columns:auto 1fr auto;gap:2px 12px;padding:11px 16px;position:relative;align-items:baseline}
+.evs .e + .e::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
+.evs .t{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.evs .w{font-size:15px}
+.evs .d{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.evs .s{grid-column:2/4;font-size:13px;color:var(--hint)}
+.evs .e.now .t,.evs .e.now .d{color:var(--alert-ink)}
+.evs .e.off .t,.evs .e.off .d,.evs .e.off .w{color:var(--hint);font-weight:400}
+/* тиждень: 7 днів */
+.week{padding:14px 12px 10px;display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px}
+.wd .col{width:100%;max-width:30px;height:110px;border-radius:6px;background:var(--well);box-shadow:var(--well-sh);outline:1px solid var(--well-bd);outline-offset:-1px;position:relative;overflow:hidden}
+.wd .col i{position:absolute;left:0;right:0;bottom:0;border-radius:6px 6px 0 0;background:color-mix(in srgb,var(--ink-ramp) 72%,transparent)}
+.wd .col.today i{background:color-mix(in srgb,var(--ink-ramp) 90%,transparent)}
+.wd b{font-size:12px;line-height:1.25;min-height:30px;display:flex;align-items:flex-end;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wd span{font-size:12px;color:var(--hint)}
+.wd.cur span{color:var(--text);font-weight:600}
+/* місяць: нейтральна теплова карта */
+.chips{display:flex;gap:4px;overflow-x:auto;padding:3px;border-radius:12px;background:var(--well);box-shadow:var(--well-sh);outline:1px solid var(--well-bd);outline-offset:-1px;scrollbar-width:none;margin-bottom:10px}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:1 0 auto;border:0;background:transparent;border-radius:9px;padding:0 12px;min-height:38px;font-size:14px;font-weight:600;color:var(--hint-well);cursor:pointer;white-space:nowrap;transition:transform 280ms cubic-bezier(.34,1.5,.64,1),background-color .12s,color .12s}
+.chip[aria-pressed="true"]{background:var(--raised);box-shadow:var(--raised-sh);color:var(--text)}
+.hm{padding:14px 12px 12px}
+.hm-grid{position:relative;display:grid;grid-template-columns:24px repeat(24,1fr);gap:2px;align-items:center;margin-top:18px}
+.hm-grid .dl{font-size:11px;color:var(--hint-well)}
+.hm-cell{aspect-ratio:1/1.3;border-radius:3px;border:0;padding:0;cursor:pointer;min-width:0;background:color-mix(in srgb,var(--ink-ramp) var(--p,0%),var(--well))}
+.hm-cell.sel{outline:2px solid var(--accent-ink);outline-offset:1px}
+.hm-work{position:absolute;border-radius:5px;border:1.5px dashed color-mix(in srgb,var(--text) 40%,transparent);pointer-events:none}
+.hm-worklbl{position:absolute;top:-19px;font-size:11px;color:var(--hint)}
+.hm-hours{display:grid;grid-template-columns:24px repeat(8,1fr);font-size:11px;color:var(--hint);margin-top:4px;font-variant-numeric:tabular-nums}
+.hm-legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--hint);margin-top:10px}
+.hm-legend i{width:16px;height:10px;border-radius:2px;background:color-mix(in srgb,var(--ink-ramp) var(--p),var(--well))}
+.read{margin-top:10px;display:grid;gap:6px}
+.read div{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 12px;border-radius:var(--r-sm);background:var(--well)}
+.read span{color:var(--hint-well)}.read b{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:0;border-radius:var(--r-md);background:var(--accent-solid);color:var(--on-accent);font-size:17px;font-weight:700;cursor:pointer;margin-top:24px;box-shadow:var(--btn-sh);transition:transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.btn svg{width:20px;height:20px}
+
+/* ───────── громади ───────── */
+.search{display:flex;align-items:center;gap:8px;background:var(--well);box-shadow:var(--well-sh);outline:1px solid var(--well-bd);outline-offset:-1px;border-radius:12px;padding:0 12px;min-height:48px}
+.search svg{width:18px;height:18px;color:var(--hint);flex:none}
+.search input{flex:1;border:0;background:transparent;font:inherit;font-size:17px;color:var(--text);min-height:48px;outline:none;min-width:0}
+.search input::placeholder{color:var(--hint)}
+.search:focus-within{outline:2px solid var(--accent);outline-offset:0}
+.res{display:flex;align-items:center;gap:12px;padding:0 8px 0 16px;min-height:56px;position:relative}
+.res + .res::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
+.res .b{flex:1;min-width:0}.res .n{font-size:16px}.res .o{font-size:13px;color:var(--hint)}
+.pill{border:0;border-radius:999px;min-height:36px;min-width:44px;padding:0 14px;font-size:14px;font-weight:600;background:var(--accent-tint);color:var(--accent-ink);cursor:pointer;transition:transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.pill.done{background:transparent;color:var(--hint);font-weight:400;cursor:default}
+.nav-row{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;padding:0 16px;min-height:48px;font-size:16px;text-align:left;cursor:pointer;position:relative;color:var(--text)}
+.nav-row + .nav-row::before{content:"";position:absolute;top:0;left:16px;right:0;height:1px;background:var(--sep)}
+.nav-row .cnt{margin-left:auto;color:var(--hint);font-size:14px}
+.nav-row .chev{color:var(--hint);font-size:20px;margin-left:auto}
+.nav-row .cnt + .chev{margin-left:0}
+.back{display:inline-flex;align-items:center;gap:2px;border:0;background:transparent;color:var(--accent-ink);font-size:16px;min-height:44px;padding:0 6px 0 0;cursor:pointer;margin-top:12px}
+.empty{padding:18px 16px;font-size:15px;color:var(--hint)}
+/* «У групі»: читання за замовчуванням, «Змінити» — редагування */
+.grp .row{min-height:56px;padding-top:6px;padding-bottom:6px}
+.grp .ed{display:none}
+.grp.editing .ed{display:grid}
+.grp .minus{place-items:center;width:44px;height:44px;margin-left:-12px;border:0;background:transparent;cursor:pointer}
+.grp .minus i{display:block;width:22px;height:22px;border-radius:50%;background:var(--alert);position:relative}
+.grp .minus i::after{content:"";position:absolute;left:5px;right:5px;top:10px;height:2px;border-radius:1px;background:#fff}
+.grp .minus:disabled{cursor:not-allowed}
+.grp .minus:disabled i{background:color-mix(in srgb,var(--hint) 45%,transparent)}
+.grp .mv{grid-auto-flow:column;gap:0;margin-right:-10px}
+.grp .mv button{width:40px;height:44px;border:0;background:transparent;color:var(--hint);cursor:pointer;font-size:18px}
+.grp .mv button:disabled{opacity:.3;cursor:default}
+.grp.editing .ic,.grp.editing .v{display:none}
+.grp.editing .row::before{left:56px}
+.toast{position:absolute;left:12px;right:12px;bottom:88px;z-index:6;display:flex;align-items:center;gap:12px;min-height:50px;padding:0 8px 0 16px;border-radius:14px;background:var(--toast-bg);color:var(--toast-fg);font-size:15px;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translateY(24px);opacity:0;pointer-events:none;transition:transform .2s cubic-bezier(.4,0,.2,1),opacity .2s}
+.toast.on{transform:none;opacity:1;pointer-events:auto}
+.toast button{margin-left:auto;border:0;background:transparent;color:#8cc4ff;font-weight:700;font-size:15px;min-height:44px;padding:0 10px;cursor:pointer}
+
+/* ───────── таб-бар: скло + капсула-поверхня (A56) ───────── */
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 8px calc(8px + env(safe-area-inset-bottom));z-index:5;background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);border-top:1px solid var(--glass-rim)}
+.cap{position:absolute;top:6px;left:0;height:52px;width:0;border-radius:14px;opacity:0;pointer-events:none;background:var(--accent-tint);box-shadow:inset 0 1px 0 rgba(255,255,255,.10);transition:transform var(--nav-dur) var(--nav-ease),width var(--nav-dur) var(--nav-ease)}
+.cap.snap{transition:none}
+.tab{flex:1;position:relative;z-index:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;font-size:11px;font-weight:600;color:var(--hint);cursor:pointer;transition:color .15s,transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{color:var(--accent-ink)}
+.tab[hidden]{display:none}
+.pressing{transform:scale(.96);transition-duration:80ms!important}
+.chip.pressing,.pill.pressing{transform:scale(.92)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){.thumb,.cap,.tab,.chip,.pill,.btn,.toast{transition:none!important}.pressing{transform:none}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="s-alert" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3L10.3 3.4Z"/><path fill="#fff" d="M11 9h2v5.5h-2zM11 16.3h2v2h-2z"/></symbol>
+  <symbol id="s-yellow" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3L10.3 3.4Z"/><path fill="#1c1c1e" d="M11 9h2v5.5h-2zM11 16.3h2v2h-2z"/></symbol>
+  <symbol id="s-nodata" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3.2 2.6"/><path fill="currentColor" d="M11 15.8h2v2h-2zM12 6.3c2 0 3.4 1.2 3.4 2.9 0 1.3-.7 2-1.6 2.6-.7.5-.9.8-.9 1.6v.3h-1.9v-.5c0-1.3.5-1.9 1.3-2.5.7-.5 1.1-.8 1.1-1.5 0-.7-.6-1.2-1.4-1.2-.9 0-1.5.5-1.6 1.4H8.6c.1-1.9 1.5-3.1 3.4-3.1Z"/></symbol>
+  <symbol id="s-calm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="currentColor"/><path d="m7.5 12.3 3 3 6-6.3" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="t-now" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/></symbol>
+  <symbol id="t-rep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="t-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+</svg>
+
+<div class="stage">
+  <main class="phone" id="app" data-theme="light" aria-label="Мокап Mini App AirLens">
+    <div class="tg-bar" aria-hidden="true"><span class="l">Закрити</span><span class="c"><b>AirLens</b><small>міні-застосунок</small></span><span class="r">⋯</span></div>
+    <div class="screens">
+      <!-- ① ЗАРАЗ -->
+      <section class="screen" id="scr-now" role="tabpanel" aria-labelledby="tab-now">
+        <div class="head"><h1>Курилка</h1><span class="meta" id="fresh" role="status"></span></div>
+        <div class="hero" id="hero" role="status" aria-live="polite"></div>
+        <div id="others"></div>
+        <p class="foot"><b>Сирена й офіційні застосунки — завжди перші.</b><br>Неофіційний інструмент команди</p>
+      </section>
+      <!-- ② ЗВІТИ -->
+      <section class="screen" id="scr-rep" role="tabpanel" aria-labelledby="tab-rep" hidden>
+        <div class="pin" data-pin hidden></div>
+        <div class="head"><h1>Звіти</h1></div>
+        <div class="seg" id="seg" role="tablist" aria-label="Період">
+          <span class="thumb" aria-hidden="true"></span>
+          <button class="seg-i" role="tab" aria-selected="true" data-p="day">День</button>
+          <button class="seg-i" role="tab" aria-selected="false" data-p="week">Тиждень</button>
+          <button class="seg-i" role="tab" aria-selected="false" data-p="month">Місяць</button>
+        </div>
+        <div id="rep-body"></div>
+        <button class="btn" type="button" id="dl"><svg aria-hidden="true"><use href="#i-dl"/></svg><span>Завантажити Excel</span></button>
+        <p class="foot">Робочий час — будні 09:00–18:00 за Києвом.<br>Неофіційний інструмент команди</p>
+      </section>
+      <!-- ③ ГРОМАДИ -->
+      <section class="screen" id="scr-set" role="tabpanel" aria-labelledby="tab-set" hidden>
+        <div class="pin" data-pin hidden></div>
+        <div class="head"><h1>Громади</h1></div>
+        <label class="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Знайти громаду" aria-label="Знайти громаду"></label>
+        <div id="set-body"></div>
+      </section>
+    </div>
+    <div class="toast" id="toast" role="status"><span id="toast-t"></span><button type="button" id="undo">Повернути</button></div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Розділи">
+      <span class="cap" aria-hidden="true"></span>
+      <button class="tab" role="tab" id="tab-now" aria-selected="true" aria-controls="scr-now"><svg aria-hidden="true"><use href="#t-now"/></svg>Зараз</button>
+      <button class="tab" role="tab" id="tab-rep" aria-selected="false" aria-controls="scr-rep"><svg aria-hidden="true"><use href="#t-rep"/></svg>Звіти</button>
+      <button class="tab" role="tab" id="tab-set" aria-selected="false" aria-controls="scr-set"><svg aria-hidden="true"><use href="#t-set"/></svg>Громади</button>
+    </nav>
+  </main>
+
+  <aside class="controls" aria-label="Панель мокапа">
+    <h1>Мокап v3 · для перегляду</h1>
+    <p>Панель — не частина застосунку. Дані синтетичні, час мокапа — 14:20, облік з 01.09. Смугу «Закрити · AirLens» малює Telegram.</p>
+    <div class="ctl"><span class="ctl-label">Стан громад</span><div class="seg-demo" data-k="state">
+      <button data-v="alert" aria-pressed="true">Тривога</button><button data-v="yellow">Жовта</button><button data-v="nodata">Нема даних</button><button data-v="calm">Без тривоги</button></div></div>
+    <div class="ctl"><span class="ctl-label">Тема Telegram</span><div class="seg-demo" data-k="theme">
+      <button data-v="light" aria-pressed="true">Світла</button><button data-v="dark">Темна</button><button data-v="tinted">Tinted ≈</button></div></div>
+    <div class="ctl"><span class="ctl-label">Хто відкрив</span><div class="seg-demo" data-k="role">
+      <button data-v="admin" aria-pressed="true">Адмін</button><button data-v="member">Учасник</button></div></div>
+  </aside>
+</div>
+
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const app = $("#app");
+  const S = { state: "alert", theme: "light", role: "admin", tab: "now", period: "day", q: "all", region: 2, obl: null, editing: false };
+  const NOW = 14 * 60 + 20;   // час мокапа, хвилини доби (Київ)
+  const WORK_FROM = 540, WORK_TO = 1080;
+
+  // ───── синтетика: одна узгоджена доба ─────
+  const OBL = { "Дніпро": "Дніпропетровська", "Павлоград": "Дніпропетровська", "Кам’янське": "Дніпропетровська", "Самар": "Дніпропетровська", "Полтава": "Полтавська", "Кропивницький": "Кіровоградська" };
+  let group = ["Дніпро", "Павлоград", "Кам’янське", "Самар", "Полтава", "Кропивницький"];
+  // події доби: [від, до|null, громади, загроза, рівень]
+  const DAY = [
+    [3 * 60 + 5, 3 * 60 + 50, ["Полтава"], "дрони", "громада"],
+    [10 * 60 + 10, 10 * 60 + 35, ["Дніпро", "Павлоград", "Кам’янське", "Самар"], "балістика", "область"],
+    [11 * 60 + 40, 12 * 60 + 27, ["Павлоград"], "дрони", "район"],
+    [14 * 60 + 4, null, ["Павлоград"], "дрони", "район"],
+    [14 * 60 + 16, null, ["Дніпро"], "балістика", "громада"],
+  ];
+  const LAST_END = { "Кам’янське": 10 * 60 + 35, "Самар": 10 * 60 + 35 }; // для «без тривоги N хв» (≤ 60 хв — не показуємо старше)
+  const SCOPE = { "громада": "", "район": "тривога на весь район", "область": "тривога на всю область" };
+
+  // ───── формати ─────
+  const hm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  const dur = (m) => { m = Math.round(m); const h = Math.floor(m / 60), r = m % 60; return h ? `${h} год ${String(r).padStart(2, "0")} хв` : `${r} хв`; };
+  const plural = (n, a, b, c) => { const d = n % 10, t = n % 100; return d === 1 && t !== 11 ? a : d >= 2 && d <= 4 && (t < 12 || t > 14) ? b : c; };
+  const ico = (s, cls = "") => `<svg class="${cls} i-${s}" aria-hidden="true"><use href="#s-${s}"/></svg>`;
+  const clipWork = (a, b) => Math.max(0, Math.min(b, WORK_TO) - Math.max(a, WORK_FROM));
+
+  // ───── стан «зараз» зі сценарію ─────
+  function live() {
+    if (S.state === "nodata" || S.state === "calm") return [];
+    const act = DAY.filter((e) => e[1] === null).flatMap((e) => e[2].map((n) => ({ n, since: e[0], t: e[3], lvl: e[4] })));
+    return (S.state === "yellow" ? act.filter((x) => x.n === "Павлоград").map((x) => ({ ...x, s: "yellow" })) : act.map((x) => ({ ...x, s: "alert" })))
+      .filter((x) => group.includes(x.n)).sort((a, b) => group.indexOf(a.n) - group.indexOf(b.n));
+  }
+
+  // ───── ① Зараз ─────
+  function renderNow() {
+    const hits = live(), M = group.length, fr = $("#fresh"), stale = S.state === "nodata";
+    fr.className = "meta" + (stale ? " stale" : "");
+    fr.textContent = stale ? `⚠ дані станом на ${hm(NOW - 5)}` : `станом на ${hm(NOW)}`;
+    const h = $("#hero");
+    if (hits.length) {
+      const s = hits.every((x) => x.s === "yellow") ? "yellow" : "alert";
+      h.dataset.s = s;
+      h.innerHTML = `<div class="hero-top">${ico(s)}<div><h2>Тривога в ${hits.length} з ${M} ${plural(M, "громади", "громад", "громад")}</h2><p class="call">Пройдіть в укриття.</p></div></div>
+        <div class="hits">${hits.map((x) => `<div class="hit"><div class="b"><div class="n">${x.n}</div><div class="t"><b>${x.t}</b>${SCOPE[x.lvl] ? `<span> · ${SCOPE[x.lvl]}</span>` : ""}</div></div>
+          <div class="d"><b>${dur(NOW - x.since)}</b><small>з ${hm(x.since)}</small></div></div>`).join("")}</div>`;
+    } else if (stale) {
+      h.dataset.s = "nodata";
+      h.innerHTML = `<div class="hero-top">${ico("nodata")}<div><h2>Нема свіжих даних</h2><p class="call">Орієнтуйтесь на сирену й офіційні застосунки.</p></div></div>`;
+    } else {
+      h.dataset.s = "calm";
+      h.innerHTML = `<div class="hero-top">${ico("calm")}<div><h2>Без тривоги: усі ${M} ${plural(M, "громада", "громади", "громад")}</h2><p class="call soft">Почнеться тривога — бот напише в групу зі звуком.</p></div></div>`;
+    }
+    const inHero = new Set(hits.map((x) => x.n)), rest = group.filter((n) => !inHero.has(n));
+    if (stale) { $("#others").innerHTML = `<div class="sec">Нема даних<span class="aside">${M} з ${M}</span></div><div class="card">${rest.map((n) => `<div class="row">${ico("nodata", "ic")}<span class="n">${n}</span></div>`).join("")}</div>`; return; }
+    const recent = (n) => (LAST_END[n] !== undefined && NOW - LAST_END[n] <= 60 ? `без тривоги ${dur(NOW - LAST_END[n])}` : "");
+    $("#others").innerHTML = rest.length ? `<div class="sec">${hits.length ? "Без тривоги" : "Громади"}<span class="aside">${rest.length} з ${M}</span></div>
+      <div class="card">${rest.map((n) => `<div class="row">${ico("calm", "ic")}<span class="n">${n}</span><span class="v">${recent(n)}</span></div>`).join("")}</div>` : "";
+  }
+
+  // ───── рядок тривоги на інших вкладках ─────
+  function renderPins() {
+    const hits = live();
+    $$("[data-pin]").forEach((p) => {
+      p.hidden = !hits.length;
+      if (!hits.length) return;
+      p.dataset.s = hits.every((x) => x.s === "yellow") ? "yellow" : "alert";
+      p.innerHTML = `<button type="button" data-go="now">${ico(p.dataset.s)}<span>Тривога в ${hits.length} ${plural(hits.length, "громаді", "громадах", "громадах")} — в укриття</span><span class="go" aria-hidden="true">›</span></button>`;
+    });
+  }
+
+  // ───── ② Звіти ─────
+  function unionMinutes(evs, clip) {        // одна тривога на кілька громад = один епізод
+    const iv = evs.map((e) => [e[0], e[1] ?? NOW]).map(([a, b]) => clip ? [Math.max(a, WORK_FROM), Math.min(b, WORK_TO)] : [a, b]).filter(([a, b]) => b > a).sort((x, y) => x[0] - y[0]);
+    let tot = 0, n = 0, cur = null;
+    for (const [a, b] of iv) { if (!cur || a > cur[1]) { if (cur) tot += cur[1] - cur[0]; cur = [a, b]; n++; } else cur[1] = Math.max(cur[1], b); }
+    if (cur) tot += cur[1] - cur[0];
+    return { tot, n };
+  }
+  function renderRep() {
+    const b = $("#rep-body");
+    if (S.period === "day") b.innerHTML = repDay(); else if (S.period === "week") b.innerHTML = repWeek(); else b.innerHTML = repMonth();
+  }
+  function tiles(workMin, elapsed, count, inWork, word) {
+    return `<div class="tiles">
+      <div class="card tile"><div class="v">${workMin >= 60 ? `${Math.floor(workMin / 60)}<small> год </small>${String(workMin % 60).padStart(2, "0")}<small> хв</small>` : `${workMin}<small> хв</small>`}</div>
+        <div class="k">під тривогою · <b>${Math.round((workMin / elapsed) * 100)}%</b> ${S.period === "day" ? "робочого часу з 09:00" : "робочого часу"}</div></div>
+      <div class="card tile"><div class="v">${count}</div><div class="k">${plural(count, "тривога", "тривоги", "тривог")} ${word} · <b>${inWork}</b> у робочий час</div></div></div>
+      <p class="scope">Хоча б в одній громаді групи: тривога на кілька громад рахується один раз.</p>`;
+  }
+  function byHromada(rows) {
+    return `<div class="sec">По громадах<span class="aside">робочий час</span></div><div class="card lst">${rows.map(([n, m, c, off]) =>
+      `<div class="r"><span class="n">${n}<small>${c ? `${c} ${plural(c, "тривога", "тривоги", "тривог")}` : "без тривог"}${off ? ` · ${off} поза робочим часом` : ""}</small></span><span class="v${m ? "" : " zero"}">${dur(m)}</span></div>`).join("")}</div>`;
+  }
+  function repDay() {
+    const all = unionMinutes(DAY, false), work = unionMinutes(DAY, true);
+    const rows = group.map((n) => {
+      const ev = DAY.filter((e) => e[2].includes(n));
+      const m = ev.reduce((a, e) => a + clipWork(e[0], e[1] ?? NOW), 0);
+      const off = ev.filter((e) => clipWork(e[0], e[1] ?? NOW) === 0).length;
+      return [n, m, ev.length - off, off];
+    }).sort((a, b) => b[1] - a[1]);
+    const pos = (m) => `${(m / 1440) * 100}%`;
+    const strip = DAY.map((e) => { const b2 = e[1] ?? NOW; return `<span class="ev${e[1] === null ? " now" : ""}" style="left:${pos(e[0])};width:${((b2 - e[0]) / 1440) * 100}%"></span>`; }).join("");
+    const evs = [...DAY].sort((a, b) => b[0] - a[0]).map((e) => {
+      const b2 = e[1] ?? NOW, on = e[1] === null, off = clipWork(e[0], b2) === 0;
+      const where = e[2].length > 2 ? `${e[2].join(", ")}` : e[2].join(", ");
+      return `<div class="e${on ? " now" : ""}${off ? " off" : ""}"><span class="t">${hm(e[0])}–${on ? "зараз" : hm(b2)}</span><span class="w">${where}</span><span class="d">${dur(b2 - e[0])}</span>
+        <span class="s">${e[3]}${SCOPE[e[4]] ? ` · ${SCOPE[e[4]]}` : ""}${off ? " · поза робочим часом" : ""}</span></div>`;
+    }).join("");
+    return tiles(work.tot, NOW - WORK_FROM, all.n, work.n, "сьогодні") + byHromada(rows) +
+      `<div class="sec">Сьогодні</div>
+       <div class="card day"><div class="strip"><span class="work"></span>${strip}<span class="nowline" style="left:${pos(NOW)}"></span></div>
+         <div class="axis"><span style="left:0">00</span><span style="left:25%">06</span><span style="left:50%">12</span><span style="left:75%">18</span><span style="left:100%">24</span></div>
+         <div class="legend"><span><i style="background:color-mix(in srgb,var(--ink-ramp) 70%,transparent)"></i>була тривога</span><span><i style="background:var(--alert)"></i>зараз</span><span><i style="background:color-mix(in srgb,var(--text) 12%,transparent)"></i>робочий час 09–18</span><span>▏ ${hm(NOW)}</span></div></div>
+       <div class="sec">Події<span class="aside">${DAY.length}</span></div><div class="card evs">${evs}</div>`;
+  }
+  const WEEK = [["Ср", 42, 2], ["Чт", 0, 0], ["Пт", 118, 4], ["Сб", 0, 1], ["Нд", 0, 0], ["Пн", 64, 3], ["Вт", 88, 4]];
+  function repWeek() {
+    const tot = WEEK.reduce((a, d) => a + d[1], 0), cnt = WEEK.reduce((a, d) => a + d[2], 0);
+    const cols = WEEK.map(([d, m], i) => `<div class="wd${i === 6 ? " cur" : ""}"><b>${m >= 60 ? `${Math.floor(m / 60)} год<br>${m % 60} хв` : `${m} хв`}</b>
+      <div class="col${i === 6 ? " today" : ""}" role="img" aria-label="${d}: ${dur(m)} робочого часу під тривогою"><i style="height:${(m / 540) * 100}%"></i></div><span>${d}</span></div>`).join("");
+    return tiles(tot, 540 * 5, cnt, cnt - 1, "за 7 днів") +
+      `<div class="sec">По днях<span class="aside">висота = частка робочого дня 9 год</span></div><div class="card week">${cols}</div>` +
+      byHromada([["Павлоград", 212, 9, 0], ["Дніпро", 168, 7, 1], ["Самар", 160, 7, 0], ["Кам’янське", 151, 6, 0], ["Полтава", 74, 3, 1], ["Кропивницький", 39, 2, 0]]);
+  }
+  const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"];
+  function seeded(seed) { let x = seed; return () => ((x = (x * 1103515245 + 12345) % 2147483648) / 2147483648); }
+  function heatData(key) {
+    const rnd = seeded([...key].reduce((a, c) => a + c.charCodeAt(0), 30));
+    return DAYS.map((_, d) => Array.from({ length: 24 }, (_, h) => Math.max(0, Math.round(rnd() * 22 + (h <= 5 ? 26 : h >= 22 ? 16 : 0) + (h >= 10 && h <= 13 ? 8 : 0) + (d === 5 ? 6 : 0) - 12))));
+  }
+  function repMonth() {
+    const data = heatData(S.q), max = Math.max(1, ...data.flat());
+    let cells = "";
+    data.forEach((r, d) => { cells += `<span class="dl">${DAYS[d]}</span>`; r.forEach((m, h) => { const p = m ? Math.round(12 + (m / max) * 78) : 0;
+      cells += `<button class="hm-cell" style="--p:${p}%" data-d="${d}" data-h="${h}" data-m="${m}" aria-label="${DAYS[d]} ${h}:00–${h + 1}:00 — ${m} хв"></button>`; }); });
+    let lo = null, hi = null;
+    data.forEach((r, d) => r.forEach((m, h) => { if (d < 5 && h >= 9 && h < 18) { if (!lo || m < lo.m) lo = { d, h, m }; if (!hi || m > hi.m) hi = { d, h, m }; } }));
+    const slot = (o) => `${DAYS[o.d]} ${String(o.h).padStart(2, "0")}–${String(o.h + 1).padStart(2, "0")}`;
+    const chips = [["all", "Усі громади"], ...group.map((n) => [n, n])].map(([k, t]) => `<button class="chip" data-q="${k}" aria-pressed="${S.q === k}">${t}</button>`).join("");
+    return tiles(1983, 540 * 21, 126, 71, "за 30 днів") +
+      byHromada([["Павлоград", 790, 31, 4], ["Дніпро", 655, 27, 3], ["Самар", 640, 26, 2], ["Кам’янське", 598, 24, 2], ["Полтава", 322, 14, 5], ["Кропивницький", 187, 9, 1]]) +
+      `<div class="sec">По годинах тижня<span class="aside">сума хв за 30 днів</span></div>
+       <div class="chips" id="chips" role="group" aria-label="Громада">${chips}</div>
+       <div class="card hm"><div class="hm-grid">${cells}
+         <span class="hm-work" style="left:calc(24px + (100% - 24px) * 9 / 24 - 3px);width:calc((100% - 24px) * 9 / 24 + 4px);top:-3px;height:calc(100% * 5 / 7 + 3px)"></span>
+         <span class="hm-worklbl" style="left:calc(24px + (100% - 24px) * 9 / 24)">робочий час</span></div>
+         <div class="hm-hours"><span></span>${[0, 3, 6, 9, 12, 15, 18, 21].map((h) => `<span>${String(h).padStart(2, "0")}</span>`).join("")}</div>
+         <div class="hm-legend"><span>0</span><i style="--p:0%"></i><i style="--p:25%"></i><i style="--p:45%"></i><i style="--p:68%"></i><i style="--p:90%"></i><span>${max} хв</span></div>
+         <div class="read" id="read"><div><span>Найменше в робочий час</span><b>${slot(lo)} · ${lo.m} хв</b></div><div><span>Найбільше в робочий час</span><b>${slot(hi)} · ${hi.m} хв</b></div></div></div>
+       <p class="foot" style="margin-top:10px">Минуле, не прогноз: тривога може початись будь-коли.</p>`;
+  }
+
+  // ───── ③ Громади ─────
+  const REGIONS = [
+    ["Захід", ["Волинська", "Рівненська", "Львівська", "Тернопільська", "Хмельницька", "Івано-Франківська", "Закарпатська", "Чернівецька"]],
+    ["Північ", ["Київ", "Київська", "Житомирська", "Чернігівська", "Сумська", "Вінницька", "Черкаська"]],
+    ["Схід", ["Харківська", "Дніпропетровська", "Донецька", "Луганська", "Полтавська", "Кіровоградська"]],
+    ["Південь", ["Одеська", "Миколаївська", "Херсонська", "Запорізька", "АР Крим", "Севастополь"]],
+  ];
+  const CAT = [["Дніпро", "Дніпропетровська"], ["Кам’янське", "Дніпропетровська"], ["Павлоград", "Дніпропетровська"], ["Самар", "Дніпропетровська"], ["Кривий Ріг", "Дніпропетровська"], ["Нікополь", "Дніпропетровська"],
+    ["Жовті Води", "Дніпропетровська"], ["Підгородне", "Дніпропетровська"], ["Полтава", "Полтавська"], ["Кременчук", "Полтавська"], ["Миргород", "Полтавська"], ["Кропивницький", "Кіровоградська"], ["Олександрія", "Кіровоградська"],
+    ["Харків", "Харківська"], ["Запоріжжя", "Запорізька"], ["Київ", "Київ"], ["Черкаси", "Черкаська"], ["Вінниця", "Вінницька"], ["Львів", "Львівська"], ["Одеса", "Одеська"], ["Самарівка", "Харківська"], ["Самарське", "Запорізька"]];
+  const oblOf = (n) => OBL[n] || (CAT.find(([x]) => x === n) || [])[1] || "";
+  function renderSet() {
+    const b = $("#set-body"), q = $("#q").value.trim().toLowerCase().replace(/[’']/g, "");
+    if (q) {
+      const f = CAT.filter(([n]) => n.toLowerCase().replace(/[’']/g, "").includes(q)).slice(0, 8);
+      b.innerHTML = `<div class="sec">Знайдено<span class="aside">${f.length}</span></div>` + (f.length ? `<div class="card">${f.map(([n, o]) => res(n, o)).join("")}</div>` : `<div class="card empty">Не знайшли. Спробуйте перші літери назви.</div>`);
+      return;
+    }
+    if (S.obl) {
+      const list = CAT.filter(([, o]) => o === S.obl);
+      b.innerHTML = `<button class="back" type="button" data-back>‹ ${REGIONS[S.region][0]}</button><div class="sec" style="margin-top:4px">${S.obl}${S.obl === "Київ" ? "" : " область"}</div>
+        <div class="card">${list.length ? list.map(([n]) => res(n, "")).join("") : `<div class="empty">У живій версії — усі громади області з каталогу.</div>`}</div>`;
+      return;
+    }
+    const hits = new Map(live().map((x) => [x.n, x]));
+    b.innerHTML = `<div class="sec">Або виберіть область</div>
+      <div class="chips" id="reg" role="group" aria-label="Частина країни">${REGIONS.map(([r], i) => `<button class="chip" data-r="${i}" aria-pressed="${i === S.region}">${r}</button>`).join("")}</div>
+      <div class="card">${REGIONS[S.region][1].map((o) => { const k = group.filter((n) => oblOf(n) === o).length;
+        return `<button class="nav-row" type="button" data-o="${o}"><span>${o}</span>${k ? `<span class="cnt">${k} ${plural(k, "громада", "громади", "громад")} у групі</span>` : ""}<span class="chev" aria-hidden="true">›</span></button>`; }).join("")}</div>
+      <div class="sec">У групі · ${group.length}<button class="act" type="button" id="edit">${S.editing ? "Готово" : "Змінити"}</button></div>
+      <div class="card grp${S.editing ? " editing" : ""}">${group.map((n, i) => { const h = hits.get(n);
+        return `<div class="row"><button class="minus ed" type="button" data-del="${n}" ${h ? "disabled" : ""} aria-label="${h ? `${n}: прибрати після відбою` : `Прибрати ${n}`}"><i></i></button>
+          ${ico(h ? h.s : "calm", "ic")}<span class="n">${n}<small>${h && S.editing ? "тривога — прибрати після відбою" : oblOf(n) + (oblOf(n) === "Київ" ? "" : " обл.")}</small></span>
+          ${h ? `<span class="v al">з ${hm(h.since)}</span>` : ""}
+          <span class="mv ed"><button type="button" data-up="${i}" ${i ? "" : "disabled"} aria-label="${n} вище">↑</button><button type="button" data-down="${i}" ${i < group.length - 1 ? "" : "disabled"} aria-label="${n} нижче">↓</button></span></div>`; }).join("")}</div>
+      <p class="foot" style="margin-top:12px">Порядок тут — порядок рядків на табло в групі.</p>`;
+  }
+  const res = (n, o) => `<div class="res"><div class="b"><div class="n">${n}</div>${o ? `<div class="o">${o === "Київ" ? "місто" : o + " обл."}</div>` : ""}</div>${group.includes(n)
+    ? `<button class="pill done" type="button" disabled>У групі ✓</button>` : `<button class="pill" type="button" data-add="${n}">Додати</button>`}</div>`;
+
+  // скасування: прибране повертається на своє місце; табло в групі оновлюється лише через 5 с
+  let undoState = null, toastTimer = 0;
+  function toast(text, restore) {
+    undoState = restore; $("#toast-t").textContent = text; $("#toast").classList.add("on");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { $("#toast").classList.remove("on"); undoState = null; }, 5000);
+  }
+
+  // ───── повзунок і капсула (A54 · A56 · A57) ─────
+  function place(c, sel, tsel, snap) {
+    const t = $(tsel, c), act = $(sel, c); if (!t || !act) return;
+    const cr = c.getBoundingClientRect(), r = act.getBoundingClientRect();
+    if (!r.width) { t.style.opacity = "0"; return; }
+    const apply = () => { t.style.width = r.width + "px"; t.style.transform = `translateX(${r.left - cr.left}px)`; t.style.opacity = "1"; };
+    if (snap) { t.classList.add("snap"); apply(); requestAnimationFrame(() => requestAnimationFrame(() => t.classList.remove("snap"))); } else apply();
+  }
+  const placeSeg = (s) => place($("#seg"), '.seg-i[aria-selected="true"]', ".thumb", s);
+  const placeCap = (s) => place($("#tabs"), '.tab[aria-selected="true"]', ".cap", s);
+  function go(tab, snap = false) {
+    S.tab = tab;
+    $$(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.id === `tab-${tab}`)));
+    $$(".screen").forEach((s) => (s.hidden = s.id !== `scr-${tab}`));
+    placeCap(snap); if (tab === "rep") placeSeg(true);
+  }
+  function renderAll() {
+    app.dataset.theme = S.theme;
+    $("#tab-set").hidden = S.role !== "admin";
+    if (S.role !== "admin" && S.tab === "set") go("now", true);
+    renderNow(); renderPins(); renderRep(); renderSet();
+    requestAnimationFrame(() => { placeCap(true); placeSeg(true); });
+  }
+
+  // ───── події ─────
+  $("#tabs").addEventListener("click", (e) => { const t = e.target.closest(".tab"); if (t) go(t.id.slice(4)); });
+  app.addEventListener("click", (e) => { const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go); });
+  $("#seg").addEventListener("click", (e) => {
+    const b = e.target.closest(".seg-i"); if (!b || b.dataset.p === S.period) return;
+    S.period = b.dataset.p; $$(".seg-i").forEach((x) => x.setAttribute("aria-selected", String(x === b)));
+    placeSeg(false); renderRep();     // живе: Telegram.WebApp.HapticFeedback.selectionChanged()
+  });
+  $("#rep-body").addEventListener("click", (e) => {
+    const c = e.target.closest(".chip"); if (c) { S.q = c.dataset.q; renderRep(); return; }
+    const cell = e.target.closest(".hm-cell");
+    if (cell) {
+      $$(".hm-cell.sel").forEach((x) => x.classList.remove("sel")); cell.classList.add("sel");
+      const box = $("#read"), line = box.querySelector(".pick") || box.insertAdjacentElement("afterbegin", Object.assign(document.createElement("div"), { className: "pick" }));
+      line.innerHTML = `<span>${DAYS[cell.dataset.d]} ${String(cell.dataset.h).padStart(2, "0")}–${String(+cell.dataset.h + 1).padStart(2, "0")}</span><b>${cell.dataset.m} хв за 30 днів</b>`;
+    }
+  });
+  $("#dl").addEventListener("click", () => { const s = $("#dl span"); s.textContent = "Живе: вікно «Завантажити файл»"; setTimeout(() => (s.textContent = "Завантажити Excel"), 2000); });
+  $("#q").addEventListener("input", () => { S.obl = null; renderSet(); });
+  $("#set-body").addEventListener("click", (e) => {
+    const t = e.target;
+    const r = t.closest("[data-r]"); if (r) { S.region = +r.dataset.r; renderSet(); return; }
+    const o = t.closest("[data-o]"); if (o) { S.obl = o.dataset.o; renderSet(); return; }
+    if (t.closest("[data-back]")) { S.obl = null; renderSet(); return; }
+    if (t.closest("#edit")) { S.editing = !S.editing; renderSet(); return; }
+    const a = t.closest("[data-add]"); if (a) { const n = a.dataset.add; group.push(n); OBL[n] = OBL[n] || oblOf(n); renderAll(); toast(`${n} додано`, () => { group = group.filter((x) => x !== n); }); return; }
+    const d = t.closest("[data-del]"); if (d && !d.disabled) { const n = d.dataset.del, i = group.indexOf(n); group.splice(i, 1); renderAll(); toast(`${n} прибрано`, () => { group.splice(i, 0, n); }); return; }
+    const up = t.closest("[data-up]"); if (up) { const i = +up.dataset.up; [group[i - 1], group[i]] = [group[i], group[i - 1]]; renderAll(); return; }
+    const dn = t.closest("[data-down]"); if (dn) { const i = +dn.dataset.down; [group[i + 1], group[i]] = [group[i], group[i + 1]]; renderAll(); }
+  });
+  $("#undo").addEventListener("click", () => { if (undoState) { undoState(); undoState = null; renderAll(); } $("#toast").classList.remove("on"); });
+  let pressed = null; const release = () => { if (pressed) { pressed.classList.remove("pressing"); pressed = null; } };
+  app.addEventListener("pointerdown", (e) => { const el = e.target.closest(".tab,.chip,.pill:not(.done),.btn,.pin button"); if (el) { pressed = el; el.classList.add("pressing"); } });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => app.addEventListener(ev, release));
+  $$(".seg-demo").forEach((g) => g.addEventListener("click", (e) => {
+    const b = e.target.closest("button"); if (!b) return;
+    S[g.dataset.k] = b.dataset.v; $$("button", g).forEach((x) => x.setAttribute("aria-pressed", String(x === b))); renderAll();
+  }));
+  addEventListener("resize", () => requestAnimationFrame(() => { placeCap(true); placeSeg(true); }));
+
+  const qs = new URLSearchParams(location.search);
+  ["state", "theme", "role"].forEach((k) => { if (qs.get(k)) { S[k] = qs.get(k); $$(`.seg-demo[data-k="${k}"] button`).forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.v === S[k]))); } });
+  if (qs.get("period")) { S.period = qs.get("period"); $$(".seg-i").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.p === S.period))); }
+  if (qs.get("edit")) S.editing = true;
+  renderAll();
+  go(qs.get("tab") || "now", true);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => { placeCap(true); placeSeg(true); });
+  // PREVIEW: service worker не реєструється.
+})();
+</script>
+</body>
+</html>
