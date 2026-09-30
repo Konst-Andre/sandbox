@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AirLens</title>
+<!--
+  AirLens · Mini App (хід 5б-3). Живе доки: існує Mini App AirLens.
+  Дизайн — еталон docs/design/miniapp_v11.html (Р-29 · Р-31…Р-36): CSS і SVG перенесено дослівно, без рамки телефона,
+  несправжньої шапки Telegram і панелі мокапа. Дані — POST /api/app (Р-41): усе злиття — на сервері, тут лише показ.
+  П-1: застарілі чи відсутні дані → «Нема свіжих даних», жодного зеленого; день до обліку — пунктир і «—».
+  Поза Telegram сторінка показує лише «Відкрийте з Telegram»; прев'ю-стенд вставляє синтетику в #demo як window.AIRLENS_DEMO (tools/miniapp/build.mjs).
+  Іконки вкладок — Lucide (ISC License, Copyright (c) 2026 Lucide Icons and Contributors).
+-->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r-xl:18px;--r-lg:14px;--r-md:11px;--r-sm:8px;
+  --seg-dur:450ms;--seg-ease:cubic-bezier(.34,1.56,.64,1);    /* A54 */
+  --nav-dur:400ms;--nav-ease:cubic-bezier(.34,1.3,.64,1);      /* A56 */
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#1b2230;font-family:var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+
+/* ───────── застосунок на весь екран Telegram ───────── */
+.phone{width:100%;height:100vh;height:var(--tg-viewport-stable-height,100dvh);position:relative;display:flex;flex-direction:column;overflow:hidden;background:var(--page);color:var(--text)}
+
+/* ───────── ТЕМИ AirLens (власні, не з Telegram) ───────── */
+.phone[data-theme="graphite"]{
+  --page:#131b24;--card:#1c2733;--raised-c:#2a3746;--sep:#2b3947;--text:#ffffff;--hint:#93a3b4;--hint-well:#a9b7c6;
+  --accent:#4a93f8;--accent-ink:#8cc0ff;--accent-solid:#2a6cc8;--on-accent:#ffffff;--accent-tint:color-mix(in srgb,#4a93f8 18%,#1c2733);
+  --alert:#F0685C;--alert-ink:#F68A80;--alert-bg:#3f1d25;--alert-sub:rgba(255,255,255,.07);
+  --warn:#DFA43A;--warn-ink:#E4AE4E;--warn-bg:#40361f;
+  --nodata:#9AA6B3;--nodata-ink:#AEB9C5;--nodata-bg:#253140;
+  --calm:#2FA868;
+  --hist:#b4574f;--hist-now:#F0685C;--hist-zero:#243140;          /* історія тривог: приглушений червоний */
+  --card-sh:inset 0 1px 0 rgba(255,255,255,.07);
+  --light-top:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 45%);   /* світло зверху */
+  --hero-sh:inset 0 1px 0 rgba(255,255,255,.14),0 8px 24px rgba(0,0,0,.25);
+  --well:#0f161e;--well-sh:inset 0 1.5px 3px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.06);
+  --raised-bd:transparent;--raised:linear-gradient(180deg,#34445a,#2a3848);--raised-sh:inset 0 1px 0 rgba(255,255,255,.16),0 2px 6px rgba(0,0,0,.35);
+  --btn-sh:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.3);--btn-bd:rgba(0,0,0,.25);
+  --glass:rgba(28,39,51,.86);--glass-rim:rgba(255,255,255,.06);
+  --bar:#1c2733;--toast-bg:#34445a;--toast-act:#9fd0ff;--scrim:rgba(0,0,0,.5);
+  --pin-bg:#3f1d25;--pin-bd:rgba(240,104,92,.30);--pin-sh:inset 0 1px 0 rgba(255,255,255,.10),0 4px 14px rgba(0,0,0,.35);
+  --hit-bg:#232d3a;--hit-sh:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.30);
+  --line:rgba(255,255,255,.07);
+}
+.phone[data-theme="light"]{
+  --page:#efeff4;--card:#ffffff;--raised-c:#ffffff;--sep:#e3e3e8;--text:#000000;--hint:#606064;--hint-well:#56565b;
+  --accent:#2481cc;--accent-ink:#1d67a3;--accent-solid:#1f6fb0;--on-accent:#ffffff;--accent-tint:color-mix(in srgb,#2481cc 12%,#fff);
+  --alert:#C4221A;--alert-ink:#A51C15;--alert-bg:#faebea;--alert-sub:rgba(255,255,255,.75);
+  --warn:#B87200;--warn-ink:#8A5300;--warn-bg:#fcf1de;
+  --nodata:#6B7079;--nodata-ink:#5F646D;--nodata-bg:#eeeff1;
+  --calm:#1E8A4C;
+  --hist:#d9837e;--hist-now:#C4221A;--hist-zero:#f1f1f4;
+  --card-sh:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+  --light-top:none;
+  --hero-sh:0 1px 2px rgba(0,0,0,.05),0 12px 30px color-mix(in srgb,var(--glow,#000) 14%,transparent);
+  --well:#e5e5ea;--well-sh:inset 0 1px 3px rgba(0,0,0,.13);
+  --raised:linear-gradient(180deg,#fff,#f7f7f9);--raised-sh:0 1px 2px rgba(0,0,0,.10),0 3px 10px rgba(0,0,0,.08);--raised-bd:rgba(0,0,0,.09);
+  --btn-sh:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.18);--btn-bd:#17588d;   /* контур, не розлита тінь */
+  --glass:rgba(247,247,249,.86);--glass-rim:rgba(0,0,0,.07);
+  --bar:#f7f7f9;--toast-bg:#2c2c2e;--toast-act:#8cc4ff;--scrim:rgba(0,0,0,.28);
+  --pin-bg:#fce4e2;--pin-bd:rgba(196,34,26,.30);--pin-sh:0 1px 2px rgba(196,34,26,.10),0 4px 14px rgba(196,34,26,.14);
+  --hit-bg:#ffffff;--hit-sh:0 1px 2px rgba(0,0,0,.06),0 3px 10px rgba(196,34,26,.08);
+  --line:rgba(0,0,0,.08);
+}
+
+/* ───────── каркас ───────── */
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:0 16px 112px;-webkit-overflow-scrolling:touch}
+.screen[hidden]{display:none}
+.head{display:flex;align-items:center;gap:12px;padding:16px 2px 14px}
+.head h1{font-size:24px;line-height:1.15;margin:0;letter-spacing:-.015em;font-weight:700;flex:1;min-width:0}
+.grpbtn{display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:0;min-height:44px;cursor:pointer;flex:1;min-width:0;color:var(--text);text-align:left}
+.grpbtn h1{flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.gtxt{display:grid;gap:5px;min-width:0}
+.gline{display:flex;align-items:center;gap:6px;min-width:0}
+.gtxt .fresh{justify-self:start;min-height:24px;padding:0 9px;font-size:12px}
+.grpbtn .dd{color:var(--hint);font-size:14px}
+.ava{width:48px;height:48px;font-size:19px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:17px;color:#fff;background-color:#2560bd;background-image:linear-gradient(160deg,#3a7fe0,#1f55ac);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.fresh{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 11px;border-radius:999px;background:var(--well);box-shadow:var(--well-sh);font-size:13px;color:var(--hint-well);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fresh svg{width:13px;height:13px;flex:none}
+.fresh.stale{background:var(--nodata-bg);color:var(--nodata-ink);font-weight:600}
+
+.sec{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:24px 2px 8px;font-size:15px;font-weight:600;min-height:24px}
+.sec .act{border:0;background:transparent;color:var(--accent-ink);font-size:15px;font-weight:600;min-height:44px;margin:-10px -8px;padding:0 8px;cursor:pointer}
+.card{background:var(--card);background-image:var(--light-top);border-radius:var(--r-lg);box-shadow:var(--card-sh);overflow:hidden}
+.card-h{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 4px;font-size:13px;font-weight:600;color:var(--hint)}
+.count{display:inline-flex;align-items:center;min-height:22px;padding:0 9px;border-radius:999px;background:var(--well);box-shadow:var(--well-sh);font-size:12px;font-weight:600;color:var(--hint-well);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.i-alert{color:var(--alert)}.i-yellow{color:var(--warn)}.i-nodata{color:var(--nodata)}.i-calm{color:var(--calm)}
+
+.pin{position:sticky;top:0;z-index:4;margin:0 -16px;padding:8px 16px 0;background:var(--page)}
+.pin[hidden]{display:none}
+.pin button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;border:1px solid var(--pin-bd);border-radius:var(--r-md);padding:0 12px;background:var(--pin-bg);color:var(--alert-ink);font-size:15px;font-weight:600;cursor:pointer;text-align:left;box-shadow:var(--pin-sh)}
+.pin[data-s="yellow"] button{background:var(--warn-bg);color:var(--warn-ink)}
+.pin svg{width:18px;height:18px;flex:none}
+.pin .go{margin-left:auto;font-size:20px;line-height:1}
+
+/* ───────── ГЕРОЙ ───────── */
+.hero{border-radius:var(--r-xl);padding:16px 14px 14px;box-shadow:var(--hero-sh);border:1px solid transparent;background-image:var(--light-top)}
+.hero[data-s="alert"]{background-color:var(--alert-bg);border-color:color-mix(in srgb,var(--alert) 32%,transparent);--glow:var(--alert)}
+.hero[data-s="yellow"]{background-color:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 34%,transparent);--glow:var(--warn)}
+.hero[data-s="nodata"]{background-color:var(--nodata-bg);border-color:color-mix(in srgb,var(--nodata) 30%,transparent)}
+.hero[data-s="calm"]{background-color:var(--card)}
+.hero-top{display:flex;gap:12px;align-items:center;padding:0 2px}
+.hero-top svg{width:34px;height:34px;flex:none}
+.hero h2{margin:0;font-size:21px;line-height:1.2;letter-spacing:-.01em}
+.hero[data-s="alert"] h2{color:var(--alert-ink)}.hero[data-s="yellow"] h2{color:var(--warn-ink)}
+.hero[data-s="calm"] h2{font-size:18px;font-weight:600}
+.hero .call{margin:2px 0 0;font-size:17px;font-weight:700}
+.hits{display:grid;gap:6px;margin-top:14px}
+.hit{display:flex;align-items:center;gap:12px;background:var(--hit-bg);border-radius:var(--r-md);padding:10px 12px;min-height:58px;box-shadow:var(--hit-sh)}
+.hit .b{flex:1;min-width:0}.hit .n{font-size:17px;font-weight:600}
+.hit .t{font-size:14px;margin-top:2px}.hit .t b{font-weight:600}
+.hit .t span,.hit .d small{color:color-mix(in srgb,var(--text) 74%,transparent)}
+.hit .d{text-align:right;white-space:nowrap}
+.hit .d b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+.hit .d small{font-size:12px;font-variant-numeric:tabular-nums}
+.hero[data-s="alert"] .hit .d b{color:var(--alert-ink)}.hero[data-s="yellow"] .hit .d b{color:var(--warn-ink)}
+.row{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:48px;position:relative;background:var(--card)}
+.row + .row::before{content:"";position:absolute;top:0;left:46px;right:16px;height:1px;background:var(--line)}
+.row .ic{width:18px;height:18px;flex:none}
+.row .n{flex:1;font-size:16px;min-width:0}
+.row .n small{display:block;font-size:12px;color:var(--hint)}
+.row .v{font-size:13px;color:var(--hint);white-space:nowrap;font-variant-numeric:tabular-nums}
+.row .v.al{color:var(--alert-ink);font-weight:600}
+.card .row{background:transparent}
+
+/* ───────── ТАЦЯ з повзунком-пружиною — одна для періоду, громад і частин країни (A54 · A65) ───────── */
+.tray{position:relative;isolation:isolate;display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--well);box-shadow:var(--well-sh);overflow-x:auto;scrollbar-width:none}
+.tray::-webkit-scrollbar{display:none}
+.tray-i{flex:1 0 auto;position:relative;z-index:1;transform:translateZ(0);-webkit-backface-visibility:hidden;border:0;background:transparent;min-height:40px;padding:0 14px;border-radius:9px;font-size:15px;font-weight:600;color:var(--hint-well);cursor:pointer;white-space:nowrap;transition:color .14s}
+.tray-i[aria-selected="true"]{color:var(--text)}
+.tray .thumb{position:absolute;z-index:0;will-change:transform;top:3px;bottom:3px;left:0;width:0;border-radius:9px;background:var(--raised);box-shadow:var(--raised-sh);opacity:0;pointer-events:none;transition:transform var(--seg-dur) var(--seg-ease),width var(--seg-dur) var(--seg-ease)}
+.tray .thumb.snap{transition:none}
+.tray.sm .tray-i{min-height:36px;font-size:14px}
+.gap{height:12px}
+
+/* ───────── ЗВІТИ ───────── */
+.rhero{margin-top:12px;padding:16px}
+.rhero .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.rhero .k{font-size:14px;color:var(--hint);margin-top:2px}
+.rhero .badge{border:1px solid var(--raised-bd);display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;background:var(--raised);box-shadow:var(--raised-sh);font-size:13px;font-weight:700}
+.rhero .hours{display:inline-flex;align-items:center;gap:5px;min-height:24px;padding:0 9px;border-radius:999px;background:var(--well);box-shadow:var(--well-sh);font-size:12px;color:var(--hint-well);font-variant-numeric:tabular-nums}
+.rhero .hours svg{width:12px;height:12px}
+.rhero .big{margin-top:2px}
+.meter{position:relative;height:10px;border-radius:5px;background:var(--well);box-shadow:var(--well-sh);margin:14px 0 10px;overflow:hidden}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--hist)}
+.rmeta{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--hint)}
+.rmeta b{color:var(--text);font-size:16px;font-variant-numeric:tabular-nums}
+.rhero .big{font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.rhero .big small{font-size:17px;font-weight:600;color:var(--hint)}
+.lst .r{display:flex;align-items:center;gap:10px;padding:0 12px 0 16px;min-height:56px;position:relative;width:100%;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--text)}
+.lst .r + .r::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.lst .r .n{flex:1;font-size:16px}.lst .r .n small{display:block;font-size:13px;color:var(--hint);margin-top:1px}
+.lst .r .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lst .r .v.zero{color:var(--hint);font-weight:400}
+.u{font-weight:400;color:var(--hint)}
+.rd .s b{color:var(--text);font-weight:700}
+.lst .r .chev{color:var(--hint);font-size:20px}
+/* доба: робочий день 09–18, тривоги підписані */
+.wday{padding:16px 16px 14px}
+.wday .cap-t{display:flex;justify-content:space-between;font-size:13px;color:var(--hint);margin-bottom:10px}
+.wtrack{position:relative;height:44px;border-radius:10px;background:var(--well);box-shadow:var(--well-sh);overflow:hidden}
+.wtrack .future{position:absolute;top:0;bottom:0;right:0;background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--text) 6%,transparent) 6px 8px)}
+.wtrack .ev{position:absolute;top:8px;bottom:8px;border-radius:6px;background:var(--hist);min-width:6px}
+.wtrack .ev.now{background:var(--hist-now)}
+.wtrack .nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--text)}
+.wlbl{position:relative;height:34px;margin-top:6px}
+.wlbl span{position:absolute;transform:translateX(-2px);font-size:12px;line-height:1.3;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wlbl span b{display:block;font-size:13px}
+.wlbl span.now b{color:var(--alert-ink)}
+.waxis{display:flex;justify-content:space-between;font-size:11px;color:var(--hint);margin-top:6px;font-variant-numeric:tabular-nums}
+.wnote{font-size:13px;color:var(--hint);margin-top:10px}
+/* доба */
+.day{padding:30px 16px 12px}
+.strip{position:relative;height:40px;border-radius:9px;background:var(--well);box-shadow:var(--well-sh)}
+.strip .work{position:absolute;top:0;bottom:0;left:37.5%;width:37.5%;background:color-mix(in srgb,var(--text) 6%,transparent);border-left:1px dashed color-mix(in srgb,var(--text) 22%,transparent);border-right:1px dashed color-mix(in srgb,var(--text) 22%,transparent)}
+.strip .ev{position:absolute;top:8px;bottom:8px;border-radius:5px;background:var(--hist);min-width:6px}
+.strip .ev.now{background:var(--hist-now)}
+.strip .nowline{position:absolute;top:-6px;bottom:-6px;width:2px;border-radius:1px;background:var(--text)}
+.strip .nowlbl{position:absolute;top:-22px;background:var(--card);padding:0 3px;border-radius:3px;transform:translateX(-50%);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.axis{position:relative;height:16px;margin-top:8px;font-size:11px;color:var(--hint);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;transform:translateX(-50%)}.axis span:first-child{transform:none}.axis span:last-child{transform:translateX(-100%)}
+.axis .wk{color:var(--text);font-weight:600}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--hint);margin-top:8px}
+.key i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:5px}
+.evs .e{display:grid;grid-template-columns:104px minmax(0,1fr) auto;gap:2px 12px;padding:11px 16px;position:relative;align-items:baseline}
+.evs .e + .e::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.evs .t{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.evs .w{font-size:15px}.evs .d{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.evs .s{grid-column:2/4;font-size:13px;color:var(--hint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evs .w{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.evs .e.now .t,.evs .e.now .d{color:var(--alert-ink)}
+.evs .e.off .t,.evs .e.off .d,.evs .e.off .w{color:var(--hint);font-weight:400}
+/* тиждень */
+.week{padding:16px 12px 12px;position:relative}
+.week .max{position:absolute;left:12px;right:12px;top:48px;border-top:1px dashed color-mix(in srgb,var(--text) 22%,transparent);font-size:11px;color:var(--hint)}
+.week .max span{position:absolute;right:0;top:-16px}
+.wk-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;padding:0;color:var(--text)}
+.wd b{font-size:12px;line-height:1.2;min-height:30px;display:flex;align-items:flex-end;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wd .col{width:100%;max-width:30px;height:120px;border-radius:7px;background:var(--well);box-shadow:var(--well-sh);position:relative;overflow:hidden}
+.wd .col i{position:absolute;left:3px;right:3px;bottom:3px;border-radius:5px;background:var(--hist)}
+.wd span{font-size:12px;color:var(--hint)}
+.wd.cur span{color:var(--text);font-weight:700}
+.wd.fut .col{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+/* місяць */
+.hm{padding:14px 12px 12px}
+.hm-grid{position:relative;display:grid;grid-template-columns:24px repeat(24,1fr);gap:2px;align-items:center;margin-top:18px}
+.hm-grid .dl{font-size:11px;color:var(--hint-well)}
+.hm-cell{aspect-ratio:1/1.3;border-radius:3px;border:0;padding:0;cursor:pointer;min-width:0;background:color-mix(in srgb,var(--hist) var(--p,0%),var(--hist-zero))}
+.hm-cell.sel{outline:2px solid var(--text);outline-offset:1px}
+.hm-work{position:absolute;border-radius:5px;border:1.5px dashed color-mix(in srgb,var(--text) 38%,transparent);pointer-events:none}
+.hm-worklbl{position:absolute;top:-19px;font-size:11px;color:var(--hint)}
+.hm-hours{display:grid;grid-template-columns:24px repeat(8,1fr);font-size:11px;color:var(--hint);margin-top:4px;font-variant-numeric:tabular-nums}
+.hm-legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--hint);margin-top:10px}
+.hm-legend i{width:16px;height:10px;border-radius:2px;background:color-mix(in srgb,var(--hist) var(--p),var(--hist-zero))}
+.hm-cap{font-size:13px;color:var(--hint)}
+.reads{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.rd{padding:14px}
+.rd .k{font-size:13px;color:var(--hint)}
+.rd .v{font-size:17px;font-weight:600;margin-top:6px;line-height:1.25}
+.rd .v b{font-weight:700}
+.rd .s{font-size:13px;color:var(--hint);margin-top:4px;font-variant-numeric:tabular-nums}
+.pick{margin-top:10px;font-size:14px;padding:9px 12px;border-radius:var(--r-sm);background:var(--well);box-shadow:var(--well-sh)}
+.pick[hidden]{display:none}
+.read{margin-top:10px;display:grid;gap:6px}
+.read div{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 12px;border-radius:var(--r-sm);background:var(--well);box-shadow:var(--well-sh)}
+.read span{color:var(--hint-well)}.read b{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:1px solid var(--btn-bd);border-radius:var(--r-md);background:var(--accent-solid);background-image:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0));color:var(--on-accent);font-size:17px;font-weight:700;cursor:pointer;margin-top:24px;box-shadow:var(--btn-sh);transition:transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.btn svg{width:20px;height:20px}
+
+/* ───────── ГРОМАДИ ───────── */
+.search{display:flex;align-items:center;gap:8px;background:var(--well);box-shadow:var(--well-sh);border-radius:12px;padding:0 12px;min-height:48px}
+.search svg{width:18px;height:18px;color:var(--hint-well);flex:none}
+.search input{flex:1;border:0;background:transparent;font:inherit;font-size:17px;color:var(--text);min-height:48px;outline:none;min-width:0}
+.search input::placeholder{color:var(--hint-well)}
+.search:focus-within{box-shadow:var(--well-sh),0 0 0 2px var(--accent)}
+.res{display:flex;align-items:center;gap:12px;padding:0 8px 0 16px;min-height:56px;position:relative}
+.res + .res::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.res .b{flex:1;min-width:0}.res .n{font-size:16px}.res .o{font-size:13px;color:var(--hint)}
+.pill{border:0;border-radius:999px;min-height:36px;min-width:44px;padding:0 14px;font-size:14px;font-weight:600;background:var(--accent-tint);color:var(--accent-ink);cursor:pointer;transition:transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.pill.done{background:transparent;color:var(--hint);font-weight:400;cursor:default}
+.nav-row{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;padding:0 16px;min-height:48px;font-size:16px;text-align:left;cursor:pointer;position:relative;color:var(--text)}
+.nav-row + .nav-row::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.nav-row .cnt{margin-left:auto}
+.nav-row .chev{color:var(--hint);font-size:20px;margin-left:auto}
+.nav-row .cnt + .chev{margin-left:0}
+.back{display:inline-flex;align-items:center;gap:6px;border:0;background:var(--raised);box-shadow:var(--raised-sh);color:var(--text);font-size:15px;font-weight:600;min-height:40px;padding:0 14px 0 10px;border-radius:999px;cursor:pointer;margin:14px 0 10px}
+.back i{font-style:normal;color:var(--accent-ink);font-size:20px;line-height:1}
+.empty{padding:18px 16px;font-size:15px;color:var(--hint)}
+.grp .row{min-height:56px;padding-top:6px;padding-bottom:6px;transition:transform .2s cubic-bezier(.4,0,.2,1)}
+.grp .ed{display:none}.grp.editing .ed{display:grid}
+.grp.editing .ic,.grp.editing .v{display:none}
+.grp.editing .row::before{left:56px}
+.grp .minus{place-items:center;width:44px;height:44px;margin-left:-12px;border:0;background:transparent;cursor:pointer}
+.grp .minus i{display:block;width:22px;height:22px;border-radius:50%;background:var(--alert);position:relative}
+.grp .minus i::after{content:"";position:absolute;left:5px;right:5px;top:10px;height:2px;border-radius:1px;background:#fff}
+.grp .minus:disabled{cursor:not-allowed}.grp .minus:disabled i{background:color-mix(in srgb,var(--hint) 45%,transparent)}
+.grp .handle{place-items:center;width:44px;height:44px;margin-right:-10px;color:var(--hint);cursor:grab;touch-action:none}
+.grp .handle svg{width:22px;height:22px}
+.grp .row.dragging{z-index:3;transition:none;background:var(--raised-c);box-shadow:0 8px 24px rgba(0,0,0,.28);border-radius:10px}
+.toast{position:absolute;left:12px;right:12px;bottom:90px;z-index:6;display:flex;align-items:center;gap:12px;min-height:50px;padding:0 8px 0 16px;border-radius:14px;background:var(--toast-bg);color:#fff;font-size:15px;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translateY(24px);opacity:0;pointer-events:none;transition:transform .2s cubic-bezier(.4,0,.2,1),opacity .2s}
+.toast.on{transform:none;opacity:1;pointer-events:auto}
+.toast button{margin-left:auto;border:0;background:transparent;color:var(--toast-act);font-weight:700;font-size:15px;min-height:44px;padding:0 10px;cursor:pointer}
+
+/* ───────── таб-бар: скло + ПІДНЯТА капсула (A56) ───────── */
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 8px calc(8px + env(safe-area-inset-bottom));z-index:5;background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);border-top:1px solid var(--glass-rim)}
+.cap{position:absolute;top:6px;left:0;height:52px;width:0;border-radius:14px;opacity:0;pointer-events:none;background:var(--raised);box-shadow:var(--raised-sh);transition:transform var(--nav-dur) var(--nav-ease),width var(--nav-dur) var(--nav-ease)}
+.cap.snap{transition:none}
+.tab{flex:1;position:relative;z-index:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;font-size:11px;font-weight:600;color:var(--hint);cursor:pointer;transition:color .15s,transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{color:var(--accent-ink)}
+.tab[hidden]{display:none}
+/* шіт налаштувань (живе: Telegram ⋯ → «Налаштування», SettingsButton) */
+.scrim{position:absolute;inset:0;z-index:8;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .24s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:9;background:var(--page);border-radius:18px 18px 0 0;padding:8px 16px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .26s cubic-bezier(.32,.72,0,1);box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.sheet.on{transform:none}
+.sheet .grab{width:36px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--text) 22%,transparent);margin:0 auto 12px}
+.sheet h3{margin:0 0 12px;font-size:17px;text-align:center}
+.sheet .opt{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;border:0;background:transparent;padding:0 12px;font-size:16px;cursor:pointer;color:var(--text);text-align:left;border-radius:12px}
+.sheet .opt[aria-current="true"]{background:var(--card);box-shadow:var(--card-sh)}
+.sheet .opt .ava{width:34px;height:34px;font-size:15px}
+.sheet .opt small{display:block;font-size:12px;color:var(--hint)}
+.sheet [hidden]{display:none}
+.pressing{transform:scale(.96);transition-duration:80ms!important}
+.pill.pressing{transform:scale(.92)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* ───────── v8 · «Місяць» — календар (Р-31 · Р-32 · Р-33) ───────── */
+.phone[data-theme="graphite"]{--tile-top:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0) 55%);--tile-sh:inset 0 1px 0 rgba(255,255,255,.16),0 2px 6px rgba(0,0,0,.35)}
+.phone[data-theme="light"]{--tile-top:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 55%);--tile-sh:inset 0 1px 0 rgba(255,255,255,.55),0 1px 2px rgba(0,0,0,.12),0 3px 8px rgba(0,0,0,.08)}
+.calc{padding:12px 10px 12px}
+.cal-nav{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;margin:0 2px 10px}
+.cal-nav b{font-size:15px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-pill{margin:0;min-height:36px;padding:0 12px 0 8px;font-size:13px}.cal-pill.r{padding:0 8px 0 12px}.cal-pill.ghost{visibility:hidden}
+.cal{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.cal-h{font-size:11px;color:var(--hint);text-align:center;padding-bottom:2px}.cal-h.cur{color:var(--accent-ink);font-weight:700}
+.cal-c{position:relative;border:0;border-radius:8px;min-height:52px;padding:6px 5px 10px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;cursor:pointer;color:var(--text);min-width:0;overflow:hidden;text-align:left;font:inherit;transition:box-shadow .18s}
+.cal-c.z{background-color:var(--well);box-shadow:var(--well-sh)}
+.cal-c.h{background-color:color-mix(in srgb,var(--hist) var(--p,0%),var(--hist-zero));background-image:var(--tile-top);box-shadow:var(--tile-sh)}
+.cal-c.fut{background:transparent;box-shadow:none;cursor:default}.cal-c.fut .cd{color:var(--hint);font-weight:400}
+.cal-c.today{outline:2px solid var(--accent);outline-offset:-2px}
+.cal-c.sel{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--text)!important;z-index:1}
+.cal-c .cd{font-size:12px;font-weight:500;line-height:1}
+.cal-c .cv{font-size:14px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;line-height:1.1;font-variant-numeric:tabular-nums}
+.cal-c .cv u{text-decoration:none;font-size:11px;font-weight:500}
+.cal-foot{display:flex;align-items:center;gap:4px;margin-top:10px;font-size:12px;color:var(--hint)}
+.cal-foot i{width:16px;height:10px;border-radius:2px;background-color:color-mix(in srgb,var(--hist) var(--p),var(--hist-zero));background-image:var(--tile-top)}
+.cal-foot i.z0{background:var(--well);box-shadow:var(--well-sh)}
+.cal-foot .yr{margin-left:auto;display:inline-flex;align-items:center;min-height:26px;padding:0 11px;border-radius:999px;background:var(--well);box-shadow:var(--well-sh);font-size:13px;font-weight:600;color:var(--hint-well);font-variant-numeric:tabular-nums}
+/* розклад робочого дня (Р-33) */
+.dcard .dpad,.wday .dpad{padding:8px 16px 12px}
+.agn{position:relative;margin:10px 0 6px}
+.agn .hr{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.agn .hr span{position:absolute;top:-8px;left:0;padding-right:6px;background-color:var(--card);font-size:11px;color:var(--hint);font-variant-numeric:tabular-nums}
+.agn .blk{position:absolute;left:50px;right:0;display:flex;align-items:center;border-radius:8px;background-color:var(--hist);background-image:var(--tile-top);box-shadow:var(--tile-sh);color:var(--text);font-size:12px;font-weight:600;padding:0 8px;overflow:hidden;white-space:nowrap;font-variant-numeric:tabular-nums}
+.phone[data-theme="graphite"] .agn .blk.now{background-color:var(--hist-now);color:#1c1c1e}
+.phone[data-theme="light"] .agn .blk.now{background-color:var(--hist-now);color:#fff}
+/* іконки вкладок — Lucide (ISC), тон-заливка активної (Р-31) */
+.tabs svg.lu{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2}
+.tabs .tab[aria-selected="true"] svg .f{fill:currentColor;fill-opacity:.22}
+@media (prefers-reduced-motion:reduce){.thumb,.cap,.tab,.pill,.btn,.toast,.sheet,.scrim,.grp .row{transition:none!important}.pressing{transform:none}}
+/* ───────── живий застосунок (хід 5б-3) ───────── */
+/* П-1: «нема даних» — сірий пунктир і «—», ніколи не лунка «тихо» і не нуль */
+.cal-c.nd{background:transparent;box-shadow:none;border:1.5px dashed var(--nodata);cursor:default}
+.cal-c.nd .cd{color:var(--hint);font-weight:400}.cal-c.nd .cv{color:var(--nodata-ink);font-weight:600}
+.wd.nd .col{background:transparent;box-shadow:none;border:1.5px dashed var(--nodata)}.wd.nd b{color:var(--nodata-ink)}
+.rhero .since{margin:10px 0 0;font-size:13px;line-height:1.35;color:var(--hint)}
+.note{margin:12px 4px 0;font-size:14px;line-height:1.4;color:var(--hint)}
+.grp .row .n small{display:block;font-size:13px;color:var(--hint)}
+.menu{position:absolute;bottom:92px;right:12px;z-index:7;border:0;min-width:44px;min-height:44px;border-radius:999px;background:var(--raised);box-shadow:var(--raised-sh);color:var(--accent-ink);font-size:20px;cursor:pointer}
+.menu[hidden]{display:none}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="s-alert" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3L10.3 3.4Z"/><path fill="#fff" d="M11 9h2v5.5h-2zM11 16.3h2v2h-2z"/></symbol>
+  <symbol id="s-yellow" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3L10.3 3.4Z"/><path fill="#1c1c1e" d="M11 9h2v5.5h-2zM11 16.3h2v2h-2z"/></symbol>
+  <symbol id="s-nodata" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3.2 2.6"/><path fill="currentColor" d="M11 15.8h2v2h-2zM12 6.3c2 0 3.4 1.2 3.4 2.9 0 1.3-.7 2-1.6 2.6-.7.5-.9.8-.9 1.6v.3h-1.9v-.5c0-1.3.5-1.9 1.3-2.5.7-.5 1.1-.8 1.1-1.5 0-.7-.6-1.2-1.4-1.2-.9 0-1.5.5-1.6 1.4H8.6c.1-1.9 1.5-3.1 3.4-3.1Z"/></symbol>
+  <symbol id="s-calm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="currentColor"/></symbol>
+  <symbol id="t-now" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/></symbol>
+  <symbol id="t-rep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="t-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></symbol>
+</svg>
+<main class="phone" id="app" data-theme="graphite" aria-label="AirLens">
+  <button class="menu" type="button" id="menu" aria-label="Налаштування" hidden>⋯</button>
+  <div class="screens">
+    <!-- ① ЗАРАЗ -->
+    <section class="screen" id="scr-now" role="tabpanel" aria-labelledby="tab-now">
+      <div class="head"><div class="grpbtn"><span class="ava" aria-hidden="true" id="ava">A</span><span class="gtxt"><span class="gline"><h1 id="gname">AirLens</h1></span><span class="fresh" id="fresh" role="status" hidden></span></span></div></div>
+      <div class="hero" id="hero" role="status" aria-live="polite"></div>
+      <div id="others"></div>
+    </section>
+    <!-- ② ЗВІТИ -->
+    <section class="screen" id="scr-rep" role="tabpanel" aria-labelledby="tab-rep" hidden>
+      <div class="pin" data-pin hidden></div>
+      <div class="head"><h1>Звіти</h1></div>
+      <div class="tray" id="per" role="tablist" aria-label="Період"><span class="thumb" aria-hidden="true"></span>
+        <button class="tray-i" role="tab" data-v="day" aria-selected="true">День</button>
+        <button class="tray-i" role="tab" data-v="week" aria-selected="false">Тиждень</button>
+        <button class="tray-i" role="tab" data-v="month" aria-selected="false">Місяць</button></div>
+      <div class="gap"></div>
+      <div class="tray sm" id="who" role="tablist" aria-label="Громада"><span class="thumb" aria-hidden="true"></span></div>
+      <div id="rep-body"></div>
+    </section>
+    <!-- ③ ГРОМАДИ -->
+    <section class="screen" id="scr-set" role="tabpanel" aria-labelledby="tab-set" hidden>
+      <div class="pin" data-pin hidden></div>
+      <div class="head"><h1>Громади</h1></div>
+      <div id="set-body"></div>
+    </section>
+  </div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Розділи">
+      <span class="cap" aria-hidden="true"></span>
+      <button class="tab" role="tab" id="tab-now" aria-selected="true" aria-controls="scr-now"><svg viewBox="0 0 24 24" aria-hidden="true" class="lu"><path d="M7 18v-6a5 5 0 1 1 10 0v6" class="f"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z" class="f"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/></svg>Зараз</button>
+      <button class="tab" role="tab" id="tab-rep" aria-selected="false" aria-controls="scr-rep"><svg viewBox="0 0 24 24" aria-hidden="true" class="lu"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" class="f"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M8 18v-1"/><path d="M12 18v-6"/><path d="M16 18v-3"/></svg>Звіти</button>
+      <button class="tab" role="tab" id="tab-set" aria-selected="false" aria-controls="scr-set"><svg viewBox="0 0 24 24" aria-hidden="true" class="lu"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" class="f"/></svg>Громади</button>
+    </nav>
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-label="Налаштування"><div class="grab"></div><h3>Тема</h3>
+    <div class="tray" id="thm" role="tablist" aria-label="Тема"><span class="thumb" aria-hidden="true"></span>
+      <button class="tray-i" role="tab" data-v="graphite" aria-selected="true">Темна</button>
+      <button class="tray-i" role="tab" data-v="light" aria-selected="false">Світла</button></div>
+    <div id="dstate" hidden><div class="gap"></div><h3>Стан громад · синтетика прев’ю</h3>
+      <div class="tray sm" id="dst" role="tablist" aria-label="Стан синтетики"><span class="thumb" aria-hidden="true"></span>
+        <button class="tray-i" role="tab" data-v="alert">Тривога</button><button class="tray-i" role="tab" data-v="yellow">Жовта</button>
+        <button class="tray-i" role="tab" data-v="nodata">Нема даних</button><button class="tray-i" role="tab" data-v="calm">Без тривоги</button></div></div>
+  </div>
+</main>
+<script id="demo">window.AIRLENS_DEMO = {"note":"Синтетика (хід 5б-3). Звіти — справжній reportsView на SQLite; «Зараз» — узгоджений з ними знімок.","now":{"alert":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","dataAt":"2026-09-29T11:19:35.000Z","stale":false,"rows":[{"uid":332,"name":"Дніпро","oblast":"Дніпропетровська область","state":"alert","via":"hromada","threat":"балістика","since":"2026-09-29T11:16:00.000Z"},{"uid":289,"name":"Павлоград","oblast":"Дніпропетровська область","state":"alert","via":"raion","threat":"дрони","since":"2026-09-29T11:04:00.000Z"},{"uid":300,"name":"Кам’янське","oblast":"Дніпропетровська область","state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":327,"name":"Самар","oblast":"Дніпропетровська область","state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":1060,"name":"Полтава","oblast":"Полтавська область","state":"calm","lastEnd":null},{"uid":761,"name":"Кропивницький","oblast":"Кіровоградська область","state":"calm","lastEnd":null}]},"yellow":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","dataAt":"2026-09-29T11:19:35.000Z","stale":false,"rows":[{"uid":332,"name":"Дніпро","oblast":"Дніпропетровська область","state":"calm","lastEnd":null},{"uid":289,"name":"Павлоград","oblast":"Дніпропетровська область","state":"yellow","via":"raion","threat":"дрони","since":"2026-09-29T11:04:00.000Z"},{"uid":300,"name":"Кам’янське","oblast":"Дніпропетровська область","state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":327,"name":"Самар","oblast":"Дніпропетровська область","state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":1060,"name":"Полтава","oblast":"Полтавська область","state":"calm","lastEnd":null},{"uid":761,"name":"Кропивницький","oblast":"Кіровоградська область","state":"calm","lastEnd":null}]},"calm":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","dataAt":"2026-09-29T11:19:35.000Z","stale":false,"rows":[{"uid":332,"name":"Дніпро","oblast":"Дніпропетровська область","state":"calm","lastEnd":null},{"uid":289,"name":"Павлоград","oblast":"Дніпропетровська область","state":"calm","lastEnd":null},{"uid":300,"name":"Кам’янське","oblast":"Дніпропетровська область","state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":327,"name":"Самар","oblast":"Дніпропетровська область","state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":1060,"name":"Полтава","oblast":"Полтавська область","state":"calm","lastEnd":null},{"uid":761,"name":"Кропивницький","oblast":"Кіровоградська область","state":"calm","lastEnd":null}]},"nodata":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","dataAt":"2026-09-29T11:15:00.000Z","stale":true,"rows":[{"uid":332,"name":"Дніпро","oblast":null,"state":"nodata","lastEnd":null},{"uid":289,"name":"Павлоград","oblast":null,"state":"nodata","lastEnd":null},{"uid":300,"name":"Кам’янське","oblast":null,"state":"nodata","lastEnd":null},{"uid":327,"name":"Самар","oblast":null,"state":"nodata","lastEnd":null},{"uid":1060,"name":"Полтава","oblast":null,"state":"nodata","lastEnd":null},{"uid":761,"name":"Кропивницький","oblast":null,"state":"nodata","lastEnd":null}]}},"reports":{"day":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"day","from":"2026-09-29","to":"2026-09-29","today":"2026-09-29"},"series":[{"id":"all","name":"Усі","since":null,"min":88,"base":320,"n":3,"days":[{"d":"2026-09-29","min":88,"n":3}]},{"id":332,"name":"Дніпро","since":null,"min":29,"base":320,"n":2,"days":[{"d":"2026-09-29","min":29,"n":2,"iv":[[610,635,false],[856,860,true]]}]},{"id":289,"name":"Павлоград","since":null,"min":88,"base":320,"n":3,"days":[{"d":"2026-09-29","min":88,"n":3,"iv":[[610,635,false],[700,747,false],[844,860,true]]}]},{"id":300,"name":"Кам’янське","since":null,"min":25,"base":320,"n":1,"days":[{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]}]},{"id":327,"name":"Самар","since":null,"min":25,"base":320,"n":1,"days":[{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]}]},{"id":1060,"name":"Полтава","since":null,"min":0,"base":320,"n":0,"days":[{"d":"2026-09-29","min":0,"n":0,"iv":[]}]},{"id":761,"name":"Кропивницький","since":null,"min":0,"base":320,"n":0,"days":[{"d":"2026-09-29","min":0,"n":0,"iv":[]}]}],"events":[{"start":"2026-09-29T11:16:00.000Z","end":null,"uids":[332],"names":["Дніпро"],"via":"hromada","threat":"балістика","from":"14:16","to":null,"workMin":4},{"start":"2026-09-29T11:04:00.000Z","end":null,"uids":[289],"names":["Павлоград"],"via":"raion","threat":"дрони","from":"14:04","to":null,"workMin":16},{"start":"2026-09-29T08:40:00.000Z","end":"2026-09-29T09:27:00.000Z","uids":[289],"names":["Павлоград"],"via":"raion","threat":"дрони","from":"11:40","to":"12:27","workMin":47},{"start":"2026-09-29T07:10:00.000Z","end":"2026-09-29T07:35:00.000Z","uids":[332,289,300,327],"names":["Дніпро","Павлоград","Кам’янське","Самар"],"via":"oblast","threat":"балістика","from":"10:10","to":"10:35","workMin":25}]},"week":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"week","from":"2026-09-28","to":"2026-10-04","today":"2026-09-29"},"series":[{"id":"all","name":"Усі","since":null,"min":141,"base":860,"n":4,"days":[{"d":"2026-09-28","min":53,"n":1},{"d":"2026-09-29","min":88,"n":3},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":332,"name":"Дніпро","since":null,"min":82,"base":860,"n":3,"days":[{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":29,"n":2,"iv":[[610,635,false],[856,860,true]]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":289,"name":"Павлоград","since":null,"min":141,"base":860,"n":4,"days":[{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":88,"n":3,"iv":[[610,635,false],[700,747,false],[844,860,true]]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":300,"name":"Кам’янське","since":null,"min":78,"base":860,"n":2,"days":[{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":327,"name":"Самар","since":null,"min":78,"base":860,"n":2,"days":[{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":1060,"name":"Полтава","since":null,"min":0,"base":860,"n":0,"days":[{"d":"2026-09-28","min":0,"n":0,"iv":[]},{"d":"2026-09-29","min":0,"n":0,"iv":[]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":761,"name":"Кропивницький","since":null,"min":0,"base":860,"n":0,"days":[{"d":"2026-09-28","min":0,"n":0,"iv":[]},{"d":"2026-09-29","min":0,"n":0,"iv":[]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]}]},"month:2026-09":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"month","from":"2026-09-01","to":"2026-09-30","today":"2026-09-29","month":"2026-09","prev":"2026-08","next":null},"series":[{"id":"all","name":"Усі","since":null,"min":650,"base":11120,"n":18,"days":[{"d":"2026-09-01","min":0,"n":0},{"d":"2026-09-02","min":27,"n":1},{"d":"2026-09-03","min":60,"n":2},{"d":"2026-09-04","min":0,"n":0},{"d":"2026-09-07","min":92,"n":3},{"d":"2026-09-08","min":0,"n":0},{"d":"2026-09-09","min":0,"n":0},{"d":"2026-09-10","min":11,"n":1},{"d":"2026-09-11","min":39,"n":1},{"d":"2026-09-14","min":87,"n":1},{"d":"2026-09-15","min":0,"n":0},{"d":"2026-09-16","min":40,"n":1},{"d":"2026-09-17","min":24,"n":1},{"d":"2026-09-18","min":51,"n":1},{"d":"2026-09-21","min":23,"n":1},{"d":"2026-09-22","min":0,"n":0},{"d":"2026-09-23","min":0,"n":0},{"d":"2026-09-24","min":55,"n":1},{"d":"2026-09-25","min":0,"n":0},{"d":"2026-09-28","min":53,"n":1},{"d":"2026-09-29","min":88,"n":3},{"d":"2026-09-30","fut":true}]},{"id":332,"name":"Дніпро","since":null,"min":271,"base":11120,"n":9,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":27,"n":1,"iv":[[1006,1033,false]]},{"d":"2026-09-03","min":0,"n":0,"iv":[]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":14,"n":1,"iv":[[845,859,false]]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":39,"n":1,"iv":[[662,701,false]]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":35,"n":1,"iv":[[661,696,false]]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":51,"n":1,"iv":[[673,724,false]]},{"d":"2026-09-21","min":23,"n":1,"iv":[[766,789,false]]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":29,"n":2,"iv":[[610,635,false],[856,860,true]]},{"d":"2026-09-30","fut":true}]},{"id":289,"name":"Павлоград","since":null,"min":420,"base":11120,"n":10,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":27,"n":1,"iv":[[1006,1033,false]]},{"d":"2026-09-03","min":40,"n":1,"iv":[[813,853,false]]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":0,"n":0,"iv":[]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":39,"n":1,"iv":[[662,701,false]]},{"d":"2026-09-14","min":87,"n":1,"iv":[[927,1014,false]]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":35,"n":1,"iv":[[661,696,false]]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":51,"n":1,"iv":[[673,724,false]]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":88,"n":3,"iv":[[610,635,false],[700,747,false],[844,860,true]]},{"d":"2026-09-30","fut":true}]},{"id":300,"name":"Кам’янське","since":null,"min":230,"base":11120,"n":6,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":27,"n":1,"iv":[[1006,1033,false]]},{"d":"2026-09-03","min":0,"n":0,"iv":[]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":0,"n":0,"iv":[]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":39,"n":1,"iv":[[662,701,false]]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":35,"n":1,"iv":[[661,696,false]]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":51,"n":1,"iv":[[673,724,false]]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]},{"d":"2026-09-30","fut":true}]},{"id":327,"name":"Самар","since":null,"min":230,"base":11120,"n":6,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":27,"n":1,"iv":[[1006,1033,false]]},{"d":"2026-09-03","min":0,"n":0,"iv":[]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":0,"n":0,"iv":[]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":39,"n":1,"iv":[[662,701,false]]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":35,"n":1,"iv":[[661,696,false]]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":51,"n":1,"iv":[[673,724,false]]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]},{"d":"2026-09-30","fut":true}]},{"id":1060,"name":"Полтава","since":null,"min":96,"base":11120,"n":2,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":0,"n":0,"iv":[]},{"d":"2026-09-03","min":0,"n":0,"iv":[]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":41,"n":1,"iv":[[944,985,false]]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":0,"n":0,"iv":[]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":0,"n":0,"iv":[]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":0,"n":0,"iv":[]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":55,"n":1,"iv":[[606,661,false]]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":0,"n":0,"iv":[]},{"d":"2026-09-29","min":0,"n":0,"iv":[]},{"d":"2026-09-30","fut":true}]},{"id":761,"name":"Кропивницький","since":null,"min":118,"base":11120,"n":5,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":0,"n":0,"iv":[]},{"d":"2026-09-03","min":20,"n":1,"iv":[[1060,1080,false]]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":37,"n":1,"iv":[[763,800,false]]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":11,"n":1,"iv":[[1069,1080,false]]},{"d":"2026-09-11","min":0,"n":0,"iv":[]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":26,"n":1,"iv":[[675,701,false]]},{"d":"2026-09-17","min":24,"n":1,"iv":[[655,679,false]]},{"d":"2026-09-18","min":0,"n":0,"iv":[]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":0,"n":0,"iv":[]},{"d":"2026-09-29","min":0,"n":0,"iv":[]},{"d":"2026-09-30","fut":true}]}]},"month:2026-08":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"month","from":"2026-08-01","to":"2026-08-31","today":"2026-09-29","month":"2026-08","prev":"2026-07","next":"2026-09"},"series":[{"id":"all","name":"Усі","since":null,"min":695,"base":11340,"n":21,"days":[{"d":"2026-08-03","min":21,"n":1},{"d":"2026-08-04","min":23,"n":1},{"d":"2026-08-05","min":69,"n":1},{"d":"2026-08-06","min":105,"n":2},{"d":"2026-08-07","min":0,"n":0},{"d":"2026-08-10","min":49,"n":1},{"d":"2026-08-11","min":0,"n":0},{"d":"2026-08-12","min":61,"n":2},{"d":"2026-08-13","min":14,"n":1},{"d":"2026-08-14","min":20,"n":1},{"d":"2026-08-17","min":37,"n":1},{"d":"2026-08-18","min":119,"n":2},{"d":"2026-08-19","min":31,"n":2},{"d":"2026-08-20","min":36,"n":2},{"d":"2026-08-21","min":21,"n":1},{"d":"2026-08-24","min":54,"n":1},{"d":"2026-08-25","min":0,"n":0},{"d":"2026-08-26","min":21,"n":1},{"d":"2026-08-27","min":14,"n":1},{"d":"2026-08-28","min":0,"n":0},{"d":"2026-08-31","min":0,"n":0}]},{"id":332,"name":"Дніпро","since":null,"min":281,"base":11340,"n":9,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":67,"n":1,"iv":[[698,765,false]]},{"d":"2026-08-06","min":59,"n":1,"iv":[[661,720,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":30,"n":1,"iv":[[553,583,false]]},{"d":"2026-08-13","min":14,"n":1,"iv":[[639,653,false]]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":34,"n":1,"iv":[[668,702,false]]},{"d":"2026-08-19","min":29,"n":1,"iv":[[648,677,false]]},{"d":"2026-08-20","min":13,"n":1,"iv":[[685,698,false]]},{"d":"2026-08-21","min":21,"n":1,"iv":[[628,649,false]]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":14,"n":1,"iv":[[715,729,false]]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":289,"name":"Павлоград","since":null,"min":381,"base":11340,"n":9,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":67,"n":1,"iv":[[698,765,false]]},{"d":"2026-08-06","min":59,"n":1,"iv":[[661,720,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":49,"n":1,"iv":[[795,844,false]]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":61,"n":2,"iv":[[553,583,false],[866,897,false]]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":37,"n":1,"iv":[[627,664,false]]},{"d":"2026-08-18","min":85,"n":1,"iv":[[720,805,false]]},{"d":"2026-08-19","min":2,"n":1,"iv":[[1078,1080,false]]},{"d":"2026-08-20","min":0,"n":0,"iv":[]},{"d":"2026-08-21","min":21,"n":1,"iv":[[628,649,false]]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":300,"name":"Кам’янське","since":null,"min":231,"base":11340,"n":5,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":67,"n":1,"iv":[[698,765,false]]},{"d":"2026-08-06","min":59,"n":1,"iv":[[661,720,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":30,"n":1,"iv":[[553,583,false]]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":0,"n":0,"iv":[]},{"d":"2026-08-19","min":0,"n":0,"iv":[]},{"d":"2026-08-20","min":0,"n":0,"iv":[]},{"d":"2026-08-21","min":21,"n":1,"iv":[[628,649,false]]},{"d":"2026-08-24","min":54,"n":1,"iv":[[892,946,false]]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":327,"name":"Самар","since":null,"min":177,"base":11340,"n":4,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":67,"n":1,"iv":[[698,765,false]]},{"d":"2026-08-06","min":59,"n":1,"iv":[[661,720,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":30,"n":1,"iv":[[553,583,false]]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":0,"n":0,"iv":[]},{"d":"2026-08-19","min":0,"n":0,"iv":[]},{"d":"2026-08-20","min":0,"n":0,"iv":[]},{"d":"2026-08-21","min":21,"n":1,"iv":[[628,649,false]]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":1060,"name":"Полтава","since":null,"min":111,"base":11340,"n":4,"days":[{"d":"2026-08-03","min":21,"n":1,"iv":[[705,726,false]]},{"d":"2026-08-04","min":23,"n":1,"iv":[[967,990,false]]},{"d":"2026-08-05","min":0,"n":0,"iv":[]},{"d":"2026-08-06","min":46,"n":1,"iv":[[752,798,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":0,"n":0,"iv":[]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":0,"n":0,"iv":[]},{"d":"2026-08-19","min":0,"n":0,"iv":[]},{"d":"2026-08-20","min":0,"n":0,"iv":[]},{"d":"2026-08-21","min":0,"n":0,"iv":[]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":21,"n":1,"iv":[[822,843,false]]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":761,"name":"Кропивницький","since":null,"min":65,"base":11340,"n":3,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":22,"n":1,"iv":[[696,718,false]]},{"d":"2026-08-06","min":0,"n":0,"iv":[]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":0,"n":0,"iv":[]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":20,"n":1,"iv":[[952,972,false]]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":0,"n":0,"iv":[]},{"d":"2026-08-19","min":0,"n":0,"iv":[]},{"d":"2026-08-20","min":23,"n":1,"iv":[[978,1001,false]]},{"d":"2026-08-21","min":0,"n":0,"iv":[]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]}]},"month:2026-07":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"month","from":"2026-07-01","to":"2026-07-31","today":"2026-09-29","month":"2026-07","prev":null,"next":"2026-08"},"series":[{"id":"all","name":"Усі","since":"2026-07-26T21:00:00.000Z","min":247,"base":2700,"n":4,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":83,"n":1},{"d":"2026-07-28","min":0,"n":0},{"d":"2026-07-29","min":49,"n":1},{"d":"2026-07-30","min":79,"n":1},{"d":"2026-07-31","min":36,"n":1}]},{"id":332,"name":"Дніпро","since":"2026-07-26T21:00:00.000Z","min":0,"base":2700,"n":0,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":289,"name":"Павлоград","since":"2026-07-26T21:00:00.000Z","min":0,"base":2700,"n":0,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":300,"name":"Кам’янське","since":"2026-07-26T21:00:00.000Z","min":162,"base":2700,"n":2,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":83,"n":1,"iv":[[805,888,false]]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":79,"n":1,"iv":[[832,911,false]]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":327,"name":"Самар","since":"2026-07-26T21:00:00.000Z","min":0,"base":2700,"n":0,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":1060,"name":"Полтава","since":"2026-07-26T21:00:00.000Z","min":49,"base":2700,"n":1,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":49,"n":1,"iv":[[566,615,false]]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":761,"name":"Кропивницький","since":"2026-07-26T21:00:00.000Z","min":36,"base":2700,"n":1,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":36,"n":1,"iv":[[584,620,false]]}]}]}}};</script>
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const app = $("#app");
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const DEMO = window.AIRLENS_DEMO || null; // лише прев'ю-стенд (tools/miniapp/build.mjs); у живому — порожньо
+  const LIVE = !!(tg && tg.initData);
+  const store = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* приватне вікно */ } } };
+  const S = { theme: store.get("airlens.theme") === "light" ? "light" : "graphite", tab: "now", period: "day", who: "all", sel: null, month: null, demo: "alert" };
+  const STALE_MS = 3 * 60_000, REFRESH_MS = 60_000;
+
+  // ───── час і слова ─────
+  const KYIV = new Intl.DateTimeFormat("uk-UA", { timeZone: "Europe/Kyiv", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const KYIV_D = new Intl.DateTimeFormat("uk-UA", { timeZone: "Europe/Kyiv", day: "numeric", month: "2-digit" });
+  const hmIso = (iso) => KYIV.format(new Date(iso));
+  const hm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  const toMin = (s) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+  const durH = (m) => { m = Math.round(m); const h = Math.floor(m / 60), r = m % 60; return h ? `${h}<span class="u"> год </span>${String(r).padStart(2, "0")}<span class="u"> хв</span>` : `${r}<span class="u"> хв</span>`; };
+  const dur = (m) => { m = Math.max(0, Math.round(m)); const h = Math.floor(m / 60), r = m % 60; return h ? `${h} год ${String(r).padStart(2, "0")} хв` : `${r} хв`; };
+  const plural = (n, a, b, c) => { const d = n % 10, t = n % 100; return d === 1 && t !== 11 ? a : d >= 2 && d <= 4 && (t < 12 || t > 14) ? b : c; };
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const ico = (s, cls = "") => `<svg class="${cls} i-${s}" aria-hidden="true"><use href="#s-${s}"/></svg>`;
+  const SCOPE = { hromada: "", raion: "весь район", oblast: "вся область" };
+  const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"], FULL = ["Понеділок", "Вівторок", "Середа", "Четвер", "П’ятниця", "Субота", "Неділя"];
+  const MONTHS = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
+  const wdOf = (d) => (new Date(d + "T12:00:00Z").getUTCDay() + 6) % 7;
+  const ddmm = (d) => `${+d.slice(8, 10)}.${d.slice(5, 7)}`;
+
+  // ───── дані: POST /api/app (живе) або синтетика (прев'ю) ─────
+  const NOW = { data: null, at: 0, err: 0 };
+  const REP = new Map();
+  let skew = 0;
+  const nowMs = () => Date.now() + skew;
+  const code = () => new URLSearchParams(location.search).get("code") || (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
+  async function api(body) {
+    if (!LIVE) {
+      if (!DEMO) throw Object.assign(new Error("outside"), { status: 0 });
+      const v = body.view === "now" ? DEMO.now[S.demo] : DEMO.reports[body.period === "month" ? `month:${body.month || "2026-09"}` : body.period];
+      if (!v) throw Object.assign(new Error("demo"), { status: 400 });
+      return JSON.parse(JSON.stringify(v));
+    }
+    const r = await fetch("/api/app", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ initData: tg.initData, code: code(), ...body }) });
+    if (!r.ok) throw Object.assign(new Error("http"), { status: r.status });
+    return r.json();
+  }
+  const FATAL = {
+    0: ["Відкрийте з Telegram", "AirLens відкривається кнопкою «Звіти ↗» під табло вашої групи."],
+    401: ["Сесія застаріла", "Закрийте AirLens і відкрийте знову кнопкою під табло групи."],
+    403: ["Лише для учасників групи", "Ці дані бачать учасники групи, де працює бот."],
+    404: ["Групу не знайдено", "Відкрийте AirLens кнопкою «Звіти ↗» під табло вашої групи."],
+  };
+  let fatal = null;
+  async function loadNow() {
+    try {
+      const v = await api({ view: "now" });
+      skew = Date.parse(v.now) - Date.now();
+      NOW.data = v; NOW.at = Date.now(); NOW.err = 0;
+    } catch (e) {
+      if (FATAL[e.status] && !NOW.data) fatal = FATAL[e.status];
+      NOW.err = e.status || -1;
+    }
+    renderNow(); renderPins(); renderSet();
+  }
+  const repKey = () => (S.period === "month" ? `month:${S.month || ""}` : S.period);
+  async function loadRep(force = false) {
+    const k = repKey(), have = REP.get(k);
+    if (have && !force && Date.now() - have.at < REFRESH_MS) return renderRep();
+    if (!have) renderRep();
+    try {
+      const v = await api({ view: "reports", period: S.period, ...(S.period === "month" && S.month ? { month: S.month } : {}) });
+      REP.set(k, { data: v, at: Date.now(), err: 0 });
+    } catch (e) {
+      if (!have) REP.set(k, { data: null, at: 0, err: e.status || -1 });
+    }
+    if (repKey() === k) renderRep();
+  }
+
+  // ───── ① Зараз ─────
+  const nowStale = () => !NOW.data || NOW.data.stale || NOW.err || Date.now() - NOW.at > STALE_MS;
+  function live() {
+    if (!NOW.data || nowStale()) return [];
+    return NOW.data.rows.filter((r) => r.state === "alert" || r.state === "yellow").map((r) => ({ n: r.name, since: r.since, t: r.threat, lvl: r.via, s: r.state }));
+  }
+  function renderNow() {
+    if (fatal) {
+      $("#hero").dataset.s = "nodata";
+      $("#hero").innerHTML = `<div class="hero-top">${ico("nodata")}<div><h2>${fatal[0]}</h2><p class="call">${fatal[1]}</p></div></div>`;
+      $("#others").innerHTML = ""; $("#fresh").hidden = true; return;
+    }
+    const d = NOW.data, hits = live(), stale = nowStale(), rows = d ? d.rows : [], M = rows.length, fr = $("#fresh");
+    if (d) { $("#gname").textContent = d.title || "Група"; $("#ava").textContent = (d.title || "Г").trim()[0].toUpperCase(); }
+    fr.hidden = !d; fr.className = "fresh" + (stale ? " stale" : "");
+    if (d) fr.innerHTML = `<svg aria-hidden="true"><use href="#i-clock"/></svg>${NOW.err ? "нема зв’язку · " : ""}дані на ${d.dataAt ? hmIso(d.dataAt) : "—"}`;
+    const h = $("#hero");
+    if (!d && !NOW.err) { h.dataset.s = "nodata"; h.innerHTML = `<div class="hero-top">${ico("nodata")}<div><h2>Завантаження…</h2></div></div>`; $("#others").innerHTML = ""; return; }
+    if (hits.length) {
+      const s = hits.every((x) => x.s === "yellow") ? "yellow" : "alert";
+      h.dataset.s = s;
+      h.innerHTML = `<div class="hero-top">${ico(s)}<div><h2>Тривога в ${hits.length} з ${M} ${plural(M, "громади", "громад", "громад")}</h2><p class="call">Пройдіть в укриття.</p></div></div>
+        <div class="hits">${hits.map((x) => `<div class="hit"><div class="b"><div class="n">${esc(x.n)}</div><div class="t"><b>${esc(x.t || "тривога")}</b>${SCOPE[x.lvl] ? `<span> · ${SCOPE[x.lvl]}</span>` : ""}</div></div>
+        <div class="d"><b>${dur((nowMs() - Date.parse(x.since)) / 60000)}</b><small>з ${hmIso(x.since)}</small></div></div>`).join("")}</div>`;
+    } else if (stale) {
+      h.dataset.s = "nodata";
+      h.innerHTML = `<div class="hero-top">${ico("nodata")}<div><h2>Нема свіжих даних</h2><p class="call">Орієнтуйтесь на сирену й офіційні застосунки.</p></div></div>`;
+    } else {
+      h.dataset.s = "calm";
+      h.innerHTML = `<div class="hero-top">${ico("calm")}<div><h2>Без тривоги: усі ${M} ${plural(M, "громада", "громади", "громад")}</h2></div></div>`;
+    }
+    const inHero = new Set(hits.map((x) => x.n)), rest = rows.filter((r) => !inHero.has(r.name));
+    const recent = (r) => { if (stale || !r.lastEnd) return ""; const m = (nowMs() - Date.parse(r.lastEnd)) / 60000; return m <= 60 ? `без тривоги ${dur(m)}` : ""; };
+    const title = stale ? "Нема даних" : hits.length ? "Без тривоги" : "Громади";
+    $("#others").innerHTML = rest.length ? `<div class="gap"></div><div class="gap"></div><div class="card"><div class="card-h"><span>${title}</span><span class="count">${rest.length} з ${M}</span></div>
+      ${rest.map((r) => `<div class="row">${ico(stale || r.state === "nodata" ? "nodata" : "calm", "ic")}<span class="n">${esc(r.name)}</span><span class="v">${recent(r)}</span></div>`).join("")}</div>` : "";
+  }
+  function renderPins() {
+    const hits = live();
+    $$("[data-pin]").forEach((p) => {
+      p.hidden = !hits.length; if (!hits.length) return;
+      p.dataset.s = hits.every((x) => x.s === "yellow") ? "yellow" : "alert";
+      p.innerHTML = `<button type="button" data-go="now">${ico(p.dataset.s)}<span>Тривога в ${hits.length} ${plural(hits.length, "громаді", "громадах", "громадах")} — в укриття</span><span class="go" aria-hidden="true">›</span></button>`;
+    });
+  }
+
+  // ───── ② Звіти (усе злиття — на сервері, Р-30 · Р-41; тут лише показ) ─────
+  const bigDur = (m) => (m >= 60 ? `${Math.floor(m / 60)}<small> год </small>${String(m % 60).padStart(2, "0")}<small> хв</small>` : `${m}<small> хв</small>`);
+  const pctOf = (min, base) => (base ? Math.round((min / base) * 100) : 0);
+  const sinceNote = (s) => (s.since ? `<p class="since">Облік з ${KYIV_D.format(new Date(s.since))}, ${hmIso(s.since)} — раніше даних нема.</p>` : "");
+  const rhero = (v, s, when, base) => `<div class="card rhero"><div class="top"><span class="badge">${when}</span><span class="hours"><svg aria-hidden="true"><use href="#i-clock"/></svg>${v.window.from}–${v.window.to}</span></div>
+      <div class="big">${bigDur(s.min)}</div><div class="k">тривоги в робочий час</div>
+    <div class="meter" role="img" aria-label="${pctOf(s.min, s.base)}% ${base}"><i style="width:${Math.min(100, pctOf(s.min, s.base))}%"></i></div>
+    <div class="rmeta"><span><b>${pctOf(s.min, s.base)}%</b> часу під тривогами</span><span><b>${s.n}</b> ${plural(s.n, "тривога", "тривоги", "тривог")}</span></div>${sinceNote(s)}</div>`;
+  const cur = () => REP.get(repKey());
+  const pick = (v) => v.series.find((x) => String(x.id) === S.who) || v.series[0];
+  function whoTray(v) {
+    const t = $("#who"), items = v ? v.series.map((x) => [String(x.id), x.name]) : [["all", "Усі"]];
+    if (!items.some(([k]) => k === S.who)) S.who = "all";
+    t.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + items.map(([k, n]) => `<button class="tray-i" role="tab" data-v="${k}" aria-selected="${S.who === k}">${esc(n)}</button>`).join("");
+    requestAnimationFrame(() => place(t, true));
+  }
+  function renderRep() {
+    const c = cur(), b = $("#rep-body");
+    if (!c || !c.data) {
+      b.innerHTML = c && c.err ? `<div class="gap"></div><div class="card empty">${(FATAL[c.err] || ["Не вдалось завантажити звіт", "Спробуйте ще раз за хвилину."]).join(". ")}</div>` : `<div class="gap"></div><div class="card empty">Завантаження…</div>`;
+      return;
+    }
+    whoTray(c.data);
+    b.innerHTML = S.period === "day" ? repDay(c.data) : S.period === "week" ? repWeek(c.data) : repMonth(c.data);
+  }
+  function perHromada(rows, head) {
+    if (S.who !== "all") return "";
+    return `<div class="gap"></div><div class="card lst"><div class="card-h">${head || `<span>По громадах</span><span class="count">${rows.length}</span>`}</div>${rows.map(([id, n, m, c, nd]) =>
+      `<button class="r" type="button" data-who="${id}"><span class="n">${esc(n)}<small>${nd ? "нема даних" : c ? `${c} ${plural(c, "тривога", "тривоги", "тривог")}` : "без тривог"}</small></span><span class="v${m ? "" : " zero"}">${nd ? "—" : durH(m)}</span><span class="chev" aria-hidden="true">›</span></button>`).join("")}</div>`;
+  }
+  const byMin = (a, b) => b[2] - a[2];
+  // розклад робочого дня (Р-33) — один компонент для «День» і картки дня в «Місяці»
+  function agenda(v, iv) {
+    const wf = toMin(v.window.from), wt = toMin(v.window.to), hrs = Math.round((wt - wf) / 60), rh = 24;
+    let g = ""; for (let k = 0; k <= hrs; k++) g += `<div class="hr" style="top:${k * rh}px"><span>${hm(wf + k * 60)}</span></div>`;
+    const bl = iv.map(([p, q, on]) => `<div class="blk${on ? " now" : ""}" style="top:${((p - wf) / 60) * rh}px;height:${Math.max(22, ((q - p) / 60) * rh)}px">${hm(p)}–${on ? "зараз" : hm(q)} · ${dur(q - p)}</div>`).join("");
+    return `<div class="agn" style="height:${hrs * rh}px">${g}${bl}</div>${iv.length ? "" : `<div class="empty">Без тривог у робочий час.</div>`}`;
+  }
+  function repDay(v) {
+    const s = pick(v), day = s.days[0];
+    if (!day || day.nodata) return `<div class="card empty">Сьогодні не будній день або облік ще не почався — даних за робочий час нема.</div>`;
+    const rows = v.series.slice(1).map((x) => [x.id, x.name, x.days[0] && x.days[0].min || 0, x.days[0] && x.days[0].n || 0, !x.days[0] || x.days[0].nodata]).sort(byMin);
+    const ev = (v.events || []).filter((e) => S.who === "all" || e.uids.includes(+S.who));
+    const list = ev.map((e) => {
+      const on = !e.end, names = S.who === "all" ? e.names : [s.name];
+      return `<div class="e${on ? " now" : ""}"><span class="t">${e.from}–${on ? "зараз" : e.to}</span><span class="w">${names.length > 2 ? `${names.length} ${plural(names.length, "громада", "громади", "громад")}` : esc(names.join(", "))}</span><span class="d">${dur(((on ? nowMs() : Date.parse(e.end)) - Date.parse(e.start)) / 60000)}</span>
+        <span class="s">${esc(e.threat || "тривога")}${SCOPE[e.via] ? ` · ${SCOPE[e.via]}` : ""}</span></div>`;
+    }).join("");
+    return rhero(v, s, "Сьогодні", "робочого часу, що минув") +
+      (S.who === "all" ? "" : `<div class="card wday" style="margin-top:12px"><div class="card-h"><span>Робочий день</span><span class="count">зараз ${hmIso(new Date(nowMs()).toISOString())}</span></div><div class="dpad">${agenda(v, day.iv || [])}</div></div>`) +
+      perHromada(rows) + (ev.length ? `<div class="gap"></div><div class="card evs"><div class="card-h"><span>Події</span><span class="count">${ev.length}</span></div>${list}</div>` : "");
+  }
+  function repWeek(v) {
+    const s = pick(v), today = v.period.today;
+    const vals = s.days.map((d) => (d.fut || d.nodata ? 0 : d.min));
+    const cap = Math.max(60, Math.ceil(Math.max(...vals) / 30) * 30);
+    const lbl = (m) => (m >= 60 ? `${Math.floor(m / 60)} год${m % 60 ? `<br>${m % 60} хв` : ""}` : `${m} хв`);
+    const cols = s.days.map((d) => { const m = d.fut || d.nodata ? 0 : d.min;
+      return `<div class="wd${d.d === today ? " cur" : ""}${d.fut ? " fut" : ""}${d.nodata ? " nd" : ""}"><b>${d.fut ? "" : d.nodata ? "—" : m ? lbl(m) : "0"}</b>
+      <div class="col" role="img" aria-label="${DAYS[wdOf(d.d)]}: ${d.fut ? "ще не настав" : d.nodata ? "нема даних" : dur(m)}"><i style="height:calc((100% - 6px) * ${m / cap})"></i></div><span>${DAYS[wdOf(d.d)]}</span></div>`; }).join("");
+    const rows = v.series.slice(1).map((x) => [x.id, x.name, x.min, x.n, x.days.every((d) => d.fut || d.nodata)]).sort(byMin);
+    return rhero(v, s, "Тиждень", "робочого часу цього тижня") +
+      `<div class="card week" style="margin-top:12px"><div class="wk-grid" style="grid-template-columns:repeat(${s.days.length},1fr)">${cols}</div></div>` + perHromada(rows);
+  }
+  const cv = (m) => (m < 60 ? `<b>${m}</b><u> хв</u>` : `<b>${Math.floor(m / 60)}</b><u> год </u><b>${String(m % 60).padStart(2, "0")}</b>`);
+  const monName = (m) => MONTHS[+m.slice(5, 7) - 1];
+  function repMonth(v) {
+    const s = pick(v), P = [22, 40, 58, 78, 100], today = v.period.today, mo = v.period.month;
+    const nz = s.days.filter((d) => !d.fut && !d.nodata && d.min > 0).map((d) => d.min).sort((a, b) => a - b);
+    const lv = (m) => (nz.length < 2 ? 5 : Math.max(1, Math.ceil((nz.filter((x) => x <= m).length / nz.length) * 5)));
+    const pill = (m, r) => `<button class="back cal-pill${r ? " r" : ""}${m ? "" : " ghost"}" type="button" ${m ? `data-mon="${m}"` : "disabled"} aria-label="${r ? "Наступний" : "Попередній"} місяць">${r ? "" : "<i>‹</i>"}${monName(m || mo)}${r ? "<i>›</i>" : ""}</button>`;
+    const nav = `<div class="cal-nav">${pill(v.period.prev, false)}<b>${monName(mo)}</b>${pill(v.period.next, true)}</div>`;
+    const isCur = today.slice(0, 7) === mo;
+    const head = DAYS.slice(0, 5).map((w, i) => `<span class="cal-h${isCur && i === wdOf(today) ? " cur" : ""}">${w}</span>`).join("");
+    const cells = (s.days.length ? `<span></span>`.repeat(wdOf(s.days[0].d)) : "") + s.days.map((d) => {
+      const m = d.fut || d.nodata ? 0 : d.min, sel = S.sel === d.d;
+      const cls = ["cal-c", d.fut ? "fut" : d.nodata ? "nd" : m ? "h" : "z", d.d === today ? "today" : "", sel ? "sel" : ""].filter(Boolean).join(" ");
+      return `<button class="${cls}" type="button" data-day="${d.d}"${m ? ` style="--p:${P[lv(m) - 1]}%"` : ""}${d.fut || d.nodata ? " disabled" : ""} aria-label="${+d.d.slice(8)} ${d.fut ? "ще не настав" : d.nodata ? "нема даних" : dur(m)}"><span class="cd">${+d.d.slice(8)}</span>${d.nodata ? `<span class="cv">—</span>` : m ? `<span class="cv">${cv(m)}</span>` : ""}</button>`;
+    }).join("");
+    const foot = `<div class="cal-foot"><span>0</span><i class="z0"></i>${P.map((p) => `<i style="--p:${p}%"></i>`).join("")}<span>більше</span><span class="yr">${mo.slice(0, 4)}</span></div>`;
+    const selIdx = s.days.findIndex((d) => d.d === S.sel && !d.fut && !d.nodata);
+    let card = "";
+    if (selIdx >= 0 && S.who !== "all") {
+      const d = s.days[selIdx];
+      card = `<div class="card dcard" style="margin-top:12px"><div class="card-h"><span>${FULL[wdOf(d.d)]}, ${ddmm(d.d)}</span><span class="count">${dur(d.min)} в робочий час</span></div><div class="dpad">${agenda(v, d.iv || [])}</div></div>`;
+    }
+    // «Усі» + обраний день → «По громадах» за цей день (Р-36); без дня — за місяць
+    const dayMode = selIdx >= 0 && S.who === "all";
+    const rows = v.series.slice(1).map((x) => { if (!dayMode) return [x.id, x.name, x.min, x.n, x.days.every((d) => d.fut || d.nodata)]; const d = x.days[selIdx]; return [x.id, x.name, d.min || 0, d.n || 0, !!d.nodata]; }).sort(byMin);
+    const per = perHromada(rows, dayMode ? `<span>По громадах · ${DAYS[wdOf(S.sel)]}, ${ddmm(S.sel)}</span><button class="pill" type="button" data-day="${S.sel}">Весь місяць</button>` : "");
+    return rhero(v, s, monName(mo), "робочого часу за місяць") + `<div class="card calc" style="margin-top:12px">${nav}<div class="cal">${head}${cells}</div>${foot}</div>` + card + per;
+  }
+
+  // ───── ③ Громади (5б-3: перегляд; додати/прибрати з Mini App — хід 5в, Р-37) ─────
+  function renderSet() {
+    const rows = NOW.data ? NOW.data.rows : [], stale = nowStale();
+    $("#set-body").innerHTML = `<div class="card grp"><div class="card-h"><span>У групі</span><span class="count">${rows.length}</span></div>${rows.map((r) => {
+      const st = stale ? "nodata" : r.state;
+      return `<div class="row">${ico(st, "ic")}<span class="n">${esc(r.name)}<small>${esc(r.oblast || "")}</small></span>${!stale && (st === "alert" || st === "yellow") ? `<span class="v al">з ${hmIso(r.since)}</span>` : ""}</div>`; }).join("")}</div>
+      <p class="note">Додати громаду може кожен учасник — кнопка «Додати громаду» під табло або /add у групі. Порядок рядків табла й прибирання — лише власник.</p>`;
+  }
+
+  // ───── повзунки: міряємо; слайд на дію, снап на лейаут (A54 · A56 · A57) ─────
+  function place(c, snap) {
+    if (!c || c.offsetParent === null) return;
+    const t = $(".thumb, .cap", c), act = $('[aria-selected="true"]', c); if (!t || !act || !act.offsetWidth) return;
+    const w = t.classList.contains("cap") ? Math.min(act.offsetWidth - 8, 112) : act.offsetWidth, x = act.offsetLeft + (act.offsetWidth - w) / 2;
+    const apply = () => { t.style.width = w + "px"; t.style.transform = `translateX(${x}px)`; t.style.opacity = "1"; };
+    if (snap) { t.classList.add("snap"); apply(); requestAnimationFrame(() => requestAnimationFrame(() => t.classList.remove("snap"))); } else apply();
+  }
+  const placeAll = (snap) => ["#per", "#who", "#tabs", "#thm", "#dst"].forEach((s) => place($(s), snap));
+  function select(tray, v) { $$(".tray-i, .tab", tray).forEach((x) => x.setAttribute("aria-selected", String(x.dataset.v === v))); place(tray, false); }
+  const haptic = () => { try { tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged(); } catch { /* старий клієнт */ } };
+
+  function go(tab, snap = false) {
+    S.tab = tab;
+    $$(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.id === `tab-${tab}`)));
+    $$(".screen").forEach((s) => (s.hidden = s.id !== `scr-${tab}`));
+    place($("#tabs"), snap);
+    if (tab === "rep") loadRep();
+    requestAnimationFrame(() => ["#per", "#who"].forEach((s) => place($(s), true)));
+  }
+  function theme(t) {
+    S.theme = t; app.dataset.theme = t; store.set("airlens.theme", t);
+    const bg = getComputedStyle(app).getPropertyValue("--page").trim();
+    document.body.style.background = bg;
+    try { if (tg && tg.setHeaderColor) { tg.setHeaderColor(bg); tg.setBackgroundColor(bg); tg.setBottomBarColor && tg.setBottomBarColor(bg); } } catch { /* старий клієнт */ }
+  }
+
+  // ───── події ─────
+  $("#tabs").addEventListener("click", (e) => { const t = e.target.closest(".tab"); if (t) { haptic(); go(t.id.slice(4)); } });
+  app.addEventListener("click", (e) => { const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go); });
+  $("#per").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b || b.dataset.v === S.period) return; haptic(); S.period = b.dataset.v; S.sel = null; select($("#per"), S.period); loadRep(); });
+  $("#who").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b || b.dataset.v === S.who) return; haptic(); S.who = b.dataset.v; select($("#who"), S.who); b.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" }); renderRep(); });
+  $("#rep-body").addEventListener("click", (e) => {
+    const mo = e.target.closest("[data-mon]"); if (mo && !mo.disabled) { haptic(); S.month = mo.dataset.mon; S.sel = null; loadRep(); return; }
+    const dy = e.target.closest("[data-day]"); if (dy && !dy.disabled) { haptic(); const d = dy.dataset.day; S.sel = S.sel === d ? null : d; renderRep();
+      if (S.sel !== null) requestAnimationFrame(() => { const c = $(".dcard") || $(".lst"); if (c) c.scrollIntoView({ block: "nearest", behavior: "smooth" }); }); return; }
+    const w = e.target.closest("[data-who]"); if (w) { haptic(); S.who = String(w.dataset.who); renderRep(); const t = $(`#who [data-v="${S.who}"]`); if (t) t.scrollIntoView({ inline: "center", block: "nearest" }); $("#scr-rep").scrollTo({ top: 0, behavior: "smooth" }); }
+  });
+  $("#thm").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b) return; haptic(); select($("#thm"), b.dataset.v); theme(b.dataset.v); });
+  const openSheet = (on) => { $("#sheet").classList.toggle("on", on); $("#scrim").classList.toggle("on", on); if (on) requestAnimationFrame(() => placeAll(true)); };
+  $("#scrim").addEventListener("click", () => openSheet(false));
+  let pressed = null; const release = () => { if (pressed) { pressed.classList.remove("pressing"); pressed = null; } };
+  app.addEventListener("pointerdown", (e) => { const el = e.target.closest(".tab,.pill:not(.done),.btn,.pin button,.cal-pill"); if (el) { pressed = el; el.classList.add("pressing"); } });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => app.addEventListener(ev, release));
+  addEventListener("resize", () => requestAnimationFrame(() => placeAll(true)));
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { loadNow(); if (S.tab === "rep") loadRep(); } });
+  setInterval(() => { if (document.visibilityState === "visible") loadNow(); }, REFRESH_MS);
+  setInterval(() => { renderNow(); renderPins(); }, 20_000); // тривалість «16 хв» і застарілість — без запиту
+
+  // ───── Telegram: SettingsButton → тема; прев'ю поза Telegram — кнопка ⋯ і стан синтетики ─────
+  if (tg) { try { tg.ready(); tg.expand(); tg.SettingsButton.show(); tg.SettingsButton.onClick(() => openSheet(true)); } catch { /* старий клієнт */ } }
+  if (!LIVE && DEMO) {
+    $("#menu").hidden = false; $("#dstate").hidden = false;
+    $("#menu").addEventListener("click", () => openSheet(true));
+    $("#dst").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b) return; S.demo = b.dataset.v; select($("#dst"), S.demo); loadNow(); });
+  }
+  const qs = new URLSearchParams(location.search);
+  if (!LIVE && DEMO) { ["period", "who", "sel", "month"].forEach((k) => { if (qs.get(k)) S[k] = qs.get(k); }); if (qs.get("state")) S.demo = qs.get("state"); if (qs.get("theme")) S.theme = qs.get("theme"); }
+  $$("#per .tray-i").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.v === S.period)));
+  $$("#thm .tray-i").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.v === S.theme)));
+  $$("#dst .tray-i").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.v === S.demo)));
+  theme(S.theme);
+  renderNow(); renderSet();
+  loadNow();
+  go(qs.get("tab") || "now", true);
+  if (qs.get("sheet")) openSheet(true);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => placeAll(true));
+})();
+</script>
+</body>
+</html>
