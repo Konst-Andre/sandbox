@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AirLens</title>
+<!--
+  AirLens · Mini App (хід 5б-3). Живе доки: існує Mini App AirLens.
+  Дизайн — еталон docs/design/miniapp_v11.html (Р-29 · Р-31…Р-36): CSS і SVG перенесено дослівно, без рамки телефона,
+  несправжньої шапки Telegram і панелі мокапа. Дані — POST /api/app (Р-41): усе злиття — на сервері, тут лише показ.
+  П-1: застарілі чи відсутні дані → «Нема свіжих даних», жодного зеленого; день до обліку — пунктир і «—».
+  Поза Telegram сторінка показує лише «Відкрийте з Telegram»; прев'ю-стенд вставляє синтетику в #demo як window.AIRLENS_DEMO (tools/miniapp/build.mjs).
+  Іконки вкладок — Lucide (ISC License, Copyright (c) 2026 Lucide Icons and Contributors).
+-->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --r-xl:18px;--r-lg:14px;--r-md:11px;--r-sm:8px;
+  --seg-dur:450ms;--seg-ease:cubic-bezier(.34,1.56,.64,1);    /* A54 */
+  --nav-dur:400ms;--nav-ease:cubic-bezier(.34,1.3,.64,1);      /* A56 */
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:#1b2230;font-family:var(--font);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+
+/* ───────── застосунок на весь екран Telegram ───────── */
+.phone{width:100%;height:100vh;height:100dvh;position:relative;display:flex;flex-direction:column;overflow:hidden;background:var(--page);color:var(--text)}
+
+/* у Telegram — висота з SDK (стабільна частина вікна); поза Telegram змінна SDK не про видиму частину екрана — 100dvh */
+html.tg .phone{height:var(--tg-viewport-stable-height,100dvh)}
+
+/* ───────── ТЕМИ AirLens (власні, не з Telegram) ───────── */
+.phone[data-theme="graphite"]{
+  --page:#131b24;--card:#1c2733;--raised-c:#2a3746;--sep:#2b3947;--text:#ffffff;--hint:#93a3b4;--hint-well:#a9b7c6;
+  --accent:#4a93f8;--accent-ink:#8cc0ff;--accent-solid:#2a6cc8;--on-accent:#ffffff;--accent-tint:color-mix(in srgb,#4a93f8 18%,#1c2733);
+  --alert:#F0685C;--alert-ink:#F68A80;--alert-bg:#3f1d25;--alert-sub:rgba(255,255,255,.07);
+  --warn:#DFA43A;--warn-ink:#E4AE4E;--warn-bg:#40361f;
+  --nodata:#9AA6B3;--nodata-ink:#AEB9C5;--nodata-bg:#253140;
+  --calm:#2FA868;
+  --hist:#b4574f;--hist-now:#F0685C;--hist-zero:#243140;          /* історія тривог: приглушений червоний */
+  --card-sh:inset 0 1px 0 rgba(255,255,255,.07);
+  --light-top:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,0) 45%);   /* світло зверху */
+  --hero-sh:inset 0 1px 0 rgba(255,255,255,.14),0 8px 24px rgba(0,0,0,.25);
+  --well:#0f161e;--well-sh:inset 0 1.5px 3px rgba(0,0,0,.55),inset 0 -1px 0 rgba(255,255,255,.06);
+  --raised-bd:transparent;--raised:linear-gradient(180deg,#34445a,#2a3848);--raised-sh:inset 0 1px 0 rgba(255,255,255,.16),0 2px 6px rgba(0,0,0,.35);
+  --btn-sh:inset 0 1px 0 rgba(255,255,255,.22),inset 0 -1px 0 rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.3);--btn-bd:rgba(0,0,0,.25);
+  --glass:rgba(28,39,51,.86);--glass-rim:rgba(255,255,255,.06);
+  --bar:#1c2733;--toast-bg:#34445a;--toast-act:#9fd0ff;--scrim:rgba(0,0,0,.5);
+  --pin-bg:#3f1d25;--pin-bd:rgba(240,104,92,.30);--pin-sh:inset 0 1px 0 rgba(255,255,255,.10),0 4px 14px rgba(0,0,0,.35);
+  --hit-bg:#232d3a;--hit-sh:inset 0 1px 0 rgba(255,255,255,.08),0 0 0 1px rgba(0,0,0,.25),0 2px 6px rgba(0,0,0,.30);
+  --line:rgba(255,255,255,.07);
+}
+.phone[data-theme="light"]{
+  --page:#efeff4;--card:#ffffff;--raised-c:#ffffff;--sep:#e3e3e8;--text:#000000;--hint:#606064;--hint-well:#56565b;
+  --accent:#2481cc;--accent-ink:#1d67a3;--accent-solid:#1f6fb0;--on-accent:#ffffff;--accent-tint:color-mix(in srgb,#2481cc 12%,#fff);
+  --alert:#C4221A;--alert-ink:#A51C15;--alert-bg:#faebea;--alert-sub:rgba(255,255,255,.75);
+  --warn:#B87200;--warn-ink:#8A5300;--warn-bg:#fcf1de;
+  --nodata:#6B7079;--nodata-ink:#5F646D;--nodata-bg:#eeeff1;
+  --calm:#1E8A4C;
+  --hist:#d9837e;--hist-now:#C4221A;--hist-zero:#f1f1f4;
+  --card-sh:0 1px 2px rgba(0,0,0,.04),0 6px 20px rgba(0,0,0,.05);
+  --light-top:none;
+  --hero-sh:0 1px 2px rgba(0,0,0,.05),0 12px 30px color-mix(in srgb,var(--glow,#000) 14%,transparent);
+  --well:#e5e5ea;--well-sh:inset 0 1px 3px rgba(0,0,0,.13);
+  --raised:linear-gradient(180deg,#fff,#f7f7f9);--raised-sh:0 1px 2px rgba(0,0,0,.10),0 3px 10px rgba(0,0,0,.08);--raised-bd:rgba(0,0,0,.09);
+  --btn-sh:inset 0 1px 0 rgba(255,255,255,.25),0 1px 2px rgba(0,0,0,.18);--btn-bd:#17588d;   /* контур, не розлита тінь */
+  --glass:rgba(247,247,249,.86);--glass-rim:rgba(0,0,0,.07);
+  --bar:#f7f7f9;--toast-bg:#2c2c2e;--toast-act:#8cc4ff;--scrim:rgba(0,0,0,.28);
+  --pin-bg:#fce4e2;--pin-bd:rgba(196,34,26,.30);--pin-sh:0 1px 2px rgba(196,34,26,.10),0 4px 14px rgba(196,34,26,.14);
+  --hit-bg:#ffffff;--hit-sh:0 1px 2px rgba(0,0,0,.06),0 3px 10px rgba(196,34,26,.08);
+  --line:rgba(0,0,0,.08);
+}
+
+/* ───────── каркас ───────── */
+.screens{flex:1;position:relative;overflow:hidden}
+.screen{position:absolute;inset:0;overflow-y:auto;padding:0 16px 112px;-webkit-overflow-scrolling:touch}
+.screen[hidden]{display:none}
+.head{display:flex;align-items:center;gap:12px;padding:16px 2px 14px}
+.head h1{font-size:24px;line-height:1.15;margin:0;letter-spacing:-.015em;font-weight:700;flex:1;min-width:0}
+.grpbtn{display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:0;min-height:44px;cursor:pointer;flex:1;min-width:0;color:var(--text);text-align:left}
+.grpbtn h1{flex:0 1 auto;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.gtxt{display:grid;gap:5px;min-width:0}
+.gline{display:flex;align-items:center;gap:6px;min-width:0}
+.gtxt .fresh{justify-self:start;min-height:24px;padding:0 9px;font-size:12px}
+.grpbtn .dd{color:var(--hint);font-size:14px}
+.ava{width:48px;height:48px;font-size:19px;border-radius:50%;flex:none;display:grid;place-items:center;font-weight:700;font-size:17px;color:#fff;background-color:#2560bd;background-image:linear-gradient(160deg,#3a7fe0,#1f55ac);box-shadow:inset 0 1px 0 rgba(255,255,255,.25)}
+.fresh{display:inline-flex;align-items:center;gap:6px;min-height:30px;padding:0 11px;border-radius:999px;background:var(--well);box-shadow:var(--well-sh);font-size:13px;color:var(--hint-well);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fresh svg{width:13px;height:13px;flex:none}
+.fresh.stale{background:var(--nodata-bg);color:var(--nodata-ink);font-weight:600}
+
+.sec{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:24px 2px 8px;font-size:15px;font-weight:600;min-height:24px}
+.sec .act{border:0;background:transparent;color:var(--accent-ink);font-size:15px;font-weight:600;min-height:44px;margin:-10px -8px;padding:0 8px;cursor:pointer}
+.card{background:var(--card);background-image:var(--light-top);border-radius:var(--r-lg);box-shadow:var(--card-sh);overflow:hidden}
+.card-h{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 4px;font-size:13px;font-weight:600;color:var(--hint)}
+.count{display:inline-flex;align-items:center;min-height:22px;padding:0 9px;border-radius:999px;background:var(--well);box-shadow:var(--well-sh);font-size:12px;font-weight:600;color:var(--hint-well);font-variant-numeric:tabular-nums}
+.num{font-variant-numeric:tabular-nums}
+.i-alert{color:var(--alert)}.i-yellow{color:var(--warn)}.i-nodata{color:var(--nodata)}.i-calm{color:var(--calm)}
+
+.pin{position:sticky;top:0;z-index:4;margin:0 -16px;padding:8px 16px 0;background:var(--page)}
+.pin[hidden]{display:none}
+.pin button{display:flex;align-items:center;gap:10px;width:100%;min-height:44px;border:1px solid var(--pin-bd);border-radius:var(--r-md);padding:0 12px;background:var(--pin-bg);color:var(--alert-ink);font-size:15px;font-weight:600;cursor:pointer;text-align:left;box-shadow:var(--pin-sh)}
+.pin[data-s="yellow"] button{background:var(--warn-bg);color:var(--warn-ink)}
+.pin svg{width:18px;height:18px;flex:none}
+.pin .go{margin-left:auto;font-size:20px;line-height:1}
+
+/* ───────── ГЕРОЙ ───────── */
+.hero{border-radius:var(--r-xl);padding:16px 14px 14px;box-shadow:var(--hero-sh);border:1px solid transparent;background-image:var(--light-top)}
+.hero[data-s="alert"]{background-color:var(--alert-bg);border-color:color-mix(in srgb,var(--alert) 32%,transparent);--glow:var(--alert)}
+.hero[data-s="yellow"]{background-color:var(--warn-bg);border-color:color-mix(in srgb,var(--warn) 34%,transparent);--glow:var(--warn)}
+.hero[data-s="nodata"]{background-color:var(--nodata-bg);border-color:color-mix(in srgb,var(--nodata) 30%,transparent)}
+.hero[data-s="calm"]{background-color:var(--card)}
+.hero-top{display:flex;gap:12px;align-items:center;padding:0 2px}
+.hero-top svg{width:34px;height:34px;flex:none}
+.hero h2{margin:0;font-size:21px;line-height:1.2;letter-spacing:-.01em}
+.hero[data-s="alert"] h2{color:var(--alert-ink)}.hero[data-s="yellow"] h2{color:var(--warn-ink)}
+.hero[data-s="calm"] h2{font-size:18px;font-weight:600}
+.hero .call{margin:2px 0 0;font-size:17px;font-weight:700}
+.hits{display:grid;gap:6px;margin-top:14px}
+.hit{display:flex;align-items:center;gap:12px;background:var(--hit-bg);border-radius:var(--r-md);padding:10px 12px;min-height:58px;box-shadow:var(--hit-sh)}
+.hit .b{flex:1;min-width:0}.hit .n{font-size:17px;font-weight:600}
+.hit .t{font-size:14px;margin-top:2px}.hit .t b{font-weight:600}
+.hit .t span,.hit .d small{color:color-mix(in srgb,var(--text) 74%,transparent)}
+.hit .d{text-align:right;white-space:nowrap}
+.hit .d b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+.hit .d small{font-size:12px;font-variant-numeric:tabular-nums}
+.hero[data-s="alert"] .hit .d b{color:var(--alert-ink)}.hero[data-s="yellow"] .hit .d b{color:var(--warn-ink)}
+.row{display:flex;align-items:center;gap:12px;padding:0 16px;min-height:48px;position:relative;background:var(--card)}
+.row + .row::before{content:"";position:absolute;top:0;left:46px;right:16px;height:1px;background:var(--line)}
+.row .ic{width:18px;height:18px;flex:none}
+.row .n{flex:1;font-size:16px;min-width:0}
+.row .n small{display:block;font-size:12px;color:var(--hint)}
+.row .v{font-size:13px;color:var(--hint);white-space:nowrap;font-variant-numeric:tabular-nums}
+.row .v.al{color:var(--alert-ink);font-weight:600}
+.card .row{background:transparent}
+
+/* ───────── ТАЦЯ з повзунком-пружиною — одна для періоду, громад і частин країни (A54 · A65) ───────── */
+.tray{position:relative;isolation:isolate;display:flex;gap:2px;padding:3px;border-radius:12px;background:var(--well);box-shadow:var(--well-sh);overflow-x:auto;scrollbar-width:none}
+.tray::-webkit-scrollbar{display:none}
+.tray-i{flex:1 0 auto;position:relative;z-index:1;transform:translateZ(0);-webkit-backface-visibility:hidden;border:0;background:transparent;min-height:40px;padding:0 14px;border-radius:9px;font-size:15px;font-weight:600;color:var(--hint-well);cursor:pointer;white-space:nowrap;transition:color .14s}
+.tray-i[aria-selected="true"]{color:var(--text)}
+.tray .thumb{position:absolute;z-index:0;will-change:transform;top:3px;bottom:3px;left:0;width:0;border-radius:9px;background:var(--raised);box-shadow:var(--raised-sh);opacity:0;pointer-events:none;transition:transform var(--seg-dur) var(--seg-ease),width var(--seg-dur) var(--seg-ease)}
+.tray .thumb.snap{transition:none}
+.tray.sm .tray-i{min-height:36px;font-size:14px}
+.gap{height:12px}
+
+/* ───────── ЗВІТИ ───────── */
+.rhero{margin-top:12px;padding:16px}
+.rhero .top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.rhero .k{font-size:14px;color:var(--hint);margin-top:2px}
+.rhero .badge{border:1px solid var(--raised-bd);display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;background:var(--raised);box-shadow:var(--raised-sh);font-size:13px;font-weight:700}
+.rhero .hours{display:inline-flex;align-items:center;gap:5px;min-height:24px;padding:0 9px;border-radius:999px;background:var(--well);box-shadow:var(--well-sh);font-size:12px;color:var(--hint-well);font-variant-numeric:tabular-nums}
+.rhero .hours svg{width:12px;height:12px}
+.rhero .big{margin-top:2px}
+.meter{position:relative;height:10px;border-radius:5px;background:var(--well);box-shadow:var(--well-sh);margin:14px 0 10px;overflow:hidden}
+.meter i{position:absolute;left:0;top:0;bottom:0;border-radius:5px;background:var(--hist)}
+.rmeta{display:flex;justify-content:space-between;gap:12px;font-size:14px;color:var(--hint)}
+.rmeta b{color:var(--text);font-size:16px;font-variant-numeric:tabular-nums}
+.rhero .big{font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums}
+.rhero .big small{font-size:17px;font-weight:600;color:var(--hint)}
+.lst .r{display:flex;align-items:center;gap:10px;padding:0 12px 0 16px;min-height:56px;position:relative;width:100%;border:0;background:transparent;text-align:left;cursor:pointer;color:var(--text)}
+.lst .r + .r::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.lst .r .n{flex:1;font-size:16px}.lst .r .n small{display:block;font-size:13px;color:var(--hint);margin-top:1px}
+.lst .r .v{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.lst .r .v.zero{color:var(--hint);font-weight:400}
+.u{font-weight:400;color:var(--hint)}
+.rd .s b{color:var(--text);font-weight:700}
+.lst .r .chev{color:var(--hint);font-size:20px}
+/* доба: робочий день 09–18, тривоги підписані */
+.wday{padding:16px 16px 14px}
+.wday .cap-t{display:flex;justify-content:space-between;font-size:13px;color:var(--hint);margin-bottom:10px}
+.wtrack{position:relative;height:44px;border-radius:10px;background:var(--well);box-shadow:var(--well-sh);overflow:hidden}
+.wtrack .future{position:absolute;top:0;bottom:0;right:0;background:repeating-linear-gradient(135deg,transparent 0 6px,color-mix(in srgb,var(--text) 6%,transparent) 6px 8px)}
+.wtrack .ev{position:absolute;top:8px;bottom:8px;border-radius:6px;background:var(--hist);min-width:6px}
+.wtrack .ev.now{background:var(--hist-now)}
+.wtrack .nowline{position:absolute;top:0;bottom:0;width:2px;background:var(--text)}
+.wlbl{position:relative;height:34px;margin-top:6px}
+.wlbl span{position:absolute;transform:translateX(-2px);font-size:12px;line-height:1.3;white-space:nowrap;font-variant-numeric:tabular-nums}
+.wlbl span b{display:block;font-size:13px}
+.wlbl span.now b{color:var(--alert-ink)}
+.waxis{display:flex;justify-content:space-between;font-size:11px;color:var(--hint);margin-top:6px;font-variant-numeric:tabular-nums}
+.wnote{font-size:13px;color:var(--hint);margin-top:10px}
+/* доба */
+.day{padding:30px 16px 12px}
+.strip{position:relative;height:40px;border-radius:9px;background:var(--well);box-shadow:var(--well-sh)}
+.strip .work{position:absolute;top:0;bottom:0;left:37.5%;width:37.5%;background:color-mix(in srgb,var(--text) 6%,transparent);border-left:1px dashed color-mix(in srgb,var(--text) 22%,transparent);border-right:1px dashed color-mix(in srgb,var(--text) 22%,transparent)}
+.strip .ev{position:absolute;top:8px;bottom:8px;border-radius:5px;background:var(--hist);min-width:6px}
+.strip .ev.now{background:var(--hist-now)}
+.strip .nowline{position:absolute;top:-6px;bottom:-6px;width:2px;border-radius:1px;background:var(--text)}
+.strip .nowlbl{position:absolute;top:-22px;background:var(--card);padding:0 3px;border-radius:3px;transform:translateX(-50%);font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--text)}
+.axis{position:relative;height:16px;margin-top:8px;font-size:11px;color:var(--hint);font-variant-numeric:tabular-nums}
+.axis span{position:absolute;transform:translateX(-50%)}.axis span:first-child{transform:none}.axis span:last-child{transform:translateX(-100%)}
+.axis .wk{color:var(--text);font-weight:600}
+.key{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--hint);margin-top:8px}
+.key i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:5px}
+.evs .e{display:grid;grid-template-columns:104px minmax(0,1fr) auto;gap:2px 12px;padding:11px 16px;position:relative;align-items:baseline}
+.evs .e + .e::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.evs .t{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.evs .w{font-size:15px}.evs .d{font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap;text-align:right}
+.evs .s{grid-column:2/4;font-size:13px;color:var(--hint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.evs .w{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.evs .e.now .t,.evs .e.now .d{color:var(--alert-ink)}
+.evs .e.off .t,.evs .e.off .d,.evs .e.off .w{color:var(--hint);font-weight:400}
+/* тиждень */
+.week{padding:16px 12px 12px;position:relative}
+.week .max{position:absolute;left:12px;right:12px;top:48px;border-top:1px dashed color-mix(in srgb,var(--text) 22%,transparent);font-size:11px;color:var(--hint)}
+.week .max span{position:absolute;right:0;top:-16px}
+.wk-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;align-items:end}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:transparent;padding:0;color:var(--text)}
+.wd b{font-size:12px;line-height:1.2;min-height:30px;display:flex;align-items:flex-end;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wd .col{width:100%;max-width:30px;height:120px;border-radius:7px;background:var(--well);box-shadow:var(--well-sh);position:relative;overflow:hidden}
+.wd .col i{position:absolute;left:3px;right:3px;bottom:3px;border-radius:5px;background:var(--hist)}
+.wd span{font-size:12px;color:var(--hint)}
+.wd.cur span{color:var(--text);font-weight:700}
+.wd.fut .col{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}
+/* місяць */
+.hm{padding:14px 12px 12px}
+.hm-grid{position:relative;display:grid;grid-template-columns:24px repeat(24,1fr);gap:2px;align-items:center;margin-top:18px}
+.hm-grid .dl{font-size:11px;color:var(--hint-well)}
+.hm-cell{aspect-ratio:1/1.3;border-radius:3px;border:0;padding:0;cursor:pointer;min-width:0;background:color-mix(in srgb,var(--hist) var(--p,0%),var(--hist-zero))}
+.hm-cell.sel{outline:2px solid var(--text);outline-offset:1px}
+.hm-work{position:absolute;border-radius:5px;border:1.5px dashed color-mix(in srgb,var(--text) 38%,transparent);pointer-events:none}
+.hm-worklbl{position:absolute;top:-19px;font-size:11px;color:var(--hint)}
+.hm-hours{display:grid;grid-template-columns:24px repeat(8,1fr);font-size:11px;color:var(--hint);margin-top:4px;font-variant-numeric:tabular-nums}
+.hm-legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--hint);margin-top:10px}
+.hm-legend i{width:16px;height:10px;border-radius:2px;background:color-mix(in srgb,var(--hist) var(--p),var(--hist-zero))}
+.hm-cap{font-size:13px;color:var(--hint)}
+.reads{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.rd{padding:14px}
+.rd .k{font-size:13px;color:var(--hint)}
+.rd .v{font-size:17px;font-weight:600;margin-top:6px;line-height:1.25}
+.rd .v b{font-weight:700}
+.rd .s{font-size:13px;color:var(--hint);margin-top:4px;font-variant-numeric:tabular-nums}
+.pick{margin-top:10px;font-size:14px;padding:9px 12px;border-radius:var(--r-sm);background:var(--well);box-shadow:var(--well-sh)}
+.pick[hidden]{display:none}
+.read{margin-top:10px;display:grid;gap:6px}
+.read div{display:flex;justify-content:space-between;gap:10px;font-size:14px;padding:9px 12px;border-radius:var(--r-sm);background:var(--well);box-shadow:var(--well-sh)}
+.read span{color:var(--hint-well)}.read b{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;border:1px solid var(--btn-bd);border-radius:var(--r-md);background:var(--accent-solid);background-image:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0));color:var(--on-accent);font-size:17px;font-weight:700;cursor:pointer;margin-top:24px;box-shadow:var(--btn-sh);transition:transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.btn svg{width:20px;height:20px}
+
+/* ───────── ГРОМАДИ ───────── */
+.search{display:flex;align-items:center;gap:8px;background:var(--well);box-shadow:var(--well-sh);border-radius:12px;padding:0 12px;min-height:48px}
+.search svg{width:18px;height:18px;color:var(--hint-well);flex:none}
+.search input{flex:1;border:0;background:transparent;font:inherit;font-size:17px;color:var(--text);min-height:48px;outline:none;min-width:0}
+.search input::placeholder{color:var(--hint-well)}
+.search:focus-within{box-shadow:var(--well-sh),0 0 0 2px var(--accent)}
+.res{display:flex;align-items:center;gap:12px;padding:0 8px 0 16px;min-height:56px;position:relative}
+.res + .res::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.res .b{flex:1;min-width:0}.res .n{font-size:16px}.res .o{font-size:13px;color:var(--hint)}
+.pill{border:0;border-radius:999px;min-height:36px;min-width:44px;padding:0 14px;font-size:14px;font-weight:600;background:var(--accent-tint);color:var(--accent-ink);cursor:pointer;transition:transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.pill.done{background:transparent;color:var(--hint);font-weight:400;cursor:default}
+.nav-row{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;padding:0 16px;min-height:48px;font-size:16px;text-align:left;cursor:pointer;position:relative;color:var(--text)}
+.nav-row + .nav-row::before{content:"";position:absolute;top:0;left:16px;right:16px;height:1px;background:var(--line)}
+.nav-row .cnt{margin-left:auto}
+.nav-row .chev{color:var(--hint);font-size:20px;margin-left:auto}
+.nav-row .cnt + .chev{margin-left:0}
+.back{display:inline-flex;align-items:center;gap:6px;border:0;background:var(--raised);box-shadow:var(--raised-sh);color:var(--text);font-size:15px;font-weight:600;min-height:40px;padding:0 14px 0 10px;border-radius:999px;cursor:pointer;margin:14px 0 10px}
+.back i{font-style:normal;color:var(--accent-ink);font-size:20px;line-height:1}
+.empty{padding:18px 16px;font-size:15px;color:var(--hint)}
+.grp .row{min-height:56px;padding-top:6px;padding-bottom:6px;transition:transform .2s cubic-bezier(.4,0,.2,1)}
+.grp .ed{display:none}.grp.editing .ed{display:grid}
+.grp.editing .ic,.grp.editing .v{display:none}
+.grp.editing .row::before{left:56px}
+.grp .minus{place-items:center;width:44px;height:44px;margin-left:-12px;border:0;background:transparent;cursor:pointer}
+.grp .minus i{display:block;width:22px;height:22px;border-radius:50%;background:var(--alert);position:relative}
+.grp .minus i::after{content:"";position:absolute;left:5px;right:5px;top:10px;height:2px;border-radius:1px;background:#fff}
+.grp .minus:disabled{cursor:not-allowed}.grp .minus:disabled i{background:color-mix(in srgb,var(--hint) 45%,transparent)}
+.grp .handle{place-items:center;width:44px;height:44px;margin-right:-10px;color:var(--hint);cursor:grab;touch-action:none}
+.grp .handle svg{width:22px;height:22px}
+.grp .row.dragging{z-index:3;transition:none;background:var(--raised-c);box-shadow:0 8px 24px rgba(0,0,0,.28);border-radius:10px}
+.toast{position:absolute;left:12px;right:12px;bottom:90px;z-index:6;display:flex;align-items:center;gap:12px;min-height:50px;padding:0 8px 0 16px;border-radius:14px;background:var(--toast-bg);color:#fff;font-size:15px;box-shadow:0 8px 24px rgba(0,0,0,.25);transform:translateY(24px);opacity:0;pointer-events:none;transition:transform .2s cubic-bezier(.4,0,.2,1),opacity .2s}
+.toast.on{transform:none;opacity:1;pointer-events:auto}
+.toast button{margin-left:auto;border:0;background:transparent;color:var(--toast-act);font-weight:700;font-size:15px;min-height:44px;padding:0 10px;cursor:pointer}
+
+/* ───────── таб-бар: скло + ПІДНЯТА капсула (A56) ───────── */
+.tabs{position:absolute;left:0;right:0;bottom:0;display:flex;padding:6px 8px calc(8px + env(safe-area-inset-bottom));z-index:5;background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(180%);backdrop-filter:blur(14px) saturate(180%);border-top:1px solid var(--glass-rim)}
+.cap{position:absolute;top:6px;left:0;height:52px;width:0;border-radius:14px;opacity:0;pointer-events:none;background:var(--raised);box-shadow:var(--raised-sh);transition:transform var(--nav-dur) var(--nav-ease),width var(--nav-dur) var(--nav-ease)}
+.cap.snap{transition:none}
+.tab{flex:1;position:relative;z-index:1;border:0;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:52px;font-size:11px;font-weight:600;color:var(--hint);cursor:pointer;transition:color .15s,transform 280ms cubic-bezier(.34,1.5,.64,1)}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{color:var(--accent-ink)}
+.tab[hidden]{display:none}
+/* шіт налаштувань (живе: Telegram ⋯ → «Налаштування», SettingsButton) */
+.scrim{position:absolute;inset:0;z-index:8;background:var(--scrim);opacity:0;pointer-events:none;transition:opacity .24s}
+.scrim.on{opacity:1;pointer-events:auto}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:9;background:var(--page);border-radius:18px 18px 0 0;padding:8px 16px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .26s cubic-bezier(.32,.72,0,1);box-shadow:0 -8px 30px rgba(0,0,0,.25)}
+.sheet.on{transform:none}
+.sheet .grab{width:36px;height:5px;border-radius:3px;background:color-mix(in srgb,var(--text) 22%,transparent);margin:0 auto 12px}
+.sheet h3{margin:0 0 12px;font-size:17px;text-align:center}
+.sheet .opt{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;border:0;background:transparent;padding:0 12px;font-size:16px;cursor:pointer;color:var(--text);text-align:left;border-radius:12px}
+.sheet .opt[aria-current="true"]{background:var(--card);box-shadow:var(--card-sh)}
+.sheet .opt .ava{width:34px;height:34px;font-size:15px}
+.sheet .opt small{display:block;font-size:12px;color:var(--hint)}
+.sheet [hidden]{display:none}
+.pressing{transform:scale(.96);transition-duration:80ms!important}
+.pill.pressing{transform:scale(.92)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+/* ───────── v8 · «Місяць» — календар (Р-31 · Р-32 · Р-33) ───────── */
+.phone[data-theme="graphite"]{--tile-top:linear-gradient(180deg,rgba(255,255,255,.10),rgba(255,255,255,0) 55%);--tile-sh:inset 0 1px 0 rgba(255,255,255,.16),0 2px 6px rgba(0,0,0,.35)}
+.phone[data-theme="light"]{--tile-top:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 55%);--tile-sh:inset 0 1px 0 rgba(255,255,255,.55),0 1px 2px rgba(0,0,0,.12),0 3px 8px rgba(0,0,0,.08)}
+.calc{padding:12px 10px 12px}
+.cal-nav{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:center;margin:0 2px 10px}
+.cal-nav b{font-size:15px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cal-pill{margin:0;min-height:36px;padding:0 12px 0 8px;font-size:13px}.cal-pill.r{padding:0 8px 0 12px}.cal-pill.ghost{visibility:hidden}
+.cal{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}
+.cal-h{font-size:11px;color:var(--hint);text-align:center;padding-bottom:2px}.cal-h.cur{color:var(--accent-ink);font-weight:700}
+.cal-c{position:relative;border:0;border-radius:8px;min-height:52px;padding:6px 5px 10px;display:flex;flex-direction:column;align-items:flex-start;gap:3px;cursor:pointer;color:var(--text);min-width:0;overflow:hidden;text-align:left;font:inherit;transition:box-shadow .18s}
+.cal-c.z{background-color:var(--well);box-shadow:var(--well-sh)}
+.cal-c.h{background-color:color-mix(in srgb,var(--hist) var(--p,0%),var(--hist-zero));background-image:var(--tile-top);box-shadow:var(--tile-sh)}
+.cal-c.fut{background:transparent;box-shadow:none;cursor:default}.cal-c.fut .cd{color:var(--hint);font-weight:400}
+.cal-c.today{outline:2px solid var(--accent);outline-offset:-2px}
+.cal-c.sel{box-shadow:0 0 0 2px var(--card),0 0 0 4px var(--text)!important;z-index:1}
+.cal-c .cd{font-size:12px;font-weight:500;line-height:1}
+.cal-c .cv{font-size:14px;font-weight:700;letter-spacing:-.01em;white-space:nowrap;line-height:1.1;font-variant-numeric:tabular-nums}
+.cal-c .cv u{text-decoration:none;font-size:11px;font-weight:500}
+.cal-foot{display:flex;align-items:center;gap:4px;margin-top:10px;font-size:12px;color:var(--hint)}
+.cal-foot i{width:16px;height:10px;border-radius:2px;background-color:color-mix(in srgb,var(--hist) var(--p),var(--hist-zero));background-image:var(--tile-top)}
+.cal-foot i.z0{background:var(--well);box-shadow:var(--well-sh)}
+.cal-foot .yr{margin-left:auto;display:inline-flex;align-items:center;min-height:26px;padding:0 11px;border-radius:999px;background:var(--well);box-shadow:var(--well-sh);font-size:13px;font-weight:600;color:var(--hint-well);font-variant-numeric:tabular-nums}
+/* розклад робочого дня (Р-33) */
+.dcard .dpad,.wday .dpad{padding:8px 16px 12px}
+.agn{position:relative;margin:10px 0 6px}
+.agn .hr{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.agn .hr span{position:absolute;top:-8px;left:0;padding-right:6px;background-color:var(--card);font-size:11px;color:var(--hint);font-variant-numeric:tabular-nums}
+.agn .blk{position:absolute;left:50px;right:0;display:flex;align-items:center;border-radius:8px;background-color:var(--hist);background-image:var(--tile-top);box-shadow:var(--tile-sh);color:var(--text);font-size:12px;font-weight:600;padding:0 8px;overflow:hidden;white-space:nowrap;font-variant-numeric:tabular-nums}
+.phone[data-theme="graphite"] .agn .blk.now{background-color:var(--hist-now);color:#1c1c1e}
+.phone[data-theme="light"] .agn .blk.now{background-color:var(--hist-now);color:#fff}
+/* іконки вкладок — Lucide (ISC), тон-заливка активної (Р-31) */
+.tabs svg.lu{fill:none;stroke:currentColor;stroke-linecap:round;stroke-linejoin:round;stroke-width:2}
+.tabs .tab[aria-selected="true"] svg .f{fill:currentColor;fill-opacity:.22}
+@media (prefers-reduced-motion:reduce){.thumb,.cap,.tab,.pill,.btn,.toast,.sheet,.scrim,.grp .row{transition:none!important}.pressing{transform:none}}
+/* ───────── живий застосунок (хід 5б-3) ───────── */
+/* П-1: «нема даних» — сірий пунктир і «—», ніколи не лунка «тихо» і не нуль */
+.cal-c.nd{background:transparent;box-shadow:none;border:1.5px dashed var(--nodata);cursor:default}
+.cal-c.nd .cd{color:var(--hint);font-weight:400}.cal-c.nd .cv{color:var(--nodata-ink);font-weight:600}
+.wd.nd .col{background:transparent;box-shadow:none;border:1.5px dashed var(--nodata)}.wd.nd b{color:var(--nodata-ink)}
+.rhero .since{margin:10px 0 0;font-size:13px;line-height:1.35;color:var(--hint)}
+.toast button[hidden]{display:none}
+/* Р-44 · робочий час групи: у налаштуваннях; пігулка годин у «Звітах» — кнопка для власника */
+button.hours{border:0;font:inherit;cursor:pointer}
+.rhero button.hours{font-size:12px;color:var(--accent-ink)}
+#wsec[hidden]{display:none}
+.wsel{display:flex;gap:10px}
+.wsel label{flex:1;display:grid;gap:6px;font-size:13px;color:var(--hint)}
+.wsel select{appearance:none;-webkit-appearance:none;border:0;border-radius:12px;min-height:48px;padding:0 14px;background:var(--well);box-shadow:var(--well-sh);font:inherit;font-size:17px;color:var(--text);font-variant-numeric:tabular-nums}
+.whint{margin:10px 2px 14px;font-size:13px;line-height:1.4;color:var(--hint)}
+.whint b{color:var(--text)}
+/* смуга Telegram — лише в прев'ю поза Telegram (як у мокапі); у живому її малює Telegram */
+.tg-bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;height:48px;padding:0 6px 0 14px;background:var(--bar);border-bottom:1px solid var(--sep);font-size:16px}
+.tg-bar .l{color:var(--accent-ink);justify-self:start;border:0;background:transparent;font-size:16px;min-height:44px;padding:0;cursor:pointer}.tg-bar .c{text-align:center;line-height:1.1}.tg-bar .c b{display:block;font-size:16px}.tg-bar .c small{font-size:12px;color:var(--hint)}
+.tg-bar .r{justify-self:end;border:0;background:transparent;color:var(--accent-ink);font-size:22px;min-width:44px;min-height:44px;cursor:pointer;letter-spacing:1px}
+.tg-bar[hidden]{display:none}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="s-alert" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3L10.3 3.4Z"/><path fill="#fff" d="M11 9h2v5.5h-2zM11 16.3h2v2h-2z"/></symbol>
+  <symbol id="s-yellow" viewBox="0 0 24 24"><path fill="currentColor" d="M10.3 3.4a2 2 0 0 1 3.4 0l8.4 14.6A2 2 0 0 1 20.4 21H3.6a2 2 0 0 1-1.7-3L10.3 3.4Z"/><path fill="#1c1c1e" d="M11 9h2v5.5h-2zM11 16.3h2v2h-2z"/></symbol>
+  <symbol id="s-nodata" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="2" stroke-dasharray="3.2 2.6"/><path fill="currentColor" d="M11 15.8h2v2h-2zM12 6.3c2 0 3.4 1.2 3.4 2.9 0 1.3-.7 2-1.6 2.6-.7.5-.9.8-.9 1.6v.3h-1.9v-.5c0-1.3.5-1.9 1.3-2.5.7-.5 1.1-.8 1.1-1.5 0-.7-.6-1.2-1.4-1.2-.9 0-1.5.5-1.6 1.4H8.6c.1-1.9 1.5-3.1 3.4-3.1Z"/></symbol>
+  <symbol id="s-calm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-opacity=".35" stroke-width="2"/><circle cx="12" cy="12" r="5" fill="currentColor"/></symbol>
+  <symbol id="t-now" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7"/></symbol>
+  <symbol id="t-rep" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="t-set" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></symbol>
+  <symbol id="i-dl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></symbol>
+  <symbol id="i-clock" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
+  <symbol id="i-grip" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M5 8h14M5 12h14M5 16h14"/></symbol>
+</svg>
+<main class="phone" id="app" data-theme="graphite" aria-label="AirLens">
+  <div class="tg-bar" id="tgbar" hidden><button class="l" type="button" id="tgback" aria-label="Закрити">Закрити</button><span class="c" aria-hidden="true"><b>AirLens</b><small>прев’ю · синтетика</small></span><button class="r" type="button" id="menu" aria-label="Налаштування">⋯</button></div>
+  <div class="screens">
+    <!-- ① ЗАРАЗ -->
+    <section class="screen" id="scr-now" role="tabpanel" aria-labelledby="tab-now">
+      <div class="head"><div class="grpbtn"><span class="ava" aria-hidden="true" id="ava">A</span><span class="gtxt"><span class="gline"><h1 id="gname">AirLens</h1></span><span class="fresh" id="fresh" role="status" hidden></span></span></div></div>
+      <div class="hero" id="hero" role="status" aria-live="polite"></div>
+      <div id="others"></div>
+    </section>
+    <!-- ② ЗВІТИ -->
+    <section class="screen" id="scr-rep" role="tabpanel" aria-labelledby="tab-rep" hidden>
+      <div class="pin" data-pin hidden></div>
+      <div class="head"><h1>Звіти</h1></div>
+      <div class="tray" id="per" role="tablist" aria-label="Період"><span class="thumb" aria-hidden="true"></span>
+        <button class="tray-i" role="tab" data-v="day" aria-selected="true">День</button>
+        <button class="tray-i" role="tab" data-v="week" aria-selected="false">Тиждень</button>
+        <button class="tray-i" role="tab" data-v="month" aria-selected="false">Місяць</button></div>
+      <div class="gap"></div>
+      <div class="tray sm" id="who" role="tablist" aria-label="Громада"><span class="thumb" aria-hidden="true"></span></div>
+      <div id="rep-body"></div>
+      <button class="btn" type="button" id="dl" hidden><svg aria-hidden="true"><use href="#i-dl"/></svg><span>Завантажити Excel</span></button>
+    </section>
+    <!-- ③ ГРОМАДИ -->
+    <section class="screen" id="scr-set" role="tabpanel" aria-labelledby="tab-set" hidden>
+      <div class="pin" data-pin hidden></div>
+      <div class="head"><h1>Громади</h1></div>
+      <label class="search"><svg aria-hidden="true"><use href="#i-search"/></svg><input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Пошук громади" aria-label="Пошук громади"></label>
+      <div class="gap"></div>
+      <div class="tray sm" id="reg" role="tablist" aria-label="Частина країни"><span class="thumb" aria-hidden="true"></span></div>
+      <div id="set-body"></div>
+    </section>
+  </div>
+  <div class="toast" id="toast" role="status"><span id="toast-t"></span><button type="button" id="undo" hidden>Повернути</button></div>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Розділи">
+      <span class="cap" aria-hidden="true"></span>
+      <button class="tab" role="tab" id="tab-now" aria-selected="true" aria-controls="scr-now"><svg viewBox="0 0 24 24" aria-hidden="true" class="lu"><path d="M7 18v-6a5 5 0 1 1 10 0v6" class="f"/><path d="M5 21a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-1a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2z" class="f"/><path d="M21 12h1"/><path d="M18.5 4.5 18 5"/><path d="M2 12h1"/><path d="M12 2v1"/><path d="m4.929 4.929.707.707"/><path d="M12 12v6"/></svg>Зараз</button>
+      <button class="tab" role="tab" id="tab-rep" aria-selected="false" aria-controls="scr-rep"><svg viewBox="0 0 24 24" aria-hidden="true" class="lu"><path d="M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z" class="f"/><path d="M14 2v5a1 1 0 0 0 1 1h5"/><path d="M8 18v-1"/><path d="M12 18v-6"/><path d="M16 18v-3"/></svg>Звіти</button>
+      <button class="tab" role="tab" id="tab-set" aria-selected="false" aria-controls="scr-set"><svg viewBox="0 0 24 24" aria-hidden="true" class="lu"><path d="M10 12h4"/><path d="M10 8h4"/><path d="M14 21v-3a2 2 0 0 0-4 0v3"/><path d="M6 10H4a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2"/><path d="M6 21V5a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v16" class="f"/></svg>Громади</button>
+    </nav>
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-label="Налаштування"><div class="grab"></div><h3>Тема</h3>
+    <div class="tray" id="thm" role="tablist" aria-label="Тема"><span class="thumb" aria-hidden="true"></span>
+      <button class="tray-i" role="tab" data-v="graphite" aria-selected="true">Темна</button>
+      <button class="tray-i" role="tab" data-v="light" aria-selected="false">Світла</button></div>
+    <div id="wsec" hidden><div class="gap"></div><h3>Робочий час групи</h3><div id="wbody"></div></div>
+    <div id="dstate" hidden><div class="gap"></div><h3>Стан громад · синтетика прев’ю</h3>
+      <div class="tray sm" id="dst" role="tablist" aria-label="Стан синтетики"><span class="thumb" aria-hidden="true"></span>
+        <button class="tray-i" role="tab" data-v="alert">Тривога</button><button class="tray-i" role="tab" data-v="yellow">Жовта</button>
+        <button class="tray-i" role="tab" data-v="nodata">Нема даних</button><button class="tray-i" role="tab" data-v="calm">Без тривоги</button></div></div>
+  </div>
+</main>
+<script id="demo">window.AIRLENS_DEMO = {"note":"Синтетика (хід 5б-3). Звіти — справжній reportsView на SQLite; «Зараз» — узгоджений з ними знімок.","now":{"alert":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","dataAt":"2026-09-29T11:19:35.000Z","stale":false,"owner":true,"window":{"from":"09:00","to":"18:00"},"rows":[{"uid":332,"name":"Дніпро","oblast":"Дніпропетровська область","oblastId":9,"state":"alert","via":"hromada","threat":"балістика","since":"2026-09-29T11:16:00.000Z"},{"uid":289,"name":"Павлоград","oblast":"Дніпропетровська область","oblastId":9,"state":"alert","via":"raion","threat":"дрони","since":"2026-09-29T11:04:00.000Z"},{"uid":300,"name":"Кам’янське","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":327,"name":"Самар","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":1060,"name":"Полтава","oblast":"Полтавська область","oblastId":19,"state":"calm","lastEnd":null},{"uid":761,"name":"Кропивницький","oblast":"Кіровоградська область","oblastId":15,"state":"calm","lastEnd":null}]},"yellow":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","dataAt":"2026-09-29T11:19:35.000Z","stale":false,"owner":true,"window":{"from":"09:00","to":"18:00"},"rows":[{"uid":332,"name":"Дніпро","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":null},{"uid":289,"name":"Павлоград","oblast":"Дніпропетровська область","oblastId":9,"state":"yellow","via":"raion","threat":"дрони","since":"2026-09-29T11:04:00.000Z"},{"uid":300,"name":"Кам’янське","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":327,"name":"Самар","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":1060,"name":"Полтава","oblast":"Полтавська область","oblastId":19,"state":"calm","lastEnd":null},{"uid":761,"name":"Кропивницький","oblast":"Кіровоградська область","oblastId":15,"state":"calm","lastEnd":null}]},"calm":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","dataAt":"2026-09-29T11:19:35.000Z","stale":false,"owner":true,"window":{"from":"09:00","to":"18:00"},"rows":[{"uid":332,"name":"Дніпро","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":null},{"uid":289,"name":"Павлоград","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":null},{"uid":300,"name":"Кам’янське","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":327,"name":"Самар","oblast":"Дніпропетровська область","oblastId":9,"state":"calm","lastEnd":"2026-09-29T07:35:00.000Z"},{"uid":1060,"name":"Полтава","oblast":"Полтавська область","oblastId":19,"state":"calm","lastEnd":null},{"uid":761,"name":"Кропивницький","oblast":"Кіровоградська область","oblastId":15,"state":"calm","lastEnd":null}]},"nodata":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","dataAt":"2026-09-29T11:15:00.000Z","stale":true,"owner":true,"window":{"from":"09:00","to":"18:00"},"rows":[{"uid":332,"name":"Дніпро","oblast":"Дніпропетровська область","oblastId":9,"state":"nodata","lastEnd":null},{"uid":289,"name":"Павлоград","oblast":"Дніпропетровська область","oblastId":9,"state":"nodata","lastEnd":null},{"uid":300,"name":"Кам’янське","oblast":"Дніпропетровська область","oblastId":9,"state":"nodata","lastEnd":null},{"uid":327,"name":"Самар","oblast":"Дніпропетровська область","oblastId":9,"state":"nodata","lastEnd":null},{"uid":1060,"name":"Полтава","oblast":"Полтавська область","oblastId":19,"state":"nodata","lastEnd":null},{"uid":761,"name":"Кропивницький","oblast":"Кіровоградська область","oblastId":15,"state":"nodata","lastEnd":null}]}},"oblasts":{"3":{"uid":3,"name":"Хмельницька область","rows":[{"uid":1377,"name":"Антонінська громада"},{"uid":1404,"name":"Берездівська громада"},{"uid":1405,"name":"Білогірська громада"},{"uid":1378,"name":"Війтовецька громада"},{"uid":1379,"name":"Віньковецька громада"},{"uid":1380,"name":"Вовковинецька громада"},{"uid":1381,"name":"Волочиська громада"},{"uid":1406,"name":"Ганнопільська громада"},{"uid":1382,"name":"Гвардійська громада"},{"uid":1383,"name":"Городоцька громада"},{"uid":1407,"name":"Грицівська громада"},{"uid":1422,"name":"Гуківська громада"},{"uid":1423,"name":"Гуменецька громада"},{"uid":1384,"name":"Деражнянська громада"},{"uid":1424,"name":"Дунаєвецька громада"},{"uid":1425,"name":"Жванецька громада"},{"uid":1426,"name":"Закупненська громада"},{"uid":1385,"name":"Заслучненська громада"},{"uid":1386,"name":"Зіньківська громада"},{"uid":1408,"name":"Ізяславська громада"},{"uid":1427,"name":"Кам'янець-Подільський"},{"uid":1428,"name":"Китайгородська громада"},{"uid":1387,"name":"Красилівська громада"},{"uid":1409,"name":"Крупецька громада"},{"uid":1410,"name":"Ленковецька громада"},{"uid":1388,"name":"Летичівська громада"},{"uid":1389,"name":"Лісовогринівецька громада"},{"uid":1429,"name":"Маківська громада"},{"uid":1390,"name":"Меджибізька громада"},{"uid":1391,"name":"Миролюбненська громада"},{"uid":1411,"name":"Михайлюцька громада"},{"uid":1392,"name":"Наркевицька громада"},{"uid":1412,"name":"Нетішин"},{"uid":1430,"name":"Новодунаєвецька громада"},{"uid":1431,"name":"Новоушицька громада"},{"uid":1432,"name":"Орининська громада"},{"uid":1413,"name":"Плужненська громада"},{"uid":1414,"name":"Полонська громада"},{"uid":1415,"name":"Понінківська громада"},{"uid":1393,"name":"Розсошанська громада"},{"uid":1394,"name":"Сатанівська громада"},{"uid":1416,"name":"Сахновецька громада"},{"uid":1417,"name":"Славута"},{"uid":1433,"name":"Слобідсько-Кульчієвецьк громада"},{"uid":1434,"name":"Смотрицька громада"},{"uid":1395,"name":"Солобковецька громада"},{"uid":1396,"name":"Старокостянтинів"},{"uid":1397,"name":"Староостропільська громада"},{"uid":1398,"name":"Старосинявська громада"},{"uid":1435,"name":"Староушицька громада"},{"uid":1418,"name":"Судилківська громада"},{"uid":1399,"name":"Теофіпольська громада"},{"uid":1419,"name":"Улашанівська громада"},{"uid":1400,"name":"Хмельницький"},{"uid":1436,"name":"Чемеровецька громада"},{"uid":1401,"name":"Чорноострівська громада"},{"uid":1420,"name":"Шепетівка"},{"uid":1402,"name":"Щиборівська громада"},{"uid":1421,"name":"Ямпільська громада"},{"uid":1403,"name":"Ярмолинецька громада"}]},"4":{"uid":4,"name":"Вінницька область","rows":[{"uid":154,"name":"Агрономічна громада"},{"uid":170,"name":"Бабчинецька громада"},{"uid":177,"name":"Барська громада"},{"uid":185,"name":"Бершадська громада"},{"uid":199,"name":"Брацлавська громада"},{"uid":200,"name":"Вапнярська громада"},{"uid":171,"name":"Вендичанська громада"},{"uid":155,"name":"Вінниця"},{"uid":156,"name":"Вороновицька громада"},{"uid":186,"name":"Гайсинська громада"},{"uid":208,"name":"Глуховецька громада"},{"uid":157,"name":"Гніванська громада"},{"uid":201,"name":"Городківська громада"},{"uid":187,"name":"Дашівська громада"},{"uid":188,"name":"Джулинська громада"},{"uid":178,"name":"Джуринська громада"},{"uid":209,"name":"Жданівська громада"},{"uid":179,"name":"Жмеринка"},{"uid":210,"name":"Іванівська громада"},{"uid":158,"name":"Іллінецька громада"},{"uid":211,"name":"Калинівська громада"},{"uid":212,"name":"Козятин"},{"uid":180,"name":"Копайгородська громада"},{"uid":189,"name":"Краснопільська громада"},{"uid":202,"name":"Крижопільська громада"},{"uid":190,"name":"Кунківська громада"},{"uid":191,"name":"Ладижин"},{"uid":159,"name":"Липовецька громада"},{"uid":160,"name":"Літинська громада"},{"uid":161,"name":"Лука-Мелешківська громада"},{"uid":213,"name":"Махнівська громада"},{"uid":172,"name":"Могилів-Подільський"},{"uid":181,"name":"Мурафська громада"},{"uid":173,"name":"Мурованокуриловецька громада"},{"uid":162,"name":"Немирівська громада"},{"uid":192,"name":"Ободівська громада"},{"uid":193,"name":"Ольгопільська громада"},{"uid":163,"name":"Оратівська громада"},{"uid":203,"name":"Піщанська громада"},{"uid":164,"name":"Погребищенська громада"},{"uid":194,"name":"Райгородська громада"},{"uid":214,"name":"Самгородоцька громада"},{"uid":182,"name":"Северинівська громада"},{"uid":195,"name":"Соболівська громада"},{"uid":183,"name":"Станіславчицька громада"},{"uid":165,"name":"Стрижавська громада"},{"uid":204,"name":"Студенянська громада"},{"uid":166,"name":"Сутисківська громада"},{"uid":196,"name":"Теплицька громада"},{"uid":167,"name":"Тиврівська громада"},{"uid":205,"name":"Томашпільська громада"},{"uid":197,"name":"Тростянецька громада"},{"uid":206,"name":"Тульчинська громада"},{"uid":168,"name":"Турбівська громада"},{"uid":215,"name":"Уланівська громада"},{"uid":216,"name":"Хмільник"},{"uid":174,"name":"Чернівецька громада"},{"uid":198,"name":"Чечельницька громада"},{"uid":184,"name":"Шаргородська громада"},{"uid":207,"name":"Шпиківська громада"},{"uid":169,"name":"Якушинецька громада"},{"uid":175,"name":"Ямпільська громада"},{"uid":176,"name":"Яришівська громада"}]},"5":{"uid":5,"name":"Рівненська область","rows":[{"uid":1102,"name":"Антонівська громада"},{"uid":1110,"name":"Бабинська громада"},{"uid":1136,"name":"Березівська громада"},{"uid":1111,"name":"Березнівська громада"},{"uid":1112,"name":"Білокриницька громада"},{"uid":1147,"name":"Бокіймівська громада"},{"uid":1148,"name":"Боремельська громада"},{"uid":1113,"name":"Бугринська громада"},{"uid":1103,"name":"Вараш"},{"uid":1149,"name":"Варковицька громада"},{"uid":1114,"name":"Великомежиріцька громада"},{"uid":1115,"name":"Великоомелянська громада"},{"uid":1150,"name":"Вербська громада"},{"uid":1137,"name":"Вирівська громада"},{"uid":1138,"name":"Висоцька громада"},{"uid":1104,"name":"Володимирецька громада"},{"uid":1116,"name":"Головинська громада"},{"uid":1117,"name":"Городоцька громада"},{"uid":1118,"name":"Гощанська громада"},{"uid":1151,"name":"Демидівська громада"},{"uid":1119,"name":"Деражненська громада"},{"uid":1152,"name":"Дубно"},{"uid":1139,"name":"Дубровицька громада"},{"uid":1120,"name":"Дядьковицька громада"},{"uid":1105,"name":"Зарічненська громада"},{"uid":1121,"name":"Здовбицька громада"},{"uid":1122,"name":"Здолбунівська громада"},{"uid":1123,"name":"Зорянська громада"},{"uid":1106,"name":"Каноницька громада"},{"uid":1124,"name":"Клеванська громада"},{"uid":1140,"name":"Клесівська громада"},{"uid":1153,"name":"Козинська громада"},{"uid":1125,"name":"Корецька громада"},{"uid":1126,"name":"Корнинська громада"},{"uid":1127,"name":"Костопільська громада"},{"uid":1154,"name":"Крупецька громада"},{"uid":1107,"name":"Локницька громада"},{"uid":1128,"name":"Малинська громада"},{"uid":1129,"name":"Малолюбашанська громада"},{"uid":1141,"name":"Миляцька громада"},{"uid":1155,"name":"Мирогощанська громада"},{"uid":1130,"name":"Мізоцька громада"},{"uid":1156,"name":"Млинівська громада"},{"uid":1142,"name":"Немовицька громада"},{"uid":1131,"name":"Олександрійська громада"},{"uid":1132,"name":"Острог"},{"uid":1157,"name":"Острожецька громада"},{"uid":1158,"name":"Підлозцівська громада"},{"uid":1159,"name":"Повчанська громада"},{"uid":1108,"name":"Полицька громада"},{"uid":1160,"name":"Привільненська громада"},{"uid":1161,"name":"Радивилівська громада"},{"uid":1109,"name":"Рафалівська громада"},{"uid":1133,"name":"Рівне"},{"uid":1143,"name":"Рокитнівська громада"},{"uid":1144,"name":"Сарни"},{"uid":1162,"name":"Семидубська громада"},{"uid":1163,"name":"Смизька громада"},{"uid":1134,"name":"Соснівська громада"},{"uid":1145,"name":"Старосільська громада"},{"uid":1146,"name":"Степанська громада"},{"uid":1164,"name":"Тараканівська громада"},{"uid":1135,"name":"Шпанівська громада"},{"uid":1165,"name":"Ярославицька громада"}]},"8":{"uid":8,"name":"Волинська область","rows":[{"uid":217,"name":"Берестечківська громада"},{"uid":218,"name":"Боратинська громада"},{"uid":232,"name":"Велимченська громада"},{"uid":233,"name":"Велицька громада"},{"uid":234,"name":"Вишнівська громада"},{"uid":255,"name":"Володимир"},{"uid":235,"name":"Голобська громада"},{"uid":236,"name":"Головненська громада"},{"uid":219,"name":"Городищенська громада"},{"uid":220,"name":"Горохівська громада"},{"uid":221,"name":"Доросинівська громада"},{"uid":237,"name":"Дубечненська громада"},{"uid":238,"name":"Дубівська громада"},{"uid":239,"name":"Заболоттівська громада"},{"uid":240,"name":"Забродівська громада"},{"uid":256,"name":"Затурцівська громада"},{"uid":257,"name":"Зимнівська громада"},{"uid":258,"name":"Іваничівська громада"},{"uid":266,"name":"Камінь-Каширська громада"},{"uid":222,"name":"Ківерцівська громада"},{"uid":241,"name":"Ковель"},{"uid":223,"name":"Колківська громада"},{"uid":242,"name":"Колодяжненська громада"},{"uid":224,"name":"Копачівська громада"},{"uid":259,"name":"Литовезька громада"},{"uid":260,"name":"Локачинська громада"},{"uid":243,"name":"Луківська громада"},{"uid":225,"name":"Луцьк"},{"uid":267,"name":"Любешівська громада"},{"uid":244,"name":"Люблинецька громада"},{"uid":245,"name":"Любомиль"},{"uid":268,"name":"Маневицька громада"},{"uid":226,"name":"Мар'янівська громада"},{"uid":261,"name":"Нововолинськ"},{"uid":262,"name":"Оваднівська громада"},{"uid":227,"name":"Олицька громада"},{"uid":263,"name":"Павлівська громада"},{"uid":228,"name":"Підгайцівська громада"},{"uid":246,"name":"Поворська громада"},{"uid":264,"name":"Поромівська громада"},{"uid":269,"name":"Прилісненська громада"},{"uid":247,"name":"Ратнівська громада"},{"uid":248,"name":"Рівненська громада"},{"uid":229,"name":"Рожищенська громада"},{"uid":249,"name":"Самарівська громада"},{"uid":250,"name":"Сереховичівська громада"},{"uid":251,"name":"Смідинська громада"},{"uid":270,"name":"Сошичненська громада"},{"uid":252,"name":"Старовижівська громада"},{"uid":230,"name":"Торчинська громада"},{"uid":253,"name":"Турійська громада"},{"uid":265,"name":"Устилузька громада"},{"uid":231,"name":"Цуманська громада"},{"uid":254,"name":"Шацьк"}]},"9":{"uid":9,"name":"Дніпропетровська область","rows":[{"uid":271,"name":"Апостолівська громада"},{"uid":286,"name":"Богданівська громада"},{"uid":293,"name":"Божедарівська громада"},{"uid":305,"name":"Брагинівська громада"},{"uid":272,"name":"Вакулівська громада"},{"uid":306,"name":"Васильківська громада"},{"uid":307,"name":"Великомихайлівська громада"},{"uid":287,"name":"Вербківська громада"},{"uid":294,"name":"Верхівцівська громада"},{"uid":295,"name":"Верхньодніпровська громада"},{"uid":296,"name":"Вишнівська громада"},{"uid":297,"name":"Вільногірськ"},{"uid":273,"name":"Глеюватська громада"},{"uid":274,"name":"Гречаноподівська громада"},{"uid":275,"name":"Грушівська громада"},{"uid":324,"name":"Губиниська громада"},{"uid":276,"name":"Девладівська громада"},{"uid":332,"name":"Дніпро"},{"uid":308,"name":"Дубовиківська громада"},{"uid":298,"name":"Жовті Води"},{"uid":309,"name":"Зайцівська громада"},{"uid":299,"name":"Затишнянська громада"},{"uid":277,"name":"Зеленодольська громада"},{"uid":310,"name":"Іларіонівська громада"},{"uid":300,"name":"Кам’янське"},{"uid":278,"name":"Карпівська громада"},{"uid":333,"name":"Китайгородська громада"},{"uid":279,"name":"Кривий Ріг"},{"uid":301,"name":"Криничанська громада"},{"uid":302,"name":"Лихівська громада"},{"uid":325,"name":"Личківська громада"},{"uid":280,"name":"Лозуватська громада"},{"uid":334,"name":"Любимівська громада"},{"uid":335,"name":"Ляшківська громада"},{"uid":326,"name":"Магдалинівська громада"},{"uid":311,"name":"Маломихайлівська громада"},{"uid":349,"name":"Марганець"},{"uid":288,"name":"Межиріцька громада"},{"uid":312,"name":"Межівська громада"},{"uid":313,"name":"Миколаївська громада"},{"uid":336,"name":"Миколаївська громада"},{"uid":350,"name":"Мирівська громада"},{"uid":337,"name":"Могилівська громада"},{"uid":281,"name":"Нивотрудівська громада"},{"uid":351,"name":"Нікополь"},{"uid":282,"name":"Новолатівська громада"},{"uid":338,"name":"Новоолександрівська громада"},{"uid":314,"name":"Новопавлівська громада"},{"uid":283,"name":"Новопільська громада"},{"uid":339,"name":"Новопокровська громада"},{"uid":340,"name":"Обухівська громада"},{"uid":303,"name":"П'ятихатська громада"},{"uid":289,"name":"Павлоград"},{"uid":328,"name":"Перещепинська громада"},{"uid":352,"name":"Першотравневська громада"},{"uid":341,"name":"Петриківська громада"},{"uid":316,"name":"Петропавлівська громада"},{"uid":342,"name":"Підгородненська громада"},{"uid":329,"name":"Піщанська громада"},{"uid":354,"name":"Покров"},{"uid":317,"name":"Покровська громада"},{"uid":353,"name":"Покровська громада"},{"uid":318,"name":"Раївська громада"},{"uid":319,"name":"Роздорська громада"},{"uid":304,"name":"Саксаганська громада"},{"uid":327,"name":"Самар"},{"uid":343,"name":"Святовасилівська громада"},{"uid":320,"name":"Синельникове"},{"uid":321,"name":"Славгородська громада"},{"uid":344,"name":"Слобожанська громада"},{"uid":322,"name":"Слов'янська громада"},{"uid":345,"name":"Солонянська громада"},{"uid":284,"name":"Софіївська громада"},{"uid":346,"name":"Сурсько-Литовська громада"},{"uid":290,"name":"Тернівка"},{"uid":355,"name":"Томаківська громада"},{"uid":291,"name":"Троїцька громада"},{"uid":323,"name":"Українська громада"},{"uid":347,"name":"Царичанська громада"},{"uid":356,"name":"Червоногригорівська громада"},{"uid":330,"name":"Черкаська громада"},{"uid":331,"name":"Чернеччинська громада"},{"uid":348,"name":"Чумаківська громада"},{"uid":315,"name":"Шахтарськ"},{"uid":285,"name":"Широківська громада"},{"uid":292,"name":"Юр’ївська громада"}]},"10":{"uid":10,"name":"Житомирська область","rows":[{"uid":423,"name":"Андрушівська громада"},{"uid":433,"name":"Андрушківська громада"},{"uid":464,"name":"Баранівська громада"},{"uid":465,"name":"Барашівська громада"},{"uid":424,"name":"Бердичів"},{"uid":434,"name":"Березівська громада"},{"uid":476,"name":"Білокоровицька громада"},{"uid":466,"name":"Брониківська громада"},{"uid":435,"name":"Брусилівська громада"},{"uid":436,"name":"Високівська громада"},{"uid":437,"name":"Вишевицька громада"},{"uid":438,"name":"Вільшанська громада"},{"uid":439,"name":"Волицька громада"},{"uid":425,"name":"Вчорайшенська громада"},{"uid":477,"name":"Гладковицька громада"},{"uid":440,"name":"Глибочицька громада"},{"uid":467,"name":"Городницька громада"},{"uid":441,"name":"Городоцька громада"},{"uid":478,"name":"Горщиківська громада"},{"uid":426,"name":"Гришковецька громада"},{"uid":468,"name":"Довбиська громада"},{"uid":469,"name":"Дубрівська громада"},{"uid":470,"name":"Ємільчинська громада"},{"uid":442,"name":"Житомир"},{"uid":471,"name":"Звягель"},{"uid":479,"name":"Іршанська громада"},{"uid":443,"name":"Квітнева громада"},{"uid":444,"name":"Корнинська громада"},{"uid":480,"name":"Коростень"},{"uid":445,"name":"Коростишівська громада"},{"uid":427,"name":"Краснопільська громада"},{"uid":446,"name":"Курненська громада"},{"uid":481,"name":"Лугинська громада"},{"uid":447,"name":"Любарська громада"},{"uid":482,"name":"Малин"},{"uid":448,"name":"Миропільська громада"},{"uid":483,"name":"Народицька громада"},{"uid":449,"name":"Новоборівська громада"},{"uid":450,"name":"Новогуйвинська громада"},{"uid":484,"name":"Овруцька громада"},{"uid":485,"name":"Олевська громада"},{"uid":451,"name":"Оліївська громада"},{"uid":472,"name":"Піщівська громада"},{"uid":452,"name":"Попільнянська громада"},{"uid":453,"name":"Потіївська громада"},{"uid":454,"name":"Пулинська громада"},{"uid":455,"name":"Радомишльська громада"},{"uid":428,"name":"Райгородська громада"},{"uid":456,"name":"Романівська громада"},{"uid":429,"name":"Ружинська громада"},{"uid":430,"name":"Семенівська громада"},{"uid":486,"name":"Словечанська громада"},{"uid":457,"name":"Станишівська громада"},{"uid":458,"name":"Старосілецька громада"},{"uid":473,"name":"Стриївська громада"},{"uid":459,"name":"Тетерівська громада"},{"uid":487,"name":"Ушомирська громада"},{"uid":460,"name":"Харитонівська громада"},{"uid":461,"name":"Хорошівська громада"},{"uid":431,"name":"Червоненська громада"},{"uid":462,"name":"Черняхівська громада"},{"uid":474,"name":"Чижівська громада"},{"uid":488,"name":"Чоповицька громада"},{"uid":463,"name":"Чуднівська громада"},{"uid":432,"name":"Швайківська громада"},{"uid":475,"name":"Ярунська громада"}]},"11":{"uid":11,"name":"Закарпатська область","rows":[{"uid":489,"name":"Баранинська громада"},{"uid":503,"name":"Батівська громада"},{"uid":513,"name":"Бедевлянська громада"},{"uid":504,"name":"Берегове"},{"uid":523,"name":"Білківська громада"},{"uid":536,"name":"Богданська громада"},{"uid":514,"name":"Буштинська громада"},{"uid":490,"name":"Великоберезнянська громада"},{"uid":505,"name":"Великоберезька громада"},{"uid":506,"name":"Великобийганська громада"},{"uid":537,"name":"Великобичківська громада"},{"uid":491,"name":"Великодобронська громада"},{"uid":540,"name":"Великолучківська громада"},{"uid":541,"name":"Верхньокоропецька громада"},{"uid":507,"name":"Вилоцька громада"},{"uid":508,"name":"Виноградів"},{"uid":524,"name":"Вишківська громада"},{"uid":515,"name":"Вільховецька громада"},{"uid":542,"name":"Воловецька громада"},{"uid":525,"name":"Горінчівська громада"},{"uid":543,"name":"Горондівська громада"},{"uid":526,"name":"Довжанська громада"},{"uid":527,"name":"Драгівська громада"},{"uid":516,"name":"Дубівська громада"},{"uid":492,"name":"Дубриницько-Малоберезня громада"},{"uid":544,"name":"Жденіївська громада"},{"uid":528,"name":"Зарічанська громада"},{"uid":545,"name":"Івановецька громада"},{"uid":529,"name":"Іршава"},{"uid":509,"name":"Кам'янська громада"},{"uid":530,"name":"Керецьківська громада"},{"uid":531,"name":"Колочавська громада"},{"uid":546,"name":"Кольчинська громада"},{"uid":510,"name":"Королівська громада"},{"uid":511,"name":"Косоньська громада"},{"uid":493,"name":"Костринська громада"},{"uid":532,"name":"Міжгір'я"},{"uid":547,"name":"Мукачево"},{"uid":548,"name":"Неліпинська громада"},{"uid":517,"name":"Нересницька громада"},{"uid":549,"name":"Нижньоворітська громада"},{"uid":494,"name":"Оноківська громада"},{"uid":495,"name":"Перечинська громада"},{"uid":512,"name":"Пийтерфолвівська громада"},{"uid":533,"name":"Пилипецька громада"},{"uid":550,"name":"Полянська громада"},{"uid":538,"name":"Рахів"},{"uid":551,"name":"Свалявська громада"},{"uid":496,"name":"Середнянська громада"},{"uid":534,"name":"Синевирська громада"},{"uid":518,"name":"Солотвинська громада"},{"uid":497,"name":"Ставненська громада"},{"uid":498,"name":"Сюртівська громада"},{"uid":519,"name":"Тересвянська громада"},{"uid":499,"name":"Тур'є-Реметівська громада"},{"uid":520,"name":"Тячів"},{"uid":521,"name":"Углянська громада"},{"uid":500,"name":"Ужгород"},{"uid":522,"name":"Усть-Чорнянська громада"},{"uid":501,"name":"Холмківська громада"},{"uid":535,"name":"Хуст"},{"uid":552,"name":"Чинадіївська громада"},{"uid":502,"name":"Чоп"},{"uid":539,"name":"Ясінянська громада"}]},"12":{"uid":12,"name":"Запорізька область","rows":[{"uid":553,"name":"Андрівська громада"},{"uid":554,"name":"Андріївська громада"},{"uid":555,"name":"Бердянськ"},{"uid":556,"name":"Берестівська громада"},{"uid":561,"name":"Біленьківська громада"},{"uid":578,"name":"Більмацька громада"},{"uid":593,"name":"Благовіщенська громада"},{"uid":594,"name":"Василівська громада"},{"uid":595,"name":"Великобілозерська громада"},{"uid":604,"name":"Веселівська громада"},{"uid":562,"name":"Вільнянська громада"},{"uid":596,"name":"Водянська громада"},{"uid":579,"name":"Воздвижівська громада"},{"uid":580,"name":"Воскресенська громада"},{"uid":581,"name":"Гуляйпільська громада"},{"uid":597,"name":"Дніпрорудненська громада"},{"uid":563,"name":"Долинська громада"},{"uid":598,"name":"Енергодар"},{"uid":564,"name":"Запоріжжя"},{"uid":599,"name":"Кам'янсько-Дніпровська громада"},{"uid":605,"name":"Кирилівська громада"},{"uid":557,"name":"Коларівська громада"},{"uid":582,"name":"Комиш-Зорянська громада"},{"uid":565,"name":"Комишуваська громада"},{"uid":606,"name":"Костянтинівська громада"},{"uid":566,"name":"Кушугумська громада"},{"uid":583,"name":"Малинівська громада"},{"uid":600,"name":"Малобілозерська громада"},{"uid":584,"name":"Малотокмачанська громада"},{"uid":567,"name":"Матвіївська громада"},{"uid":607,"name":"Мелітополь"},{"uid":608,"name":"Мирненська громада"},{"uid":568,"name":"Михайлівська громада"},{"uid":601,"name":"Михайлівська громада"},{"uid":569,"name":"Михайло-Лукашівська громада"},{"uid":585,"name":"Молочанська громада"},{"uid":609,"name":"Новенська громада"},{"uid":610,"name":"Новобогданівська громада"},{"uid":611,"name":"Нововасилівська громада"},{"uid":570,"name":"Новомиколаївська громада"},{"uid":571,"name":"Новоолександрівська громада"},{"uid":612,"name":"Новоуспенівська громада"},{"uid":613,"name":"Олександрівська громада"},{"uid":586,"name":"Оріхівська громада"},{"uid":558,"name":"Осипенківська громада"},{"uid":572,"name":"Павлівська громада"},{"uid":573,"name":"Петро-Михайлівська громада"},{"uid":614,"name":"Плодородненська громада"},{"uid":587,"name":"Пологівська громада"},{"uid":588,"name":"Преображенська громада"},{"uid":615,"name":"Приазовська громада"},{"uid":559,"name":"Приморська громада"},{"uid":602,"name":"Роздольська громада"},{"uid":589,"name":"Розівська громада"},{"uid":616,"name":"Семенівська громада"},{"uid":590,"name":"Смирновська громада"},{"uid":574,"name":"Степненська громада"},{"uid":603,"name":"Степногірська громада"},{"uid":575,"name":"Таврійська громада"},{"uid":576,"name":"Тернуватська громада"},{"uid":617,"name":"Терпіннівська громада"},{"uid":591,"name":"Токмак"},{"uid":592,"name":"Федорівська громада"},{"uid":560,"name":"Чернігівська громада"},{"uid":618,"name":"Чкаловська громада"},{"uid":577,"name":"Широківська громада"},{"uid":619,"name":"Якимівська громада"}]},"13":{"uid":13,"name":"Івано-Франківська область","rows":[{"uid":620,"name":"Білоберізька громада"},{"uid":623,"name":"Більшівцівська громада"},{"uid":624,"name":"Богородчанська громада"},{"uid":643,"name":"Болехів"},{"uid":644,"name":"Брошнів-Осадська громада"},{"uid":625,"name":"Букачівська громада"},{"uid":626,"name":"Бурштин"},{"uid":645,"name":"Верхнянська громада"},{"uid":621,"name":"Верховинська громада"},{"uid":646,"name":"Вигодська громада"},{"uid":647,"name":"Витвицька громада"},{"uid":648,"name":"Войнилівська громада"},{"uid":656,"name":"Ворохтянська громада"},{"uid":627,"name":"Галицька громада"},{"uid":664,"name":"Гвіздецька громада"},{"uid":665,"name":"Городенківська громада"},{"uid":657,"name":"Делятинська громада"},{"uid":628,"name":"Дзвиняцька громада"},{"uid":649,"name":"Долина"},{"uid":650,"name":"Дубівська громада"},{"uid":629,"name":"Дубовецька громада"},{"uid":630,"name":"Єзупільська громада"},{"uid":666,"name":"Заболотівська громада"},{"uid":631,"name":"Загвіздянська громада"},{"uid":622,"name":"Зеленська громада"},{"uid":632,"name":"Івано-Франківськ"},{"uid":651,"name":"Калуш"},{"uid":667,"name":"Коломия"},{"uid":668,"name":"Коршівська громада"},{"uid":677,"name":"Косівська громада"},{"uid":678,"name":"Космацька громада"},{"uid":679,"name":"Кутська громада"},{"uid":658,"name":"Ланчинська громада"},{"uid":633,"name":"Лисецька громада"},{"uid":669,"name":"Матеївецька громада"},{"uid":659,"name":"Надвірна"},{"uid":670,"name":"Нижньовербізька громада"},{"uid":652,"name":"Новицька громада"},{"uid":634,"name":"Обертинська громада"},{"uid":635,"name":"Олешанська громада"},{"uid":671,"name":"Отинійська громада"},{"uid":674,"name":"П'ядицька громада"},{"uid":660,"name":"Пасічнянська громада"},{"uid":653,"name":"Перегінська громада"},{"uid":661,"name":"Переріслянська громада"},{"uid":672,"name":"Печеніжинська громада"},{"uid":673,"name":"Підгайчиківська громада"},{"uid":662,"name":"Поляницька громада"},{"uid":636,"name":"Рогатинська громада"},{"uid":680,"name":"Рожнівська громада"},{"uid":654,"name":"Рожнятівська громада"},{"uid":675,"name":"Снятинська громада"},{"uid":637,"name":"Солотвинська громада"},{"uid":655,"name":"Спаська громада"},{"uid":638,"name":"Старобогородчанська громада"},{"uid":639,"name":"Тисменицька громада"},{"uid":640,"name":"Тлумацька громада"},{"uid":641,"name":"Угринівська громада"},{"uid":676,"name":"Чернелицька громада"},{"uid":681,"name":"Яблунівська громада"},{"uid":642,"name":"Ямницька громада"},{"uid":663,"name":"Яремче"}]},"14":{"uid":14,"name":"Київська область","rows":[{"uid":682,"name":"Баришівська громада"},{"uid":683,"name":"Березань"},{"uid":690,"name":"Бишівська громада"},{"uid":711,"name":"Біла Церква"},{"uid":699,"name":"Білогородська громада"},{"uid":724,"name":"Богуславська громада"},{"uid":733,"name":"Бориспіль"},{"uid":700,"name":"Бородянська громада"},{"uid":701,"name":"Борщагівська громада"},{"uid":691,"name":"Боярська громада"},{"uid":684,"name":"Бровари"},{"uid":702,"name":"Буча"},{"uid":725,"name":"Васильків"},{"uid":685,"name":"Великодимерська громада"},{"uid":744,"name":"Вишгородська громада"},{"uid":703,"name":"Вишнева громада"},{"uid":712,"name":"Володарська громада"},{"uid":734,"name":"Вороньківська громада"},{"uid":692,"name":"Гатненська громада"},{"uid":735,"name":"Гірська громада"},{"uid":693,"name":"Глевахівська громада"},{"uid":704,"name":"Гостомелська громада"},{"uid":713,"name":"Гребінківська громада"},{"uid":745,"name":"Димерська громада"},{"uid":736,"name":"Дівичківська громада"},{"uid":705,"name":"Дмитрівська громада"},{"uid":686,"name":"Зазимська громада"},{"uid":687,"name":"Згурівська громада"},{"uid":737,"name":"Золочівська громада"},{"uid":746,"name":"Іванківська громада"},{"uid":706,"name":"Ірпінь"},{"uid":726,"name":"Кагарлицька громада"},{"uid":688,"name":"Калинівська громада"},{"uid":694,"name":"Калинівська громада"},{"uid":689,"name":"Калитянська громада"},{"uid":714,"name":"Ковалівська громада"},{"uid":695,"name":"Кожанська громада"},{"uid":727,"name":"Козинська громада"},{"uid":707,"name":"Коцюбинська громада"},{"uid":708,"name":"Макарівська громада"},{"uid":715,"name":"Маловільшанська громада"},{"uid":716,"name":"Медвинська громада"},{"uid":728,"name":"Миронівська громада"},{"uid":709,"name":"Немішаївська громада"},{"uid":729,"name":"Обухів"},{"uid":738,"name":"Переяслав"},{"uid":747,"name":"Петрівська громада"},{"uid":748,"name":"Пірнівська громада"},{"uid":710,"name":"Пісківська громада"},{"uid":749,"name":"Поліська громада"},{"uid":739,"name":"Пристолична громада"},{"uid":730,"name":"Ржищів"},{"uid":717,"name":"Рокитнянська громада"},{"uid":718,"name":"Сквирська громада"},{"uid":750,"name":"Славутич"},{"uid":719,"name":"Ставищенська громада"},{"uid":740,"name":"Студениківська громада"},{"uid":720,"name":"Таращанська громада"},{"uid":741,"name":"Ташанська громада"},{"uid":721,"name":"Тетіївська громада"},{"uid":696,"name":"Томашівська громада"},{"uid":722,"name":"Узинська громада"},{"uid":731,"name":"Українська громада"},{"uid":697,"name":"Фастів"},{"uid":732,"name":"Феодосіївська громада"},{"uid":723,"name":"Фурсівська громада"},{"uid":742,"name":"Циблівська громада"},{"uid":698,"name":"Чабанівська громада"},{"uid":743,"name":"Яготинська громада"}]},"15":{"uid":15,"name":"Кіровоградська область","rows":[{"uid":751,"name":"Аджамська громада"},{"uid":768,"name":"Благовіщенська громада"},{"uid":752,"name":"Бобринецька громада"},{"uid":778,"name":"Великоандрусівська громада"},{"uid":753,"name":"Великосеверинівська громада"},{"uid":769,"name":"Вільшанська громада"},{"uid":770,"name":"Гайворонська громада"},{"uid":787,"name":"Ганнівська громада"},{"uid":788,"name":"Глодоська громада"},{"uid":771,"name":"Голованівська громада"},{"uid":754,"name":"Гурівська громада"},{"uid":755,"name":"Дмитрівська громада"},{"uid":789,"name":"Добровеличківська громада"},{"uid":756,"name":"Долинська громада"},{"uid":772,"name":"Заваллівська громада"},{"uid":790,"name":"Злинська громада"},{"uid":757,"name":"Знам'янка"},{"uid":758,"name":"Катеринівська громада"},{"uid":759,"name":"Кетрисанівська громада"},{"uid":760,"name":"Компаніївська громада"},{"uid":761,"name":"Кропивницький"},{"uid":791,"name":"Маловисківська громада"},{"uid":792,"name":"Мар’янівська громада"},{"uid":773,"name":"Надлацька громада"},{"uid":762,"name":"Новгородківська громада"},{"uid":774,"name":"Новоархангельська громада"},{"uid":793,"name":"Новомиргородська громада"},{"uid":779,"name":"Новопразька громада"},{"uid":794,"name":"Новоукраїнська громада"},{"uid":763,"name":"Олександрівська громада"},{"uid":780,"name":"Олександрія"},{"uid":781,"name":"Онуфріївська громада"},{"uid":782,"name":"Пантаївська громада"},{"uid":764,"name":"Первозванівська громада"},{"uid":775,"name":"Перегонівська громада"},{"uid":783,"name":"Петрівська громада"},{"uid":776,"name":"Підвисоцька громада"},{"uid":795,"name":"Піщанобрідська громада"},{"uid":777,"name":"Побузька громада"},{"uid":796,"name":"Помічнянська громада"},{"uid":784,"name":"Попельнастівська громада"},{"uid":785,"name":"Приютівська громада"},{"uid":797,"name":"Рівнянська громада"},{"uid":786,"name":"Світловодськ"},{"uid":798,"name":"Смолінська громада"},{"uid":765,"name":"Соколівська громада"},{"uid":766,"name":"Суботцівська громада"},{"uid":799,"name":"Тишківська громада"},{"uid":767,"name":"Устинівська громада"}]},"16":{"uid":16,"name":"Луганська область","rows":[{"uid":1903,"name":"Алчевськ"},{"uid":1902,"name":"Антрацит"},{"uid":800,"name":"Біловодська громада"},{"uid":808,"name":"Білокуракинська громада"},{"uid":801,"name":"Білолуцька громада"},{"uid":815,"name":"Гірська громада"},{"uid":1908,"name":"Довжанськ"},{"uid":1911,"name":"Зимогір'я"},{"uid":1909,"name":"Кадіївка"},{"uid":809,"name":"Коломийчиська громада"},{"uid":810,"name":"Красноріченська громада"},{"uid":816,"name":"Кремінна"},{"uid":817,"name":"Лисичанськ"},{"uid":811,"name":"Лозно-Олександрівська громада"},{"uid":1901,"name":"Луганськ"},{"uid":1910,"name":"Лутугине"},{"uid":802,"name":"Марківська громада"},{"uid":803,"name":"Міловська громада"},{"uid":1904,"name":"Молодогвардійськ"},{"uid":812,"name":"Нижньодуванська громада"},{"uid":821,"name":"Нижньотеплівська громада"},{"uid":822,"name":"Новоайдарська громада"},{"uid":804,"name":"Новопсковська громада"},{"uid":818,"name":"Попаснянська громада"},{"uid":1907,"name":"Ровеньки"},{"uid":819,"name":"Рубіжне"},{"uid":813,"name":"Сватівська громада"},{"uid":820,"name":"Сіверськодонецьк"},{"uid":1905,"name":"Сорокине"},{"uid":823,"name":"Станично-Луганська громада"},{"uid":805,"name":"Старобільська громада"},{"uid":814,"name":"Троїцька громада"},{"uid":1906,"name":"Хрустальний"},{"uid":806,"name":"Чмирівська громада"},{"uid":824,"name":"Широківська громада"},{"uid":807,"name":"Шульгинська громада"},{"uid":825,"name":"Щастинська громада"}]},"17":{"uid":17,"name":"Миколаївська область","rows":[{"uid":899,"name":"Арбузинська громада"},{"uid":907,"name":"Баштанка"},{"uid":919,"name":"Березанська громада"},{"uid":908,"name":"Березнегуватська громада"},{"uid":900,"name":"Благодатненська громада"},{"uid":938,"name":"Братська громада"},{"uid":939,"name":"Бузька громада"},{"uid":940,"name":"Веселинівська громада"},{"uid":920,"name":"Веснянська громада"},{"uid":909,"name":"Вільнозапорізька громада"},{"uid":941,"name":"Вознесенськ"},{"uid":910,"name":"Володимирівська громада"},{"uid":921,"name":"Воскресенська громада"},{"uid":901,"name":"Врадіївська громада"},{"uid":922,"name":"Галицинівська громада"},{"uid":911,"name":"Горохівська громада"},{"uid":942,"name":"Доманівська громада"},{"uid":943,"name":"Дорошівська громада"},{"uid":944,"name":"Єланецька громада"},{"uid":912,"name":"Інгульська громада"},{"uid":913,"name":"Казанківська громада"},{"uid":902,"name":"Кам'яномостівська громада"},{"uid":923,"name":"Коблівська громада"},{"uid":924,"name":"Костянтинівська громада"},{"uid":903,"name":"Кривоозерська громада"},{"uid":925,"name":"Куцурубська громада"},{"uid":904,"name":"Мигіївська громада"},{"uid":926,"name":"Миколаїв"},{"uid":927,"name":"Мішково-Погорілівська громада"},{"uid":945,"name":"Мостівська громада"},{"uid":928,"name":"Нечаянська громада"},{"uid":929,"name":"Нова-Одеса"},{"uid":914,"name":"Новобузька громада"},{"uid":946,"name":"Новомар'ївська громада"},{"uid":947,"name":"Олександрівська громада"},{"uid":930,"name":"Ольшанська громада"},{"uid":931,"name":"Очаків"},{"uid":905,"name":"Первомайськ"},{"uid":932,"name":"Первомайська громада"},{"uid":948,"name":"Прибужанівська громада"},{"uid":949,"name":"Прибузька громада"},{"uid":915,"name":"Привільненська громада"},{"uid":933,"name":"Радсадівська громада"},{"uid":906,"name":"Синюхинобрідська громада"},{"uid":916,"name":"Снігурівка"},{"uid":917,"name":"Софіївська громада"},{"uid":934,"name":"Степівська громада"},{"uid":935,"name":"Сухоєланецька громада"},{"uid":936,"name":"Чорноморська громада"},{"uid":937,"name":"Шевченківська громада"},{"uid":918,"name":"Широківська громада"},{"uid":950,"name":"Южноукраїнськ"}]},"18":{"uid":18,"name":"Одеська область","rows":[{"uid":951,"name":"Авангардівська громада"},{"uid":973,"name":"Ананьївська громада"},{"uid":985,"name":"Андрієво-Іванівська громада"},{"uid":1001,"name":"Арцизька громада"},{"uid":974,"name":"Балтська громада"},{"uid":986,"name":"Березівська громада"},{"uid":1011,"name":"Білгород-Дністровський"},{"uid":952,"name":"Біляївська громада"},{"uid":1002,"name":"Болградська громада"},{"uid":1003,"name":"Бородінська громада"},{"uid":1004,"name":"Василівська громада"},{"uid":987,"name":"Великобуялицька громада"},{"uid":953,"name":"Великодальницька громада"},{"uid":954,"name":"Великодолинська громада"},{"uid":1027,"name":"Великомихайлівська громада"},{"uid":1028,"name":"Великоплосківська громада"},{"uid":955,"name":"Вигодянська громада"},{"uid":956,"name":"Визирська громада"},{"uid":1036,"name":"Вилківська громада"},{"uid":1005,"name":"Городненська громада"},{"uid":957,"name":"Дальницька громада"},{"uid":958,"name":"Дачненська громада"},{"uid":1012,"name":"Дивізійська громада"},{"uid":959,"name":"Доброславська громада"},{"uid":975,"name":"Долинська громада"},{"uid":1029,"name":"Затишанська громада"},{"uid":1030,"name":"Захарівська громада"},{"uid":976,"name":"Зеленогірська громада"},{"uid":988,"name":"Знам’янська громада"},{"uid":989,"name":"Іванівська громада"},{"uid":1037,"name":"Ізмаїл"},{"uid":1013,"name":"Кароліно-Бугазька громада"},{"uid":1038,"name":"Кілійська громада"},{"uid":977,"name":"Кодимська громада"},{"uid":990,"name":"Коноплянська громада"},{"uid":960,"name":"Красносільська громада"},{"uid":1006,"name":"Криниченська громада"},{"uid":1007,"name":"Кубейська громада"},{"uid":1014,"name":"Кулевчанська громада"},{"uid":991,"name":"Курісовська громада"},{"uid":978,"name":"Куяльницька громада"},{"uid":1015,"name":"Лиманська громада"},{"uid":1031,"name":"Лиманська громада"},{"uid":979,"name":"Любашівська громада"},{"uid":1016,"name":"Маразліївська громада"},{"uid":961,"name":"Маяківська громада"},{"uid":992,"name":"Миколаївська громада"},{"uid":1017,"name":"Мологівська громада"},{"uid":962,"name":"Нерубайська громада"},{"uid":1032,"name":"Новоборисівська громада"},{"uid":993,"name":"Новокальчевська громада"},{"uid":963,"name":"Овідіопольська громада"},{"uid":964,"name":"Одеса"},{"uid":980,"name":"Окнянська громада"},{"uid":1008,"name":"Павлівська громада"},{"uid":994,"name":"Петровірівська громада"},{"uid":1018,"name":"Петропавлівська громада"},{"uid":971,"name":"Південне"},{"uid":981,"name":"Піщанська громада"},{"uid":1019,"name":"Плахтіївська громада"},{"uid":982,"name":"Подільська громада"},{"uid":995,"name":"Раухівська громада"},{"uid":1039,"name":"Ренійська громада"},{"uid":1033,"name":"Роздільнянська громада"},{"uid":996,"name":"Розквітівська громада"},{"uid":983,"name":"Савранська громада"},{"uid":1020,"name":"Саратська громада"},{"uid":1040,"name":"Саф'янівська громада"},{"uid":1021,"name":"Сергіївська громада"},{"uid":984,"name":"Слобідська громада"},{"uid":1022,"name":"Старокозацька громада"},{"uid":997,"name":"Старомаяківська громада"},{"uid":1034,"name":"Степанівська громада"},{"uid":998,"name":"Стрюківська громада"},{"uid":1041,"name":"Суворовська громада"},{"uid":965,"name":"Таїровська громада"},{"uid":1009,"name":"Тарутинська громада"},{"uid":1023,"name":"Татарбунарська громада"},{"uid":1010,"name":"Теплицька громада"},{"uid":966,"name":"Теплодарська громада"},{"uid":1024,"name":"Тузлівська громада"},{"uid":967,"name":"Усатівська громада"},{"uid":1025,"name":"Успенівська громада"},{"uid":968,"name":"Фонтанська громада"},{"uid":1035,"name":"Цебриківська громада"},{"uid":999,"name":"Чогодарівська громада"},{"uid":969,"name":"Чорноморськ"},{"uid":970,"name":"Чорноморська громада"},{"uid":1026,"name":"Шабівська громада"},{"uid":1000,"name":"Ширяївська громада"},{"uid":972,"name":"Яськівська громада"}]},"19":{"uid":19,"name":"Полтавська область","rows":[{"uid":1042,"name":"Білицька громада"},{"uid":1066,"name":"Білоцерківська громада"},{"uid":1067,"name":"Великобагачанська громада"},{"uid":1068,"name":"Великобудищанська громада"},{"uid":1043,"name":"Великорублівська громада"},{"uid":1069,"name":"Великосорочинська громада"},{"uid":1070,"name":"Гадяцька громада"},{"uid":1083,"name":"Глобинська громада"},{"uid":1071,"name":"Гоголівська громада"},{"uid":1084,"name":"Горішні плавні"},{"uid":1085,"name":"Градизька громада"},{"uid":1095,"name":"Гребінківська громада"},{"uid":1044,"name":"Диканьська громада"},{"uid":1045,"name":"Драбинівська громада"},{"uid":1072,"name":"Заводська громада"},{"uid":1046,"name":"Зіньківська громада"},{"uid":1086,"name":"Кам'янопотоківська громада"},{"uid":1047,"name":"Карлівська громада"},{"uid":1048,"name":"Кобеляцька громада"},{"uid":1087,"name":"Козельщинська громада"},{"uid":1049,"name":"Коломацька громада"},{"uid":1073,"name":"Комишнянська громада"},{"uid":1050,"name":"Котелевська громада"},{"uid":1074,"name":"Краснолуцька громада"},{"uid":1088,"name":"Кременчук"},{"uid":1051,"name":"Ланнівська громада"},{"uid":1075,"name":"Лохвиця"},{"uid":1096,"name":"Лубни"},{"uid":1076,"name":"Лютенська громада"},{"uid":1052,"name":"Мартинівська громада"},{"uid":1053,"name":"Мачухівська громада"},{"uid":1054,"name":"Машівська громада"},{"uid":1077,"name":"Миргород"},{"uid":1055,"name":"Михайлівська громада"},{"uid":1056,"name":"Нехворощанська громада"},{"uid":1089,"name":"Новогалещинська громада"},{"uid":1097,"name":"Новооржицька громада"},{"uid":1057,"name":"Новосанжарська громада"},{"uid":1058,"name":"Новоселівська громада"},{"uid":1090,"name":"Оболонська громада"},{"uid":1091,"name":"Омельницька громада"},{"uid":1059,"name":"Опішнянська громада"},{"uid":1098,"name":"Оржицька громада"},{"uid":1078,"name":"Петрівсько-Роменська громада"},{"uid":1099,"name":"Пирятин"},{"uid":1092,"name":"Піщанська громада"},{"uid":1060,"name":"Полтава"},{"uid":1093,"name":"Пришибська громада"},{"uid":1061,"name":"Решетилівська громада"},{"uid":1079,"name":"Ромоданівська громада"},{"uid":1094,"name":"Семенівська громада"},{"uid":1080,"name":"Сенчанська громада"},{"uid":1081,"name":"Сергіївська громада"},{"uid":1062,"name":"Скороходівська громада"},{"uid":1063,"name":"Терешківська громада"},{"uid":1100,"name":"Хорольська громада"},{"uid":1101,"name":"Чорнухинська громада"},{"uid":1064,"name":"Чутівська громада"},{"uid":1082,"name":"Шишацька громада"},{"uid":1065,"name":"Щербанівська громада"}]},"20":{"uid":20,"name":"Сумська область","rows":[{"uid":1166,"name":"Андріяшівська громада"},{"uid":1174,"name":"Бездрицька громада"},{"uid":1190,"name":"Березівська громада"},{"uid":1175,"name":"Білопілля"},{"uid":1200,"name":"Боромлянська громада"},{"uid":1209,"name":"Бочечківська громада"},{"uid":1210,"name":"Буринь"},{"uid":1201,"name":"Велика Писарівка"},{"uid":1176,"name":"Верхньосироватська громада"},{"uid":1167,"name":"Вільшанська громада"},{"uid":1177,"name":"Ворожбянська громада"},{"uid":1191,"name":"Глухів"},{"uid":1202,"name":"Грунська громада"},{"uid":1192,"name":"Дружбівська громада"},{"uid":1211,"name":"Дубов’язівська громада"},{"uid":1193,"name":"Есманьська громада"},{"uid":1194,"name":"Зноб-Новгородська громада"},{"uid":1203,"name":"Кириківська громада"},{"uid":1204,"name":"Комишанська громада"},{"uid":1212,"name":"Конотоп"},{"uid":1168,"name":"Коровинська громада"},{"uid":1178,"name":"Краснопілля"},{"uid":1213,"name":"Кролевець"},{"uid":1179,"name":"Лебедин"},{"uid":1169,"name":"Липова Долина"},{"uid":1180,"name":"Миколаївська громада"},{"uid":1181,"name":"Миколаївська громада"},{"uid":1182,"name":"Миропільська громада"},{"uid":1170,"name":"Недригайлів"},{"uid":1183,"name":"Нижньосироватська громада"},{"uid":1214,"name":"Новослобідська громада"},{"uid":1205,"name":"Охтирка"},{"uid":1215,"name":"Попівська громада"},{"uid":1216,"name":"Путивль"},{"uid":1184,"name":"Річківська громада"},{"uid":1171,"name":"Ромни"},{"uid":1185,"name":"Садівська громада"},{"uid":1195,"name":"Свеська громада"},{"uid":1196,"name":"Середина-Буда"},{"uid":1172,"name":"Синівська громада"},{"uid":1186,"name":"Степанівська громада"},{"uid":1187,"name":"Суми"},{"uid":1206,"name":"Тростянець"},{"uid":1173,"name":"Хмелівська громада"},{"uid":1188,"name":"Хотінська громада"},{"uid":1207,"name":"Чернеччинська громада"},{"uid":1208,"name":"Чупахівська громада"},{"uid":1197,"name":"Шалигинська громада"},{"uid":1198,"name":"Шостка"},{"uid":1189,"name":"Юнаківська громада"},{"uid":1199,"name":"Ямпіль"}]},"21":{"uid":21,"name":"Тернопільська область","rows":[{"uid":1217,"name":"Байковецька громада"},{"uid":1218,"name":"Бережани"},{"uid":1219,"name":"Білецька громада"},{"uid":1242,"name":"Білобожницька громада"},{"uid":1243,"name":"Більче-Золотецька громада"},{"uid":1264,"name":"Борсуківська громада"},{"uid":1244,"name":"Борщівська громада"},{"uid":1245,"name":"Бучацька громада"},{"uid":1246,"name":"Васильковецька громада"},{"uid":1220,"name":"Великоберезовицька громада"},{"uid":1221,"name":"Великобірківська громада"},{"uid":1222,"name":"Великогаївська громада"},{"uid":1265,"name":"Великодедеркальська громада"},{"uid":1266,"name":"Вишнівецька громада"},{"uid":1247,"name":"Гримайлівська громада"},{"uid":1248,"name":"Гусятинська громада"},{"uid":1249,"name":"Заводська громада"},{"uid":1250,"name":"Заліщицька громада"},{"uid":1223,"name":"Залозецька громада"},{"uid":1224,"name":"Збаразька громада"},{"uid":1225,"name":"Зборівська громада"},{"uid":1226,"name":"Золотниківська громада"},{"uid":1251,"name":"Золотопотіцька громада"},{"uid":1252,"name":"Іване-Пустенська громада"},{"uid":1227,"name":"Іванівська громада"},{"uid":1228,"name":"Козівська громада"},{"uid":1229,"name":"Козлівська громада"},{"uid":1253,"name":"Колиндянська громада"},{"uid":1254,"name":"Копичинецька громада"},{"uid":1255,"name":"Коропецька громада"},{"uid":1267,"name":"Кременець"},{"uid":1230,"name":"Купчинецька громада"},{"uid":1268,"name":"Лановецька громада"},{"uid":1269,"name":"Лопушненська громада"},{"uid":1256,"name":"Мельнице-Подільська громада"},{"uid":1231,"name":"Микулинецька громада"},{"uid":1257,"name":"Монастириська громада"},{"uid":1258,"name":"Нагірянська громада"},{"uid":1232,"name":"Нараївська громада"},{"uid":1233,"name":"Озернянська громада"},{"uid":1234,"name":"Підволочиська громада"},{"uid":1235,"name":"Підгаєцька громада"},{"uid":1236,"name":"Підгороднянська громада"},{"uid":1270,"name":"Почаївська громада"},{"uid":1237,"name":"Саранчуківська громада"},{"uid":1259,"name":"Скала-Подільська громада"},{"uid":1238,"name":"Скалатська громада"},{"uid":1239,"name":"Скориківська громада"},{"uid":1240,"name":"Теребовлянська громада"},{"uid":1241,"name":"Тернопіль"},{"uid":1260,"name":"Товстенська громада"},{"uid":1261,"name":"Трибухівська громада"},{"uid":1262,"name":"Хоростківська громада"},{"uid":1263,"name":"Чортків"},{"uid":1271,"name":"Шумська громада"}]},"22":{"uid":22,"name":"Харківська область","rows":[{"uid":1272,"name":"Балаклійська громада"},{"uid":1273,"name":"Барвінківська громада"},{"uid":1280,"name":"Безлюдівська громада"},{"uid":1324,"name":"Берестинська громада"},{"uid":1295,"name":"Біляївська громада"},{"uid":1296,"name":"Близнюківська громада"},{"uid":1300,"name":"Богодухів"},{"uid":1274,"name":"Борівська громада"},{"uid":1301,"name":"Валківська громада"},{"uid":1305,"name":"Великобурлуцька громада"},{"uid":1281,"name":"Височанська громада"},{"uid":1282,"name":"Вільхівська громада"},{"uid":1306,"name":"Вільхуватська громада"},{"uid":1313,"name":"Вовчанська громада"},{"uid":1307,"name":"Дворічанська громада"},{"uid":1283,"name":"Дергачівська громада"},{"uid":1275,"name":"Донецька громада"},{"uid":1322,"name":"Зачепилівська громада"},{"uid":1299,"name":"Златопіль"},{"uid":1314,"name":"Зміївська громада"},{"uid":1302,"name":"Золочівська громада"},{"uid":1276,"name":"Ізюм"},{"uid":1323,"name":"Кегичівська громада"},{"uid":1308,"name":"Кіндрашівська громада"},{"uid":1303,"name":"Коломацька громада"},{"uid":1304,"name":"Краснокутська громада"},{"uid":1277,"name":"Куньєвська громада"},{"uid":1309,"name":"Куп'янськ"},{"uid":1310,"name":"Курилівська громада"},{"uid":1284,"name":"Липецька громада"},{"uid":1297,"name":"Лозова"},{"uid":1285,"name":"Люботин"},{"uid":1315,"name":"Малинівська громада"},{"uid":1286,"name":"Малоданилівська громада"},{"uid":1287,"name":"Мереф'янська громада"},{"uid":1325,"name":"Наталинська громада"},{"uid":1288,"name":"Нововодолазька громада"},{"uid":1316,"name":"Новопокровська громада"},{"uid":1298,"name":"Олексіївська громада"},{"uid":1278,"name":"Оскільська громада"},{"uid":1311,"name":"Петропавлівська громада"},{"uid":1317,"name":"Печенізька громада"},{"uid":1289,"name":"Південноміська громада"},{"uid":1290,"name":"Пісочинська громада"},{"uid":1291,"name":"Роганська громада"},{"uid":1279,"name":"Савинська громада"},{"uid":1326,"name":"Сахновщинська громада"},{"uid":1318,"name":"Слобожанська громада"},{"uid":1292,"name":"Солоницівська громада"},{"uid":1327,"name":"Старовірівська громада"},{"uid":1319,"name":"Старосалтівська громада"},{"uid":1293,"name":"Харків"},{"uid":1294,"name":"Циркунівська громада"},{"uid":1320,"name":"Чкаловська громада"},{"uid":1321,"name":"Чугуїв"},{"uid":1312,"name":"Шевченківська громада"}]},"23":{"uid":23,"name":"Херсонська область","rows":[{"uid":1328,"name":"Асканія-Нова громада"},{"uid":1343,"name":"Бериславська громада"},{"uid":1354,"name":"Бехтерська громада"},{"uid":1363,"name":"Білозерська громада"},{"uid":1344,"name":"Борозенська громада"},{"uid":1364,"name":"Великокопанівська громада"},{"uid":1329,"name":"Великолепетиська громада"},{"uid":1345,"name":"Великоолександрівська громада"},{"uid":1330,"name":"Верхньорогачицька громада"},{"uid":1365,"name":"Виноградівська громада"},{"uid":1346,"name":"Високопільська громада"},{"uid":1373,"name":"Генічеська громада"},{"uid":1355,"name":"Гола Пристань"},{"uid":1331,"name":"Горностаївська громада"},{"uid":1366,"name":"Дар’ївська громада"},{"uid":1356,"name":"Долматівська громада"},{"uid":1332,"name":"Зеленопідська громада"},{"uid":1374,"name":"Іванівська громада"},{"uid":1357,"name":"Каланчацька громада"},{"uid":1347,"name":"Калинівська громада"},{"uid":1333,"name":"Каховка"},{"uid":1334,"name":"Костянтинівська громада"},{"uid":1348,"name":"Кочубеївська громада"},{"uid":1358,"name":"Лазурненська громада"},{"uid":1335,"name":"Любимівська громада"},{"uid":1349,"name":"Милівська громада"},{"uid":1359,"name":"Мирненська громада"},{"uid":1367,"name":"Музиківська громада"},{"uid":1375,"name":"Нижньосірогозька громада"},{"uid":1336,"name":"Нова Каховка"},{"uid":1350,"name":"Нововоронцовська громада"},{"uid":1360,"name":"Новомиколаївська громада"},{"uid":1351,"name":"Новоолександрівська громада"},{"uid":1352,"name":"Новорайська громада"},{"uid":1376,"name":"Новотроїцька громада"},{"uid":1368,"name":"Олешківська громада"},{"uid":1337,"name":"Присиваська громада"},{"uid":1338,"name":"Рубанівська громада"},{"uid":1361,"name":"Скадовська громада"},{"uid":1369,"name":"Станіславська громада"},{"uid":1339,"name":"Тавричанська громада"},{"uid":1340,"name":"Таврійська громада"},{"uid":1353,"name":"Тягинська громада"},{"uid":1370,"name":"Херсон"},{"uid":1341,"name":"Хрестівська громада"},{"uid":1342,"name":"Чаплинська громада"},{"uid":1371,"name":"Чорнобаївська громада"},{"uid":1362,"name":"Чулаківська громада"},{"uid":1372,"name":"Ювілейна громада"}]},"24":{"uid":24,"name":"Черкаська область","rows":[{"uid":1437,"name":"Бабанська громада"},{"uid":1449,"name":"Балаклеївська громада"},{"uid":1438,"name":"Баштечківська громада"},{"uid":1450,"name":"Березняківська громада"},{"uid":1451,"name":"Білозірська громада"},{"uid":1452,"name":"Бобрицька громада"},{"uid":1453,"name":"Будищенська громада"},{"uid":1475,"name":"Бужанська громада"},{"uid":1439,"name":"Буцька громада"},{"uid":1476,"name":"Ватутіне"},{"uid":1492,"name":"Великохутірська громада"},{"uid":1477,"name":"Виноградська громада"},{"uid":1478,"name":"Вільшанська громада"},{"uid":1479,"name":"Водяницька громада"},{"uid":1493,"name":"Вознесенська громада"},{"uid":1494,"name":"Гельмязівська громада"},{"uid":1454,"name":"Городищенська громада"},{"uid":1440,"name":"Дмитрушківська громада"},{"uid":1495,"name":"Драбівська громада"},{"uid":1480,"name":"Єрківська громада"},{"uid":1441,"name":"Жашківська громада"},{"uid":1481,"name":"Звенигородська громада"},{"uid":1496,"name":"Золотоніська громада"},{"uid":1497,"name":"Зорівська громада"},{"uid":1442,"name":"Іваньківська громада"},{"uid":1498,"name":"Іркліївська громада"},{"uid":1455,"name":"Кам’янська громада"},{"uid":1456,"name":"Канівська громада"},{"uid":1482,"name":"Катеринопільська громада"},{"uid":1457,"name":"Корсунь-Шевченківський"},{"uid":1443,"name":"Ладижинська громада"},{"uid":1458,"name":"Леськівська громада"},{"uid":1483,"name":"Лип'янська громада"},{"uid":1484,"name":"Лисянська громада"},{"uid":1459,"name":"Ліплявська громада"},{"uid":1444,"name":"Маньківська громада"},{"uid":1485,"name":"Матусівська громада"},{"uid":1460,"name":"Медведівська громада"},{"uid":1461,"name":"Михайлівська громада"},{"uid":1462,"name":"Мліївська громада"},{"uid":1486,"name":"Мокрокалигірська громада"},{"uid":1445,"name":"Монастирище"},{"uid":1463,"name":"Мошнівська громада"},{"uid":1464,"name":"Набутівська громада"},{"uid":1499,"name":"Новодмитрівська громада"},{"uid":1446,"name":"Паланська громада"},{"uid":1500,"name":"Піщанська громада"},{"uid":1465,"name":"Ротмістрівська громада"},{"uid":1466,"name":"Русько-Полянська громада"},{"uid":1467,"name":"Сагунівська громада"},{"uid":1487,"name":"Селищенська громада"},{"uid":1468,"name":"Смілянська громада"},{"uid":1488,"name":"Стеблівська громада"},{"uid":1469,"name":"Степанецька громада"},{"uid":1470,"name":"Степанківська громада"},{"uid":1489,"name":"Тальне"},{"uid":1471,"name":"Тернівська громада"},{"uid":1447,"name":"Уманська громада"},{"uid":1448,"name":"Христинівка"},{"uid":1472,"name":"Червонослобідська громада"},{"uid":1473,"name":"Черкаси"},{"uid":1474,"name":"Чигирин"},{"uid":1501,"name":"Чорнобаївська громада"},{"uid":1490,"name":"Шевченківська громада"},{"uid":1491,"name":"Шпола"},{"uid":1502,"name":"Шрамківська громада"}]},"25":{"uid":25,"name":"Чернігівська область","rows":[{"uid":1555,"name":"Батуринська громада"},{"uid":1556,"name":"Бахмацька громада"},{"uid":1572,"name":"Березнянська громада"},{"uid":1557,"name":"Бобровицька громада"},{"uid":1558,"name":"Борзнянська громада"},{"uid":1592,"name":"Варвинська громада"},{"uid":1559,"name":"Вертіївська громада"},{"uid":1560,"name":"Височанська громада"},{"uid":1573,"name":"Гончарівська громада"},{"uid":1574,"name":"Городнянська громада"},{"uid":1575,"name":"Деснянська громада"},{"uid":1561,"name":"Дмитрівська громада"},{"uid":1576,"name":"Добрянська громада"},{"uid":1577,"name":"Іванівська громада"},{"uid":1593,"name":"Ічнянська громада"},{"uid":1578,"name":"Киїнська громада"},{"uid":1579,"name":"Киселівська громада"},{"uid":1580,"name":"Кіптівська громада"},{"uid":1581,"name":"Козелецька громада"},{"uid":1562,"name":"Комарівська громада"},{"uid":1603,"name":"Коропська громада"},{"uid":1607,"name":"Корюківська громада"},{"uid":1563,"name":"Крутівська громада"},{"uid":1582,"name":"Куликівська громада"},{"uid":1594,"name":"Ладанська громада"},{"uid":1595,"name":"Линовицька громада"},{"uid":1564,"name":"Лосинівська громада"},{"uid":1583,"name":"Любецька громада"},{"uid":1565,"name":"Макіївська громада"},{"uid":1596,"name":"Малодівицька громада"},{"uid":1608,"name":"Менська громада"},{"uid":1584,"name":"Михайло-Коцюбинська громада"},{"uid":1566,"name":"Мринська громада"},{"uid":1567,"name":"Ніжин"},{"uid":1604,"name":"Новгород-Сіверський"},{"uid":1568,"name":"Новобасанська громада"},{"uid":1585,"name":"Новобілоуська громада"},{"uid":1569,"name":"Носівська громада"},{"uid":1586,"name":"Олишівська громада"},{"uid":1587,"name":"Остерська громада"},{"uid":1597,"name":"Парафіївська громада"},{"uid":1570,"name":"Плисківська громада"},{"uid":1605,"name":"Понорницька громада"},{"uid":1598,"name":"Прилуки"},{"uid":1588,"name":"Ріпкинська громада"},{"uid":1589,"name":"Седнівська громада"},{"uid":1606,"name":"Семенівська громада"},{"uid":1609,"name":"Сновська громада"},{"uid":1610,"name":"Сосницька громада"},{"uid":1599,"name":"Срібнянська громада"},{"uid":1600,"name":"Сухополов'янська громада"},{"uid":1571,"name":"Талалаївська громада"},{"uid":1601,"name":"Талалаївська громада"},{"uid":1590,"name":"Тупичівська громада"},{"uid":1611,"name":"Холминська громада"},{"uid":1591,"name":"Чернігів"},{"uid":1602,"name":"Яблунівська громада"}]},"26":{"uid":26,"name":"Чернівецька область","rows":[{"uid":1503,"name":"Банилівська громада"},{"uid":1504,"name":"Берегометська громада"},{"uid":1512,"name":"Боянська громада"},{"uid":1505,"name":"Брусницька громада"},{"uid":1513,"name":"Ванчиковецька громада"},{"uid":1506,"name":"Вашківецька громада"},{"uid":1545,"name":"Вашковецька громада"},{"uid":1514,"name":"Великокучурівська громада"},{"uid":1515,"name":"Веренчацька громада"},{"uid":1507,"name":"Вижницька громада"},{"uid":1516,"name":"Вікнянська громада"},{"uid":1517,"name":"Волоківська громада"},{"uid":1518,"name":"Герцаївська громада"},{"uid":1519,"name":"Глибоцька громада"},{"uid":1520,"name":"Горішньошеровецька громада"},{"uid":1521,"name":"Заставнівська громада"},{"uid":1522,"name":"Кадубовецька громада"},{"uid":1523,"name":"Кам'янецька громада"},{"uid":1524,"name":"Кам'янська громада"},{"uid":1525,"name":"Карапачівська громада"},{"uid":1546,"name":"Кельменецька громада"},{"uid":1526,"name":"Кіцманська громада"},{"uid":1547,"name":"Клішковецька громада"},{"uid":1508,"name":"Конятинська громада"},{"uid":1527,"name":"Кострижівська громада"},{"uid":1528,"name":"Красноїльська громада"},{"uid":1548,"name":"Лівинецька громада"},{"uid":1529,"name":"Магальська громада"},{"uid":1530,"name":"Мамаївська громада"},{"uid":1549,"name":"Мамалигівська громада"},{"uid":1550,"name":"Недобоївська громада"},{"uid":1531,"name":"Неполоковецька громада"},{"uid":1551,"name":"Новодністровськ"},{"uid":1532,"name":"Новоселицька громада"},{"uid":1533,"name":"Острицька громада"},{"uid":1534,"name":"Петровецька громада"},{"uid":1509,"name":"Путильська громада"},{"uid":1552,"name":"Рукшинська громада"},{"uid":1510,"name":"Селятинська громада"},{"uid":1553,"name":"Сокирянська громада"},{"uid":1535,"name":"Ставчанська громада"},{"uid":1536,"name":"Сторожинецька громада"},{"uid":1537,"name":"Сучевенська громада"},{"uid":1538,"name":"Тарашанська громада"},{"uid":1539,"name":"Тереблеченська громада"},{"uid":1540,"name":"Топорівська громада"},{"uid":1511,"name":"Усть-Путильська громада"},{"uid":1554,"name":"Хотинська громада"},{"uid":1541,"name":"Чагорська громада"},{"uid":1542,"name":"Чернівці"},{"uid":1543,"name":"Чудейська громада"},{"uid":1544,"name":"Юрковецька громада"}]},"27":{"uid":27,"name":"Львівська область","rows":[{"uid":826,"name":"Белзька громада"},{"uid":833,"name":"Бібрська громада"},{"uid":856,"name":"Бісковицька громада"},{"uid":857,"name":"Боринська громада"},{"uid":867,"name":"Борислав"},{"uid":872,"name":"Бродівська громада"},{"uid":873,"name":"Буська громада"},{"uid":834,"name":"Великолюбінська громада"},{"uid":827,"name":"Великомостівська громада"},{"uid":835,"name":"Глинянська громада"},{"uid":879,"name":"Гніздичівська громада"},{"uid":836,"name":"Городоцька громада"},{"uid":880,"name":"Грабовецько-Дулібівська громада"},{"uid":837,"name":"Давидівська громада"},{"uid":858,"name":"Добромильська громада"},{"uid":838,"name":"Добросинсько-Магерівська громада"},{"uid":828,"name":"Добротвірська громада"},{"uid":868,"name":"Дрогобич"},{"uid":881,"name":"Жидачівська громада"},{"uid":839,"name":"Жовківська громада"},{"uid":840,"name":"Жовтанецька громада"},{"uid":882,"name":"Журавненська громада"},{"uid":874,"name":"Заболотцівська громада"},{"uid":841,"name":"Зимноводівська громада"},{"uid":875,"name":"Золочівська громада"},{"uid":893,"name":"Івано-Франківська громада"},{"uid":842,"name":"Кам’янка-Бузька громада"},{"uid":883,"name":"Козівська громада"},{"uid":843,"name":"Комарнівська громада"},{"uid":876,"name":"Красненська громада"},{"uid":844,"name":"Куликівська громада"},{"uid":829,"name":"Лопатинська громада"},{"uid":845,"name":"Львів"},{"uid":869,"name":"Меденицька громада"},{"uid":884,"name":"Миколаївська громада"},{"uid":885,"name":"Моршин"},{"uid":894,"name":"Мостиська громада"},{"uid":846,"name":"Мурованська громада"},{"uid":886,"name":"Новий Розділ"},{"uid":859,"name":"Новокалинівська громада"},{"uid":895,"name":"Новояворівськ громада"},{"uid":847,"name":"Новояричівська громада"},{"uid":848,"name":"Оброшинська громада"},{"uid":849,"name":"Перемишлянська громада"},{"uid":850,"name":"Підберізцівська громада"},{"uid":877,"name":"Підкамінська громада"},{"uid":878,"name":"Поморянська громада"},{"uid":851,"name":"Пустомитівська громада"},{"uid":852,"name":"Рава-Руська громада"},{"uid":830,"name":"Радехівська громада"},{"uid":860,"name":"Ралівська громада"},{"uid":887,"name":"Розвадівська громада"},{"uid":861,"name":"Рудківська громада"},{"uid":862,"name":"Самбір"},{"uid":888,"name":"Сколівська громада"},{"uid":889,"name":"Славська громада"},{"uid":831,"name":"Сокальська громада"},{"uid":853,"name":"Сокільницька громада"},{"uid":854,"name":"Солонківська громада"},{"uid":863,"name":"Старосамбірська громада"},{"uid":890,"name":"Стрий"},{"uid":864,"name":"Стрілківська громада"},{"uid":896,"name":"Судововишнянська громада"},{"uid":870,"name":"Східницька громада"},{"uid":891,"name":"Тростянецька громада"},{"uid":871,"name":"Трускавець"},{"uid":865,"name":"Турківська громада"},{"uid":866,"name":"Хирівська громада"},{"uid":892,"name":"Ходорівська громада"},{"uid":897,"name":"Шегинівська громада"},{"uid":832,"name":"Шептицький"},{"uid":855,"name":"Щирецька громада"},{"uid":898,"name":"Яворівська громада"}]},"28":{"uid":28,"name":"Донецька область","rows":[{"uid":357,"name":"Авдіївська громада"},{"uid":403,"name":"Амвросіївська міська громада"},{"uid":371,"name":"Андріївська громада"},{"uid":383,"name":"Бахмутська громада"},{"uid":358,"name":"Білозерська громада"},{"uid":409,"name":"Бойківська селищна громада"},{"uid":390,"name":"Великоновосілківська громада"},{"uid":391,"name":"Волноваська громада"},{"uid":414,"name":"Вуглегірська міська громада"},{"uid":392,"name":"Вугледарська громада"},{"uid":359,"name":"Гродівська громада"},{"uid":416,"name":"Дебальцівська міська громада"},{"uid":360,"name":"Добропільська громада"},{"uid":410,"name":"Докучаєвська міська громада"},{"uid":404,"name":"Донецька міська громада"},{"uid":372,"name":"Дружківська громада"},{"uid":418,"name":"Жданівська міська громада"},{"uid":384,"name":"Званівська громада"},{"uid":373,"name":"Іллінівська громада"},{"uid":405,"name":"Іловайська міська громада"},{"uid":411,"name":"Кальміуська міська громада"},{"uid":398,"name":"Кальчицька громада"},{"uid":393,"name":"Комарська громада"},{"uid":374,"name":"Костянтинівська громада"},{"uid":375,"name":"Краматорськ"},{"uid":361,"name":"Криворізька громада"},{"uid":362,"name":"Курахівська громада"},{"uid":376,"name":"Лиманська громада"},{"uid":415,"name":"м. Горлівка та Горлівська міська громада"},{"uid":417,"name":"м. Єнакієве та Єнакієвська міська громада"},{"uid":406,"name":"м. Макіївка та Макіївська міська громада"},{"uid":399,"name":"Мангушська громада"},{"uid":363,"name":"Мар'їнська громада"},{"uid":400,"name":"Маріуполь"},{"uid":377,"name":"Миколаївська громада"},{"uid":394,"name":"Мирненська громада"},{"uid":364,"name":"Мирноградська громада"},{"uid":401,"name":"Нікольська громада"},{"uid":412,"name":"Новоазовська міська громада"},{"uid":365,"name":"Новогродівська громада"},{"uid":378,"name":"Новодонецька громада"},{"uid":379,"name":"Олександрівська громада"},{"uid":395,"name":"Ольгинська громада"},{"uid":366,"name":"Очеретинська громада"},{"uid":367,"name":"Покровська громада"},{"uid":402,"name":"Сартанська громада"},{"uid":385,"name":"Світлодарська громада"},{"uid":380,"name":"Святогірська громада"},{"uid":368,"name":"Селидівська громада"},{"uid":386,"name":"Сіверська громада"},{"uid":381,"name":"Слов'янськ"},{"uid":419,"name":"Сніжнянська міська громада"},{"uid":387,"name":"Соледарська громада"},{"uid":413,"name":"Старобешівська селищна громада"},{"uid":396,"name":"Старомлинівська громада"},{"uid":388,"name":"Торецька громада"},{"uid":369,"name":"Удачненська громада"},{"uid":407,"name":"Харцизьк міська громада"},{"uid":397,"name":"Хлібодарівська громада"},{"uid":420,"name":"Хрестівська міська громада"},{"uid":389,"name":"Часовоярська громада"},{"uid":382,"name":"Черкаська громада"},{"uid":421,"name":"Чистяківська міська громада"},{"uid":370,"name":"Шахівська громада"},{"uid":422,"name":"Шахтарська міська громада"},{"uid":408,"name":"Ясинуватська міська громада"}]},"29":{"uid":29,"name":"Автономна Республіка Крим","rows":[]},"30":{"uid":30,"name":"Севастополь","rows":[{"uid":30,"name":"Севастополь"}]},"31":{"uid":31,"name":"Київ","rows":[{"uid":31,"name":"Київ"}]}},"reports":{"day":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"day","from":"2026-09-29","to":"2026-09-29","today":"2026-09-29"},"series":[{"id":"all","name":"Усі","since":null,"min":88,"base":320,"n":3,"days":[{"d":"2026-09-29","min":88,"n":3}]},{"id":332,"name":"Дніпро","since":null,"min":29,"base":320,"n":2,"days":[{"d":"2026-09-29","min":29,"n":2,"iv":[[610,635,false],[856,860,true]]}]},{"id":289,"name":"Павлоград","since":null,"min":88,"base":320,"n":3,"days":[{"d":"2026-09-29","min":88,"n":3,"iv":[[610,635,false],[700,747,false],[844,860,true]]}]},{"id":300,"name":"Кам’янське","since":null,"min":25,"base":320,"n":1,"days":[{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]}]},{"id":327,"name":"Самар","since":null,"min":25,"base":320,"n":1,"days":[{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]}]},{"id":1060,"name":"Полтава","since":null,"min":0,"base":320,"n":0,"days":[{"d":"2026-09-29","min":0,"n":0,"iv":[]}]},{"id":761,"name":"Кропивницький","since":null,"min":0,"base":320,"n":0,"days":[{"d":"2026-09-29","min":0,"n":0,"iv":[]}]}],"events":[{"start":"2026-09-29T11:16:00.000Z","end":null,"uids":[332],"names":["Дніпро"],"via":"hromada","threat":"балістика","from":"14:16","to":null,"workMin":4},{"start":"2026-09-29T11:04:00.000Z","end":null,"uids":[289],"names":["Павлоград"],"via":"raion","threat":"дрони","from":"14:04","to":null,"workMin":16},{"start":"2026-09-29T08:40:00.000Z","end":"2026-09-29T09:27:00.000Z","uids":[289],"names":["Павлоград"],"via":"raion","threat":"дрони","from":"11:40","to":"12:27","workMin":47},{"start":"2026-09-29T07:10:00.000Z","end":"2026-09-29T07:35:00.000Z","uids":[332,289,300,327],"names":["Дніпро","Павлоград","Кам’янське","Самар"],"via":"oblast","threat":"балістика","from":"10:10","to":"10:35","workMin":25}],"excel":"https://t.me/AirLens_bot?start=r-1"},"week":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"week","from":"2026-09-28","to":"2026-10-04","today":"2026-09-29"},"series":[{"id":"all","name":"Усі","since":null,"min":141,"base":860,"n":4,"days":[{"d":"2026-09-28","min":53,"n":1},{"d":"2026-09-29","min":88,"n":3},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":332,"name":"Дніпро","since":null,"min":82,"base":860,"n":3,"days":[{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":29,"n":2,"iv":[[610,635,false],[856,860,true]]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":289,"name":"Павлоград","since":null,"min":141,"base":860,"n":4,"days":[{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":88,"n":3,"iv":[[610,635,false],[700,747,false],[844,860,true]]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":300,"name":"Кам’янське","since":null,"min":78,"base":860,"n":2,"days":[{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":327,"name":"Самар","since":null,"min":78,"base":860,"n":2,"days":[{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":1060,"name":"Полтава","since":null,"min":0,"base":860,"n":0,"days":[{"d":"2026-09-28","min":0,"n":0,"iv":[]},{"d":"2026-09-29","min":0,"n":0,"iv":[]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]},{"id":761,"name":"Кропивницький","since":null,"min":0,"base":860,"n":0,"days":[{"d":"2026-09-28","min":0,"n":0,"iv":[]},{"d":"2026-09-29","min":0,"n":0,"iv":[]},{"d":"2026-09-30","fut":true},{"d":"2026-10-01","fut":true},{"d":"2026-10-02","fut":true}]}],"excel":"https://t.me/AirLens_bot?start=r-1"},"month:2026-09":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"month","from":"2026-09-01","to":"2026-09-30","today":"2026-09-29","month":"2026-09","prev":"2026-08","next":null},"series":[{"id":"all","name":"Усі","since":null,"min":650,"base":11120,"n":18,"days":[{"d":"2026-09-01","min":0,"n":0},{"d":"2026-09-02","min":27,"n":1},{"d":"2026-09-03","min":60,"n":2},{"d":"2026-09-04","min":0,"n":0},{"d":"2026-09-07","min":92,"n":3},{"d":"2026-09-08","min":0,"n":0},{"d":"2026-09-09","min":0,"n":0},{"d":"2026-09-10","min":11,"n":1},{"d":"2026-09-11","min":39,"n":1},{"d":"2026-09-14","min":87,"n":1},{"d":"2026-09-15","min":0,"n":0},{"d":"2026-09-16","min":40,"n":1},{"d":"2026-09-17","min":24,"n":1},{"d":"2026-09-18","min":51,"n":1},{"d":"2026-09-21","min":23,"n":1},{"d":"2026-09-22","min":0,"n":0},{"d":"2026-09-23","min":0,"n":0},{"d":"2026-09-24","min":55,"n":1},{"d":"2026-09-25","min":0,"n":0},{"d":"2026-09-28","min":53,"n":1},{"d":"2026-09-29","min":88,"n":3},{"d":"2026-09-30","fut":true}]},{"id":332,"name":"Дніпро","since":null,"min":271,"base":11120,"n":9,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":27,"n":1,"iv":[[1006,1033,false]]},{"d":"2026-09-03","min":0,"n":0,"iv":[]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":14,"n":1,"iv":[[845,859,false]]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":39,"n":1,"iv":[[662,701,false]]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":35,"n":1,"iv":[[661,696,false]]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":51,"n":1,"iv":[[673,724,false]]},{"d":"2026-09-21","min":23,"n":1,"iv":[[766,789,false]]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":29,"n":2,"iv":[[610,635,false],[856,860,true]]},{"d":"2026-09-30","fut":true}]},{"id":289,"name":"Павлоград","since":null,"min":420,"base":11120,"n":10,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":27,"n":1,"iv":[[1006,1033,false]]},{"d":"2026-09-03","min":40,"n":1,"iv":[[813,853,false]]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":0,"n":0,"iv":[]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":39,"n":1,"iv":[[662,701,false]]},{"d":"2026-09-14","min":87,"n":1,"iv":[[927,1014,false]]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":35,"n":1,"iv":[[661,696,false]]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":51,"n":1,"iv":[[673,724,false]]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":88,"n":3,"iv":[[610,635,false],[700,747,false],[844,860,true]]},{"d":"2026-09-30","fut":true}]},{"id":300,"name":"Кам’янське","since":null,"min":230,"base":11120,"n":6,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":27,"n":1,"iv":[[1006,1033,false]]},{"d":"2026-09-03","min":0,"n":0,"iv":[]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":0,"n":0,"iv":[]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":39,"n":1,"iv":[[662,701,false]]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":35,"n":1,"iv":[[661,696,false]]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":51,"n":1,"iv":[[673,724,false]]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]},{"d":"2026-09-30","fut":true}]},{"id":327,"name":"Самар","since":null,"min":230,"base":11120,"n":6,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":27,"n":1,"iv":[[1006,1033,false]]},{"d":"2026-09-03","min":0,"n":0,"iv":[]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":0,"n":0,"iv":[]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":39,"n":1,"iv":[[662,701,false]]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":35,"n":1,"iv":[[661,696,false]]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":51,"n":1,"iv":[[673,724,false]]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":53,"n":1,"iv":[[570,623,false]]},{"d":"2026-09-29","min":25,"n":1,"iv":[[610,635,false]]},{"d":"2026-09-30","fut":true}]},{"id":1060,"name":"Полтава","since":null,"min":96,"base":11120,"n":2,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":0,"n":0,"iv":[]},{"d":"2026-09-03","min":0,"n":0,"iv":[]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":41,"n":1,"iv":[[944,985,false]]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":0,"n":0,"iv":[]},{"d":"2026-09-11","min":0,"n":0,"iv":[]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":0,"n":0,"iv":[]},{"d":"2026-09-17","min":0,"n":0,"iv":[]},{"d":"2026-09-18","min":0,"n":0,"iv":[]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":55,"n":1,"iv":[[606,661,false]]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":0,"n":0,"iv":[]},{"d":"2026-09-29","min":0,"n":0,"iv":[]},{"d":"2026-09-30","fut":true}]},{"id":761,"name":"Кропивницький","since":null,"min":118,"base":11120,"n":5,"days":[{"d":"2026-09-01","min":0,"n":0,"iv":[]},{"d":"2026-09-02","min":0,"n":0,"iv":[]},{"d":"2026-09-03","min":20,"n":1,"iv":[[1060,1080,false]]},{"d":"2026-09-04","min":0,"n":0,"iv":[]},{"d":"2026-09-07","min":37,"n":1,"iv":[[763,800,false]]},{"d":"2026-09-08","min":0,"n":0,"iv":[]},{"d":"2026-09-09","min":0,"n":0,"iv":[]},{"d":"2026-09-10","min":11,"n":1,"iv":[[1069,1080,false]]},{"d":"2026-09-11","min":0,"n":0,"iv":[]},{"d":"2026-09-14","min":0,"n":0,"iv":[]},{"d":"2026-09-15","min":0,"n":0,"iv":[]},{"d":"2026-09-16","min":26,"n":1,"iv":[[675,701,false]]},{"d":"2026-09-17","min":24,"n":1,"iv":[[655,679,false]]},{"d":"2026-09-18","min":0,"n":0,"iv":[]},{"d":"2026-09-21","min":0,"n":0,"iv":[]},{"d":"2026-09-22","min":0,"n":0,"iv":[]},{"d":"2026-09-23","min":0,"n":0,"iv":[]},{"d":"2026-09-24","min":0,"n":0,"iv":[]},{"d":"2026-09-25","min":0,"n":0,"iv":[]},{"d":"2026-09-28","min":0,"n":0,"iv":[]},{"d":"2026-09-29","min":0,"n":0,"iv":[]},{"d":"2026-09-30","fut":true}]}],"excel":"https://t.me/AirLens_bot?start=r-1"},"month:2026-08":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"month","from":"2026-08-01","to":"2026-08-31","today":"2026-09-29","month":"2026-08","prev":"2026-07","next":"2026-09"},"series":[{"id":"all","name":"Усі","since":null,"min":695,"base":11340,"n":21,"days":[{"d":"2026-08-03","min":21,"n":1},{"d":"2026-08-04","min":23,"n":1},{"d":"2026-08-05","min":69,"n":1},{"d":"2026-08-06","min":105,"n":2},{"d":"2026-08-07","min":0,"n":0},{"d":"2026-08-10","min":49,"n":1},{"d":"2026-08-11","min":0,"n":0},{"d":"2026-08-12","min":61,"n":2},{"d":"2026-08-13","min":14,"n":1},{"d":"2026-08-14","min":20,"n":1},{"d":"2026-08-17","min":37,"n":1},{"d":"2026-08-18","min":119,"n":2},{"d":"2026-08-19","min":31,"n":2},{"d":"2026-08-20","min":36,"n":2},{"d":"2026-08-21","min":21,"n":1},{"d":"2026-08-24","min":54,"n":1},{"d":"2026-08-25","min":0,"n":0},{"d":"2026-08-26","min":21,"n":1},{"d":"2026-08-27","min":14,"n":1},{"d":"2026-08-28","min":0,"n":0},{"d":"2026-08-31","min":0,"n":0}]},{"id":332,"name":"Дніпро","since":null,"min":281,"base":11340,"n":9,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":67,"n":1,"iv":[[698,765,false]]},{"d":"2026-08-06","min":59,"n":1,"iv":[[661,720,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":30,"n":1,"iv":[[553,583,false]]},{"d":"2026-08-13","min":14,"n":1,"iv":[[639,653,false]]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":34,"n":1,"iv":[[668,702,false]]},{"d":"2026-08-19","min":29,"n":1,"iv":[[648,677,false]]},{"d":"2026-08-20","min":13,"n":1,"iv":[[685,698,false]]},{"d":"2026-08-21","min":21,"n":1,"iv":[[628,649,false]]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":14,"n":1,"iv":[[715,729,false]]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":289,"name":"Павлоград","since":null,"min":381,"base":11340,"n":9,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":67,"n":1,"iv":[[698,765,false]]},{"d":"2026-08-06","min":59,"n":1,"iv":[[661,720,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":49,"n":1,"iv":[[795,844,false]]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":61,"n":2,"iv":[[553,583,false],[866,897,false]]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":37,"n":1,"iv":[[627,664,false]]},{"d":"2026-08-18","min":85,"n":1,"iv":[[720,805,false]]},{"d":"2026-08-19","min":2,"n":1,"iv":[[1078,1080,false]]},{"d":"2026-08-20","min":0,"n":0,"iv":[]},{"d":"2026-08-21","min":21,"n":1,"iv":[[628,649,false]]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":300,"name":"Кам’янське","since":null,"min":231,"base":11340,"n":5,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":67,"n":1,"iv":[[698,765,false]]},{"d":"2026-08-06","min":59,"n":1,"iv":[[661,720,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":30,"n":1,"iv":[[553,583,false]]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":0,"n":0,"iv":[]},{"d":"2026-08-19","min":0,"n":0,"iv":[]},{"d":"2026-08-20","min":0,"n":0,"iv":[]},{"d":"2026-08-21","min":21,"n":1,"iv":[[628,649,false]]},{"d":"2026-08-24","min":54,"n":1,"iv":[[892,946,false]]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":327,"name":"Самар","since":null,"min":177,"base":11340,"n":4,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":67,"n":1,"iv":[[698,765,false]]},{"d":"2026-08-06","min":59,"n":1,"iv":[[661,720,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":30,"n":1,"iv":[[553,583,false]]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":0,"n":0,"iv":[]},{"d":"2026-08-19","min":0,"n":0,"iv":[]},{"d":"2026-08-20","min":0,"n":0,"iv":[]},{"d":"2026-08-21","min":21,"n":1,"iv":[[628,649,false]]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":1060,"name":"Полтава","since":null,"min":111,"base":11340,"n":4,"days":[{"d":"2026-08-03","min":21,"n":1,"iv":[[705,726,false]]},{"d":"2026-08-04","min":23,"n":1,"iv":[[967,990,false]]},{"d":"2026-08-05","min":0,"n":0,"iv":[]},{"d":"2026-08-06","min":46,"n":1,"iv":[[752,798,false]]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":0,"n":0,"iv":[]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":0,"n":0,"iv":[]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":0,"n":0,"iv":[]},{"d":"2026-08-19","min":0,"n":0,"iv":[]},{"d":"2026-08-20","min":0,"n":0,"iv":[]},{"d":"2026-08-21","min":0,"n":0,"iv":[]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":21,"n":1,"iv":[[822,843,false]]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]},{"id":761,"name":"Кропивницький","since":null,"min":65,"base":11340,"n":3,"days":[{"d":"2026-08-03","min":0,"n":0,"iv":[]},{"d":"2026-08-04","min":0,"n":0,"iv":[]},{"d":"2026-08-05","min":22,"n":1,"iv":[[696,718,false]]},{"d":"2026-08-06","min":0,"n":0,"iv":[]},{"d":"2026-08-07","min":0,"n":0,"iv":[]},{"d":"2026-08-10","min":0,"n":0,"iv":[]},{"d":"2026-08-11","min":0,"n":0,"iv":[]},{"d":"2026-08-12","min":0,"n":0,"iv":[]},{"d":"2026-08-13","min":0,"n":0,"iv":[]},{"d":"2026-08-14","min":20,"n":1,"iv":[[952,972,false]]},{"d":"2026-08-17","min":0,"n":0,"iv":[]},{"d":"2026-08-18","min":0,"n":0,"iv":[]},{"d":"2026-08-19","min":0,"n":0,"iv":[]},{"d":"2026-08-20","min":23,"n":1,"iv":[[978,1001,false]]},{"d":"2026-08-21","min":0,"n":0,"iv":[]},{"d":"2026-08-24","min":0,"n":0,"iv":[]},{"d":"2026-08-25","min":0,"n":0,"iv":[]},{"d":"2026-08-26","min":0,"n":0,"iv":[]},{"d":"2026-08-27","min":0,"n":0,"iv":[]},{"d":"2026-08-28","min":0,"n":0,"iv":[]},{"d":"2026-08-31","min":0,"n":0,"iv":[]}]}],"excel":"https://t.me/AirLens_bot?start=r-1"},"month:2026-07":{"title":"Курилка","now":"2026-09-29T11:20:00.000Z","window":{"from":"09:00","to":"18:00"},"period":{"kind":"month","from":"2026-07-01","to":"2026-07-31","today":"2026-09-29","month":"2026-07","prev":null,"next":"2026-08"},"series":[{"id":"all","name":"Усі","since":"2026-07-26T21:00:00.000Z","min":247,"base":2700,"n":4,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":83,"n":1},{"d":"2026-07-28","min":0,"n":0},{"d":"2026-07-29","min":49,"n":1},{"d":"2026-07-30","min":79,"n":1},{"d":"2026-07-31","min":36,"n":1}]},{"id":332,"name":"Дніпро","since":"2026-07-26T21:00:00.000Z","min":0,"base":2700,"n":0,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":289,"name":"Павлоград","since":"2026-07-26T21:00:00.000Z","min":0,"base":2700,"n":0,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":300,"name":"Кам’янське","since":"2026-07-26T21:00:00.000Z","min":162,"base":2700,"n":2,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":83,"n":1,"iv":[[805,888,false]]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":79,"n":1,"iv":[[832,911,false]]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":327,"name":"Самар","since":"2026-07-26T21:00:00.000Z","min":0,"base":2700,"n":0,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":1060,"name":"Полтава","since":"2026-07-26T21:00:00.000Z","min":49,"base":2700,"n":1,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":49,"n":1,"iv":[[566,615,false]]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":0,"n":0,"iv":[]}]},{"id":761,"name":"Кропивницький","since":"2026-07-26T21:00:00.000Z","min":36,"base":2700,"n":1,"days":[{"d":"2026-07-01","nodata":true},{"d":"2026-07-02","nodata":true},{"d":"2026-07-03","nodata":true},{"d":"2026-07-06","nodata":true},{"d":"2026-07-07","nodata":true},{"d":"2026-07-08","nodata":true},{"d":"2026-07-09","nodata":true},{"d":"2026-07-10","nodata":true},{"d":"2026-07-13","nodata":true},{"d":"2026-07-14","nodata":true},{"d":"2026-07-15","nodata":true},{"d":"2026-07-16","nodata":true},{"d":"2026-07-17","nodata":true},{"d":"2026-07-20","nodata":true},{"d":"2026-07-21","nodata":true},{"d":"2026-07-22","nodata":true},{"d":"2026-07-23","nodata":true},{"d":"2026-07-24","nodata":true},{"d":"2026-07-27","min":0,"n":0,"iv":[]},{"d":"2026-07-28","min":0,"n":0,"iv":[]},{"d":"2026-07-29","min":0,"n":0,"iv":[]},{"d":"2026-07-30","min":0,"n":0,"iv":[]},{"d":"2026-07-31","min":36,"n":1,"iv":[[584,620,false]]}]}],"excel":"https://t.me/AirLens_bot?start=r-1"}}};</script>
+<script>
+(() => {
+  "use strict";
+  const $ = (s, r = document) => r.querySelector(s);
+  const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+  const app = $("#app");
+  const tg = window.Telegram && window.Telegram.WebApp;
+  const DEMO = window.AIRLENS_DEMO || null; // лише прев'ю-стенд (tools/miniapp/build.mjs); у живому — порожньо
+  const LIVE = !!(tg && tg.initData);
+  if (LIVE) document.documentElement.classList.add("tg");
+  const store = { get: (k) => { try { return localStorage.getItem(k); } catch { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch { /* приватне вікно */ } } };
+  const S = { theme: store.get("airlens.theme") === "light" ? "light" : "graphite", tab: "now", period: "day", who: "all", sel: null, month: null, demo: "alert" };
+  const STALE_MS = 3 * 60_000, REFRESH_MS = 60_000;
+
+  // ───── час і слова ─────
+  const KYIV = new Intl.DateTimeFormat("uk-UA", { timeZone: "Europe/Kyiv", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+  const KYIV_D = new Intl.DateTimeFormat("uk-UA", { timeZone: "Europe/Kyiv", day: "numeric", month: "2-digit" });
+  const hmIso = (iso) => KYIV.format(new Date(iso));
+  const hm = (m) => `${String(Math.floor(m / 60) % 24).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+  const toMin = (s) => { const [h, m] = s.split(":").map(Number); return h * 60 + m; };
+  const durH = (m) => { m = Math.round(m); const h = Math.floor(m / 60), r = m % 60; return h ? `${h}<span class="u"> год </span>${String(r).padStart(2, "0")}<span class="u"> хв</span>` : `${r}<span class="u"> хв</span>`; };
+  const dur = (m) => { m = Math.max(0, Math.round(m)); const h = Math.floor(m / 60), r = m % 60; return h ? `${h} год ${String(r).padStart(2, "0")} хв` : `${r} хв`; };
+  const plural = (n, a, b, c) => { const d = n % 10, t = n % 100; return d === 1 && t !== 11 ? a : d >= 2 && d <= 4 && (t < 12 || t > 14) ? b : c; };
+  const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const ico = (s, cls = "") => `<svg class="${cls} i-${s}" aria-hidden="true"><use href="#s-${s}"/></svg>`;
+  const SCOPE = { hromada: "", raion: "весь район", oblast: "вся область" };
+  const DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Нд"], FULL = ["Понеділок", "Вівторок", "Середа", "Четвер", "П’ятниця", "Субота", "Неділя"];
+  const MONTHS = ["Січень", "Лютий", "Березень", "Квітень", "Травень", "Червень", "Липень", "Серпень", "Вересень", "Жовтень", "Листопад", "Грудень"];
+  const wdOf = (d) => (new Date(d + "T12:00:00Z").getUTCDay() + 6) % 7;
+  const ddmm = (d) => `${+d.slice(8, 10)}.${d.slice(5, 7)}`;
+
+  // ───── дані: POST /api/app (живе) або синтетика (прев'ю) ─────
+  const NOW = { data: null, at: 0, err: 0 };
+  const REP = new Map();
+  let skew = 0;
+  const nowMs = () => Date.now() + skew;
+  const code = () => new URLSearchParams(location.search).get("code") || (tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param) || "";
+  async function api(body) {
+    if (!LIVE) {
+      if (!DEMO) throw Object.assign(new Error("outside"), { status: 0 });
+      if (body.action || body.view === "search" || body.view === "oblast") return demoGroup(body);
+      if (body.view === "now" && new URLSearchParams(location.search).get("owner") === "0") return { ...JSON.parse(JSON.stringify(DEMO.now[S.demo])), owner: false }; // прев'ю: як бачить учасник
+      const v = body.view === "now" ? DEMO.now[S.demo] : DEMO.reports[body.period === "month" ? `month:${body.month || "2026-09"}` : body.period];
+      if (!v) throw Object.assign(new Error("demo"), { status: 400 });
+      return JSON.parse(JSON.stringify(v));
+    }
+    const r = await fetch("/api/app", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ initData: tg.initData, code: code(), ...body }) });
+    if (!r.ok) { const j = await r.json().catch(() => ({})); throw Object.assign(new Error("http"), { status: r.status, error: j.error }); }
+    return r.json();
+  }
+  const FATAL = {
+    0: ["Відкрийте з Telegram", "AirLens відкривається кнопкою «Звіти ↗» під табло вашої групи."],
+    401: ["Сесія застаріла", "Закрийте AirLens і відкрийте знову кнопкою під табло групи."],
+    403: ["Лише для учасників групи", "Ці дані бачать учасники групи, де працює бот."],
+    404: ["Групу не знайдено", "Відкрийте AirLens кнопкою «Звіти ↗» під табло вашої групи."],
+  };
+  let fatal = null;
+  async function loadNow() {
+    try {
+      const v = await api({ view: "now" });
+      skew = Date.parse(v.now) - Date.now();
+      NOW.data = v; NOW.at = Date.now(); NOW.err = 0;
+    } catch (e) {
+      if (FATAL[e.status] && !NOW.data) fatal = FATAL[e.status];
+      NOW.err = e.status || -1;
+    }
+    renderNow(); renderPins(); renderSet(); renderWin();
+  }
+  const repKey = () => (S.period === "month" ? `month:${S.month || ""}` : S.period);
+  async function loadRep(force = false) {
+    const k = repKey(), have = REP.get(k);
+    if (have && !force && Date.now() - have.at < REFRESH_MS) return renderRep();
+    if (!have) renderRep();
+    try {
+      const v = await api({ view: "reports", period: S.period, ...(S.period === "month" && S.month ? { month: S.month } : {}) });
+      REP.set(k, { data: v, at: Date.now(), err: 0 });
+    } catch (e) {
+      if (!have) REP.set(k, { data: null, at: 0, err: e.status || -1 });
+    }
+    if (repKey() === k) renderRep();
+  }
+
+  // ───── ① Зараз ─────
+  const nowStale = () => !NOW.data || NOW.data.stale || NOW.err || Date.now() - NOW.at > STALE_MS;
+  function live() {
+    if (!NOW.data || nowStale()) return [];
+    return NOW.data.rows.filter((r) => r.state === "alert" || r.state === "yellow").map((r) => ({ n: r.name, since: r.since, t: r.threat, lvl: r.via, s: r.state }));
+  }
+  function renderNow() {
+    if (fatal) {
+      $("#hero").dataset.s = "nodata";
+      $("#hero").innerHTML = `<div class="hero-top">${ico("nodata")}<div><h2>${fatal[0]}</h2><p class="call">${fatal[1]}</p></div></div>`;
+      $("#others").innerHTML = ""; $("#fresh").hidden = true; return;
+    }
+    const d = NOW.data, hits = live(), stale = nowStale(), rows = d ? d.rows.filter((r) => !G.del.has(r.uid)) : [], M = rows.length, fr = $("#fresh");
+    if (d) { $("#gname").textContent = d.title || "Група"; $("#ava").textContent = (d.title || "Г").trim()[0].toUpperCase(); }
+    fr.hidden = !d; fr.className = "fresh" + (stale ? " stale" : "");
+    if (d) fr.innerHTML = `<svg aria-hidden="true"><use href="#i-clock"/></svg>${NOW.err ? "нема зв’язку · " : ""}дані на ${d.dataAt ? hmIso(d.dataAt) : "—"}`;
+    const h = $("#hero");
+    if (!d && !NOW.err) { h.dataset.s = "nodata"; h.innerHTML = `<div class="hero-top">${ico("nodata")}<div><h2>Завантаження…</h2></div></div>`; $("#others").innerHTML = ""; return; }
+    if (hits.length) {
+      const s = hits.every((x) => x.s === "yellow") ? "yellow" : "alert";
+      h.dataset.s = s;
+      h.innerHTML = `<div class="hero-top">${ico(s)}<div><h2>Тривога в ${hits.length} з ${M} ${plural(M, "громади", "громад", "громад")}</h2><p class="call">Пройдіть в укриття.</p></div></div>
+        <div class="hits">${hits.map((x) => `<div class="hit"><div class="b"><div class="n">${esc(x.n)}</div><div class="t"><b>${esc(x.t || "тривога")}</b>${SCOPE[x.lvl] ? `<span> · ${SCOPE[x.lvl]}</span>` : ""}</div></div>
+        <div class="d"><b>${dur((nowMs() - Date.parse(x.since)) / 60000)}</b><small>з ${hmIso(x.since)}</small></div></div>`).join("")}</div>`;
+    } else if (stale) {
+      h.dataset.s = "nodata";
+      h.innerHTML = `<div class="hero-top">${ico("nodata")}<div><h2>Нема свіжих даних</h2><p class="call">Орієнтуйтесь на сирену й офіційні застосунки.</p></div></div>`;
+    } else {
+      h.dataset.s = "calm";
+      h.innerHTML = `<div class="hero-top">${ico("calm")}<div><h2>Без тривоги: усі ${M} ${plural(M, "громада", "громади", "громад")}</h2></div></div>`;
+    }
+    const inHero = new Set(hits.map((x) => x.n)), rest = rows.filter((r) => !inHero.has(r.name));
+    const recent = (r) => { if (stale || !r.lastEnd) return ""; const m = (nowMs() - Date.parse(r.lastEnd)) / 60000; return m <= 60 ? `без тривоги ${dur(m)}` : ""; };
+    const title = stale ? "Нема даних" : hits.length ? "Без тривоги" : "Громади";
+    $("#others").innerHTML = rest.length ? `<div class="gap"></div><div class="gap"></div><div class="card"><div class="card-h"><span>${title}</span><span class="count">${rest.length} з ${M}</span></div>
+      ${rest.map((r) => `<div class="row">${ico(stale || r.state === "nodata" ? "nodata" : "calm", "ic")}<span class="n">${esc(r.name)}</span><span class="v">${recent(r)}</span></div>`).join("")}</div>` : "";
+  }
+  function renderPins() {
+    const hits = live();
+    $$("[data-pin]").forEach((p) => {
+      p.hidden = !hits.length; if (!hits.length) return;
+      p.dataset.s = hits.every((x) => x.s === "yellow") ? "yellow" : "alert";
+      p.innerHTML = `<button type="button" data-go="now">${ico(p.dataset.s)}<span>Тривога в ${hits.length} ${plural(hits.length, "громаді", "громадах", "громадах")} — в укриття</span><span class="go" aria-hidden="true">›</span></button>`;
+    });
+  }
+
+  // ───── ② Звіти (усе злиття — на сервері, Р-30 · Р-41; тут лише показ) ─────
+  const bigDur = (m) => (m >= 60 ? `${Math.floor(m / 60)}<small> год </small>${String(m % 60).padStart(2, "0")}<small> хв</small>` : `${m}<small> хв</small>`);
+  const pctOf = (min, base) => (base ? Math.round((min / base) * 100) : 0);
+  const sinceNote = (s) => (s.since ? `<p class="since">Облік з ${KYIV_D.format(new Date(s.since))}, ${hmIso(s.since)} — раніше даних нема.</p>` : "");
+  const rhero = (v, s, when, base) => `<div class="card rhero"><div class="top"><span class="badge">${when}</span>${isOwner() ? `<button class="hours" type="button" data-hours aria-label="Робочий час ${v.window.from}–${v.window.to}, змінити">` : `<span class="hours">`}<svg aria-hidden="true"><use href="#i-clock"/></svg>${v.window.from}–${v.window.to}${isOwner() ? "</button>" : "</span>"}</div>
+      <div class="big">${bigDur(s.min)}</div><div class="k">тривоги в робочий час</div>
+    <div class="meter" role="img" aria-label="${pctOf(s.min, s.base)}% ${base}"><i style="width:${Math.min(100, pctOf(s.min, s.base))}%"></i></div>
+    <div class="rmeta"><span><b>${pctOf(s.min, s.base)}%</b> часу під тривогами</span><span><b>${s.n}</b> ${plural(s.n, "тривога", "тривоги", "тривог")}</span></div>${sinceNote(s)}</div>`;
+  const cur = () => REP.get(repKey());
+  const pick = (v) => v.series.find((x) => String(x.id) === S.who) || v.series[0];
+  function whoTray(v) {
+    const t = $("#who"), items = v ? v.series.map((x) => [String(x.id), x.name]) : [["all", "Усі"]];
+    if (!items.some(([k]) => k === S.who)) S.who = "all";
+    t.innerHTML = `<span class="thumb" aria-hidden="true"></span>` + items.map(([k, n]) => `<button class="tray-i" role="tab" data-v="${k}" aria-selected="${S.who === k}">${esc(n)}</button>`).join("");
+    requestAnimationFrame(() => place(t, true));
+  }
+  function renderRep() {
+    const c = cur(), b = $("#rep-body");
+    if (!c || !c.data) {
+      b.innerHTML = c && c.err ? `<div class="gap"></div><div class="card empty">${(FATAL[c.err] || ["Не вдалось завантажити звіт", "Спробуйте ще раз за хвилину."]).join(". ")}</div>` : `<div class="gap"></div><div class="card empty">Завантаження…</div>`;
+      return;
+    }
+    whoTray(c.data);
+    $("#dl").hidden = !c.data.excel;
+    b.innerHTML = S.period === "day" ? repDay(c.data) : S.period === "week" ? repWeek(c.data) : repMonth(c.data);
+  }
+  function perHromada(rows, head) {
+    if (S.who !== "all") return "";
+    return `<div class="gap"></div><div class="card lst"><div class="card-h">${head || `<span>По громадах</span><span class="count">${rows.length}</span>`}</div>${rows.map(([id, n, m, c, nd]) =>
+      `<button class="r" type="button" data-who="${id}"><span class="n">${esc(n)}<small>${nd ? "нема даних" : c ? `${c} ${plural(c, "тривога", "тривоги", "тривог")}` : "без тривог"}</small></span><span class="v${m ? "" : " zero"}">${nd ? "—" : durH(m)}</span><span class="chev" aria-hidden="true">›</span></button>`).join("")}</div>`;
+  }
+  const byMin = (a, b) => b[2] - a[2];
+  // розклад робочого дня (Р-33) — один компонент для «День» і картки дня в «Місяці»
+  function agenda(v, iv) {
+    const wf = toMin(v.window.from), wt = toMin(v.window.to), hrs = Math.round((wt - wf) / 60), rh = 24;
+    let g = ""; for (let k = 0; k <= hrs; k++) g += `<div class="hr" style="top:${k * rh}px"><span>${hm(wf + k * 60)}</span></div>`;
+    const bl = iv.map(([p, q, on]) => `<div class="blk${on ? " now" : ""}" style="top:${((p - wf) / 60) * rh}px;height:${Math.max(22, ((q - p) / 60) * rh)}px">${hm(p)}–${on ? "зараз" : hm(q)} · ${dur(q - p)}</div>`).join("");
+    return `<div class="agn" style="height:${hrs * rh}px">${g}${bl}</div>${iv.length ? "" : `<div class="empty">Без тривог у робочий час.</div>`}`;
+  }
+  function repDay(v) {
+    const s = pick(v), day = s.days[0];
+    if (!day || day.nodata) return `<div class="card empty">Сьогодні не будній день або облік ще не почався — даних за робочий час нема.</div>`;
+    const rows = v.series.slice(1).map((x) => [x.id, x.name, x.days[0] && x.days[0].min || 0, x.days[0] && x.days[0].n || 0, !x.days[0] || x.days[0].nodata]).sort(byMin);
+    const ev = (v.events || []).filter((e) => S.who === "all" || e.uids.includes(+S.who));
+    const list = ev.map((e) => {
+      const on = !e.end, names = S.who === "all" ? e.names : [s.name];
+      return `<div class="e${on ? " now" : ""}"><span class="t">${e.from}–${on ? "зараз" : e.to}</span><span class="w">${names.length > 2 ? `${names.length} ${plural(names.length, "громада", "громади", "громад")}` : esc(names.join(", "))}</span><span class="d">${dur(((on ? nowMs() : Date.parse(e.end)) - Date.parse(e.start)) / 60000)}</span>
+        <span class="s">${esc(e.threat || "тривога")}${SCOPE[e.via] ? ` · ${SCOPE[e.via]}` : ""}</span></div>`;
+    }).join("");
+    return rhero(v, s, "Сьогодні", "робочого часу, що минув") +
+      (S.who === "all" ? "" : `<div class="card wday" style="margin-top:12px"><div class="card-h"><span>Робочий день</span><span class="count">зараз ${hmIso(new Date(nowMs()).toISOString())}</span></div><div class="dpad">${agenda(v, day.iv || [])}</div></div>`) +
+      perHromada(rows) + (ev.length ? `<div class="gap"></div><div class="card evs"><div class="card-h"><span>Події</span><span class="count">${ev.length}</span></div>${list}</div>` : "");
+  }
+  function repWeek(v) {
+    const s = pick(v), today = v.period.today;
+    const vals = s.days.map((d) => (d.fut || d.nodata ? 0 : d.min));
+    const cap = Math.max(60, Math.ceil(Math.max(...vals) / 30) * 30);
+    const lbl = (m) => (m >= 60 ? `${Math.floor(m / 60)} год${m % 60 ? `<br>${m % 60} хв` : ""}` : `${m} хв`);
+    const cols = s.days.map((d) => { const m = d.fut || d.nodata ? 0 : d.min;
+      return `<div class="wd${d.d === today ? " cur" : ""}${d.fut ? " fut" : ""}${d.nodata ? " nd" : ""}"><b>${d.fut ? "" : d.nodata ? "—" : m ? lbl(m) : "0"}</b>
+      <div class="col" role="img" aria-label="${DAYS[wdOf(d.d)]}: ${d.fut ? "ще не настав" : d.nodata ? "нема даних" : dur(m)}"><i style="height:calc((100% - 6px) * ${m / cap})"></i></div><span>${DAYS[wdOf(d.d)]}</span></div>`; }).join("");
+    const rows = v.series.slice(1).map((x) => [x.id, x.name, x.min, x.n, x.days.every((d) => d.fut || d.nodata)]).sort(byMin);
+    return rhero(v, s, "Тиждень", "робочого часу цього тижня") +
+      `<div class="card week" style="margin-top:12px"><div class="wk-grid" style="grid-template-columns:repeat(${s.days.length},1fr)">${cols}</div></div>` + perHromada(rows);
+  }
+  const cv = (m) => (m < 60 ? `<b>${m}</b><u> хв</u>` : `<b>${Math.floor(m / 60)}</b><u> год </u><b>${String(m % 60).padStart(2, "0")}</b>`);
+  const monName = (m) => MONTHS[+m.slice(5, 7) - 1];
+  function repMonth(v) {
+    const s = pick(v), P = [22, 40, 58, 78, 100], today = v.period.today, mo = v.period.month;
+    const nz = s.days.filter((d) => !d.fut && !d.nodata && d.min > 0).map((d) => d.min).sort((a, b) => a - b);
+    const lv = (m) => (nz.length < 2 ? 5 : Math.max(1, Math.ceil((nz.filter((x) => x <= m).length / nz.length) * 5)));
+    const pill = (m, r) => `<button class="back cal-pill${r ? " r" : ""}${m ? "" : " ghost"}" type="button" ${m ? `data-mon="${m}"` : "disabled"} aria-label="${r ? "Наступний" : "Попередній"} місяць">${r ? "" : "<i>‹</i>"}${monName(m || mo)}${r ? "<i>›</i>" : ""}</button>`;
+    const nav = `<div class="cal-nav">${pill(v.period.prev, false)}<b>${monName(mo)}</b>${pill(v.period.next, true)}</div>`;
+    const isCur = today.slice(0, 7) === mo;
+    const head = DAYS.slice(0, 5).map((w, i) => `<span class="cal-h${isCur && i === wdOf(today) ? " cur" : ""}">${w}</span>`).join("");
+    const cells = (s.days.length ? `<span></span>`.repeat(wdOf(s.days[0].d)) : "") + s.days.map((d) => {
+      const m = d.fut || d.nodata ? 0 : d.min, sel = S.sel === d.d;
+      const cls = ["cal-c", d.fut ? "fut" : d.nodata ? "nd" : m ? "h" : "z", d.d === today ? "today" : "", sel ? "sel" : ""].filter(Boolean).join(" ");
+      return `<button class="${cls}" type="button" data-day="${d.d}"${m ? ` style="--p:${P[lv(m) - 1]}%"` : ""}${d.fut || d.nodata ? " disabled" : ""} aria-label="${+d.d.slice(8)} ${d.fut ? "ще не настав" : d.nodata ? "нема даних" : dur(m)}"><span class="cd">${+d.d.slice(8)}</span>${d.nodata ? `<span class="cv">—</span>` : m ? `<span class="cv">${cv(m)}</span>` : ""}</button>`;
+    }).join("");
+    const foot = `<div class="cal-foot"><span>0</span><i class="z0"></i>${P.map((p) => `<i style="--p:${p}%"></i>`).join("")}<span>більше</span><span class="yr">${mo.slice(0, 4)}</span></div>`;
+    const selIdx = s.days.findIndex((d) => d.d === S.sel && !d.fut && !d.nodata);
+    let card = "";
+    if (selIdx >= 0 && S.who !== "all") {
+      const d = s.days[selIdx];
+      card = `<div class="card dcard" style="margin-top:12px"><div class="card-h"><span>${FULL[wdOf(d.d)]}, ${ddmm(d.d)}</span><span class="count">${dur(d.min)} в робочий час</span></div><div class="dpad">${agenda(v, d.iv || [])}</div></div>`;
+    }
+    // «Усі» + обраний день → «По громадах» за цей день (Р-36); без дня — за місяць
+    const dayMode = selIdx >= 0 && S.who === "all";
+    const rows = v.series.slice(1).map((x) => { if (!dayMode) return [x.id, x.name, x.min, x.n, x.days.every((d) => d.fut || d.nodata)]; const d = x.days[selIdx]; return [x.id, x.name, d.min || 0, d.n || 0, !!d.nodata]; }).sort(byMin);
+    const per = perHromada(rows, dayMode ? `<span>По громадах · ${DAYS[wdOf(S.sel)]}, ${ddmm(S.sel)}</span><button class="pill" type="button" data-day="${S.sel}">Весь місяць</button>` : "");
+    return rhero(v, s, monName(mo), "робочого часу за місяць") + `<div class="card calc" style="margin-top:12px">${nav}<div class="cal">${head}${cells}</div>${foot}</div>` + card + per;
+  }
+
+  // ───── ③ Громади (Р-37: додати — кожен учасник; прибрати й порядок — лише власник; під тривогою не прибрати, Р-29) ─────
+  const REGIONS = [
+    ["Захід", [[8, "Волинська"], [5, "Рівненська"], [27, "Львівська"], [21, "Тернопільська"], [3, "Хмельницька"], [13, "Івано-Франківська"], [11, "Закарпатська"], [26, "Чернівецька"]]],
+    ["Північ", [[31, "Київ"], [14, "Київська"], [10, "Житомирська"], [25, "Чернігівська"], [20, "Сумська"], [4, "Вінницька"], [24, "Черкаська"]]],
+    ["Схід", [[22, "Харківська"], [9, "Дніпропетровська"], [28, "Донецька"], [16, "Луганська"], [19, "Полтавська"], [15, "Кіровоградська"]]],
+    ["Південь", [[18, "Одеська"], [17, "Миколаївська"], [23, "Херсонська"], [12, "Запорізька"], [29, "АР Крим"], [30, "Севастополь"]]],
+  ];
+  const oblName = (u) => { for (const [, l] of REGIONS) for (const [x, n] of l) if (x === u) return n; return ""; };
+  const oblLabel = (u) => (u === 31 || u === 30 ? "місто" : u === 29 ? "АР Крим" : `${oblName(u)} обл.`);
+  const G = { region: null, obl: null, editing: false, del: new Set(), busy: new Set(), search: new Map(), oblasts: new Map() };
+  const groupRows = () => (NOW.data ? NOW.data.rows.filter((r) => !G.del.has(r.uid)) : []);
+  const isOwner = () => !!(NOW.data && NOW.data.owner);
+  function regTray() {
+    if (G.region === null) { const first = groupRows()[0]; G.region = Math.max(0, REGIONS.findIndex(([, l]) => first && l.some(([u]) => u === first.oblastId))); }
+    $("#reg").innerHTML = `<span class="thumb" aria-hidden="true"></span>` + REGIONS.map(([r], i) => `<button class="tray-i" role="tab" data-v="${i}" aria-selected="${i === G.region}">${r}</button>`).join("");
+    requestAnimationFrame(() => place($("#reg"), true));
+  }
+  function tgBack() {
+    const on = S.tab === "set" && !!G.obl && !$("#q").value.trim();
+    const b = $("#tgback"); b.textContent = on ? "‹ Назад" : "Закрити"; b.setAttribute("aria-label", on ? "Назад" : "Закрити"); // прев'ю: як BackButton
+    try { if (tg && tg.BackButton) on ? tg.BackButton.show() : tg.BackButton.hide(); } catch { /* старий клієнт */ }
+  }
+  const resRow = (uid, name, o) => { const inG = groupRows().some((r) => r.uid === uid);
+    return `<div class="res"><div class="b"><div class="n">${esc(name)}</div>${o ? `<div class="o">${esc(o)}</div>` : ""}</div>${inG
+      ? `<button class="pill done" type="button" disabled>У групі ✓</button>` : `<button class="pill" type="button" data-add="${uid}" data-n="${esc(name)}"${G.busy.has(uid) ? " disabled" : ""}>Додати</button>`}</div>`; };
+  function renderSet() {
+    const b = $("#set-body"), q = $("#q").value.trim(), rows = groupRows(), stale = nowStale();
+    if (G.region === null && NOW.data) regTray();
+    $("#reg").hidden = !!q; tgBack();
+    if (q) {
+      const r = G.search.get(q);
+      b.innerHTML = `<div class="gap"></div>` + (q.length < 2 ? `<div class="card empty">Введіть щонайменше дві літери.</div>` : r === undefined ? `<div class="card empty">Шукаю…</div>`
+        : r.length ? `<div class="card">${r.map((x) => resRow(x.uid, x.name, x.oblast)).join("")}</div>` : `<div class="card empty">Не знайшли. Спробуйте перші літери назви.</div>`);
+      return;
+    }
+    if (G.obl) {
+      const o = G.oblasts.get(G.obl);
+      b.innerHTML = `<button class="back" type="button" data-back><i aria-hidden="true">‹</i>${REGIONS[G.region][0]}</button><div class="card"><div class="card-h"><span>${oblName(G.obl)}${oblLabel(G.obl) === "місто" ? "" : " область"}</span>${o ? `<span class="count">${o.rows.length}</span>` : ""}</div>
+        ${o ? o.rows.map((x) => resRow(x.uid, x.name, "")).join("") : `<div class="empty">Завантаження…</div>`}</div>`;
+      return;
+    }
+    const owner = isOwner(), editing = owner && G.editing;
+    b.innerHTML = `<div class="gap"></div><div class="card">${(REGIONS[G.region ?? 0] || REGIONS[0])[1].map(([u, n]) => { const k = rows.filter((r) => r.oblastId === u).length;
+        return `<button class="nav-row" type="button" data-o="${u}"><span>${n}</span>${k ? `<span class="cnt count">${k}</span>` : ""}<span class="chev" aria-hidden="true">›</span></button>`; }).join("")}</div>
+      <div class="sec">У групі${owner ? `<button class="act" type="button" id="edit">${editing ? "Готово" : "Змінити"}</button>` : ""}</div>
+      <div class="card grp${editing ? " editing" : ""}" id="grp">${rows.map((r) => { const st = stale ? "nodata" : r.state, hot = st === "alert" || st === "yellow" || st === "nodata";
+        return `<div class="row" data-uid="${r.uid}"><button class="minus ed" type="button" data-del="${r.uid}" ${hot ? "disabled" : ""} aria-label="${hot ? `${esc(r.name)}: прибрати після відбою` : `Прибрати ${esc(r.name)}`}"><i></i></button>
+          ${ico(st, "ic")}<span class="n">${esc(r.name)}<small>${hot && editing ? (st === "nodata" ? "нема даних — прибрати пізніше" : "тривога — прибрати після відбою") : r.oblastId ? oblLabel(r.oblastId) : ""}</small></span>
+          ${!stale && (st === "alert" || st === "yellow") ? `<span class="v al">з ${hmIso(r.since)}</span>` : ""}<span class="handle ed" aria-label="Перетягнути ${esc(r.name)}"><svg><use href="#i-grip"/></svg></span></div>`; }).join("")}</div>`;
+  }
+  // ───── Р-44 · робочий час групи (налаштування; змінює лише власник) ─────
+  function renderWin() {
+    const d = NOW.data; $("#wsec").hidden = !d; if (!d) return;
+    const w = d.window || { from: "09:00", to: "18:00" };
+    if (!d.owner) { $("#wbody").innerHTML = `<p class="whint"><b>${w.from}–${w.to}</b> · пн–пт. Змінює власник групи.</p>`; return; }
+    const opts = (a, b, v) => { let o = ""; for (let m = toMin(a); m <= toMin(b); m += 30) o += `<option${hm(m) === v ? " selected" : ""}>${hm(m)}</option>`; return o; };
+    $("#wbody").innerHTML = `<div class="wsel"><label>Початок<select id="wf" aria-label="Початок робочого дня">${opts("05:00", "12:00", w.from)}</select></label>
+      <label>Кінець<select id="wt" aria-label="Кінець робочого дня">${opts("12:00", "23:00", w.to)}</select></label></div>
+      <p class="whint">Пн–пт. За ним рахуються звіти й щоденний підсумок — через 5 хв після кінця дня. Тривоги бот шле цілодобово.</p>
+      <button class="btn" type="button" id="wsave"><span>Зберегти</span></button>`;
+  }
+  $("#wbody").addEventListener("click", async (e) => {
+    if (!e.target.closest("#wsave")) return;
+    const from = $("#wf").value, to = $("#wt").value;
+    if (toMin(to) - toMin(from) < 60) return toast(`Робочий день ${from}–${to} — ${WHY.window}`);
+    haptic();
+    if (await act({ action: "window", from, to }, "Робочий час")) { openSheet(false); toast(`Робочий час: ${from}–${to}${LIVE ? "" : " · у прев’ю числа звітів не перераховуються"}`); if (S.tab === "rep") loadRep(true); }
+  });
+
+  // нові дані групи (після дії): «Зараз», банери, «Громади»; звіти — перерахувати при наступному відкритті
+  function groupChanged(v) { skew = Date.parse(v.now) - Date.now(); NOW.data = v; NOW.at = Date.now(); NOW.err = 0; REP.clear(); renderNow(); renderPins(); renderSet(); renderWin(); }
+  const WHY = { window: "робочий день — від 05:00–12:00 до 12:00–23:00, не менше години", alert: "під тривогою — прибрати після відбою", nodata: "нема свіжих даних — прибрати пізніше", owner: "прибирати й міняти порядок може лише власник" };
+  async function act(body, name) {
+    try { groupChanged(await api(body)); return true; }
+    catch (e) { toast(e.status === 409 || e.status === 403 ? `${name}: ${WHY[e.error] || WHY.owner}` : "Не вдалось — перевірте зв’язок і спробуйте ще раз"); loadNow(); return false; }
+  }
+  let qTimer = 0;
+  $("#q").addEventListener("input", () => {
+    G.obl = null; const q = $("#q").value.trim(); renderSet(); clearTimeout(qTimer);
+    if (q.length < 2 || G.search.has(q)) return;
+    qTimer = setTimeout(async () => { try { const v = await api({ view: "search", q }); G.search.set(q, v.results); } catch { G.search.set(q, []); } if ($("#q").value.trim() === q) renderSet(); }, 250);
+  });
+  $("#reg").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b) return; haptic(); G.region = +b.dataset.v; G.obl = null; select($("#reg"), b.dataset.v); renderSet(); });
+  const backObl = () => { G.obl = null; renderSet(); };
+  if (tg && tg.BackButton) { try { tg.BackButton.onClick(backObl); } catch { /* старий клієнт */ } }
+  $("#set-body").addEventListener("click", async (e) => {
+    const t = e.target;
+    const o = t.closest("[data-o]"); if (o) { haptic(); G.obl = +o.dataset.o; renderSet(); $("#scr-set").scrollTo({ top: 0 });
+      if (!G.oblasts.has(G.obl)) { const u = G.obl; try { G.oblasts.set(u, await api({ view: "oblast", uid: u })); } catch { G.obl = null; toast("Не вдалось завантажити область"); } renderSet(); } return; }
+    if (t.closest("[data-back]")) return backObl();
+    if (t.closest("#edit")) { haptic(); G.editing = !G.editing; renderSet(); return; }
+    const a = t.closest("[data-add]"); if (a && !a.disabled) { const uid = +a.dataset.add, n = a.dataset.n; G.busy.add(uid); renderSet(); haptic();
+      if (await act({ action: "add", uid }, n)) toast(`${n} додано — з’явиться на табло групи`); G.busy.delete(uid); renderSet(); return; }
+    const d = t.closest("[data-del]"); if (d && !d.disabled) { const uid = +d.dataset.del, n = NOW.data.rows.find((r) => r.uid === uid).name; haptic();
+      // прибирання — через 5 с: «Повернути» скасовує, і запит не йде (П-1: прибирання — свідомо)
+      G.del.add(uid); renderSet(); renderNow();
+      toast(`${n} прибрано`, () => { G.del.delete(uid); renderSet(); renderNow(); }, async () => { await act({ action: "remove", uid }, n); G.del.delete(uid); renderSet(); renderNow(); }); }
+  });
+  // ───── перетягування за ручку: лише вертикаль, у межах списку (A44 axis-lock) ─────
+  let drag = null;
+  app.addEventListener("pointerdown", (e) => {
+    const hd = e.target.closest(".grp.editing .handle"); if (!hd || G.del.size) return;
+    e.preventDefault();
+    const row = hd.closest(".row"), rows = $$("#grp .row"), h = row.getBoundingClientRect().height;
+    drag = { row, rows, h, y0: e.clientY, from: rows.indexOf(row), to: rows.indexOf(row) };
+    row.classList.add("dragging"); hd.setPointerCapture(e.pointerId);
+    try { tg && tg.disableVerticalSwipes && tg.disableVerticalSwipes(); } catch { /* старий клієнт */ }
+  });
+  app.addEventListener("pointermove", (e) => {
+    if (!drag) return;
+    const { row, rows, h, from } = drag;
+    const dy = Math.max(-from * h, Math.min((rows.length - 1 - from) * h, e.clientY - drag.y0));
+    row.style.transform = `translateY(${dy}px)`;
+    const to = Math.max(0, Math.min(rows.length - 1, from + Math.round(dy / h)));
+    if (to !== drag.to) { drag.to = to; haptic(); rows.forEach((r, i) => { if (r === row) return; r.style.transform = from < to && i > from && i <= to ? `translateY(${-h}px)` : from > to && i < from && i >= to ? `translateY(${h}px)` : ""; }); }
+  });
+  const endDrag = async () => {
+    if (!drag) return;
+    const { from, to } = drag; drag = null;
+    try { tg && tg.enableVerticalSwipes && tg.enableVerticalSwipes(); } catch { /* старий клієнт */ }
+    if (from === to) return renderSet();
+    const rows = NOW.data.rows.slice(); const [r] = rows.splice(from, 1); rows.splice(to, 0, r);
+    NOW.data.rows = rows; renderSet(); renderNow();                    // одразу; сервер підтвердить або поверне як було
+    await act({ action: "order", uids: rows.map((x) => x.uid) }, r.name);
+  };
+  app.addEventListener("pointerup", endDrag); app.addEventListener("pointercancel", endDrag);
+
+  let undo = null, commit = null, toastTimer = 0;
+  function toast(text, onUndo = null, onCommit = null) {
+    if (commit) { const c = commit; commit = null; c(); }                // попереднє прибирання — підтвердити, не губити
+    undo = onUndo; commit = onCommit;
+    $("#toast-t").textContent = text; $("#undo").hidden = !onUndo; $("#toast").classList.add("on");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => { $("#toast").classList.remove("on"); undo = null; if (commit) { const c = commit; commit = null; c(); } }, 5000);
+  }
+  $("#undo").addEventListener("click", () => { clearTimeout(toastTimer); commit = null; if (undo) { const u = undo; undo = null; u(); } $("#toast").classList.remove("on"); });
+
+  // прев'ю поза Telegram: дії з громадами — у пам'яті сторінки (у живому — сервер, Р-37)
+  const normQ = (x) => x.toLowerCase().replace(/[’'ʼ`]/g, "");
+  function demoGroup(body) {
+    const all = Object.values(DEMO.oblasts);
+    const place = (uid) => { for (const o of all) { const r = o.rows.find((x) => x.uid === uid); if (r) return { ...r, oblastId: o.uid, oblast: o.name }; } return null; };
+    if (body.view === "search") { const q = normQ(body.q); const res = []; for (const o of all) for (const r of o.rows) if (normQ(r.name).includes(q) && res.length < 8) res.push({ uid: r.uid, name: r.name, oblast: o.uid === r.uid ? null : o.name }); return { results: res }; }
+    if (body.view === "oblast") return JSON.parse(JSON.stringify(DEMO.oblasts[body.uid]));
+    for (const k of Object.keys(DEMO.now)) {
+      const v = DEMO.now[k];
+      if (body.action === "add" && !v.rows.some((r) => r.uid === body.uid)) { const p = place(body.uid); v.rows.push({ uid: p.uid, name: p.name, oblast: p.oblast, oblastId: p.oblastId, state: k === "nodata" ? "nodata" : "calm", lastEnd: null }); }
+      if (body.action === "remove") v.rows = v.rows.filter((r) => r.uid !== body.uid);
+      if (body.action === "order") v.rows = body.uids.map((u) => v.rows.find((r) => r.uid === u));
+      if (body.action === "window") v.window = { from: body.from, to: body.to };
+    }
+    if (body.action === "window") for (const r of Object.values(DEMO.reports)) r.window = { from: body.from, to: body.to };
+    return JSON.parse(JSON.stringify(DEMO.now[S.demo]));
+  }
+
+  // ───── повзунки: міряємо; слайд на дію, снап на лейаут (A54 · A56 · A57) ─────
+  function place(c, snap) {
+    if (!c || c.offsetParent === null) return;
+    const t = $(".thumb, .cap", c), act = $('[aria-selected="true"]', c); if (!t || !act || !act.offsetWidth) return;
+    const w = t.classList.contains("cap") ? Math.min(act.offsetWidth - 8, 112) : act.offsetWidth, x = act.offsetLeft + (act.offsetWidth - w) / 2;
+    const apply = () => { t.style.width = w + "px"; t.style.transform = `translateX(${x}px)`; t.style.opacity = "1"; };
+    if (snap) { t.classList.add("snap"); apply(); requestAnimationFrame(() => requestAnimationFrame(() => t.classList.remove("snap"))); } else apply();
+  }
+  const placeAll = (snap) => ["#per", "#who", "#reg", "#tabs", "#thm", "#dst"].forEach((s) => place($(s), snap));
+  function select(tray, v) { $$(".tray-i, .tab", tray).forEach((x) => x.setAttribute("aria-selected", String(x.dataset.v === v))); place(tray, false); }
+  const haptic = () => { try { tg && tg.HapticFeedback && tg.HapticFeedback.selectionChanged(); } catch { /* старий клієнт */ } };
+
+  function go(tab, snap = false) {
+    S.tab = tab;
+    $$(".tab").forEach((t) => t.setAttribute("aria-selected", String(t.id === `tab-${tab}`)));
+    $$(".screen").forEach((s) => (s.hidden = s.id !== `scr-${tab}`));
+    place($("#tabs"), snap);
+    if (tab === "rep") loadRep();
+    tgBack();
+    requestAnimationFrame(() => ["#per", "#who", "#reg"].forEach((s) => place($(s), true)));
+  }
+  function theme(t) {
+    S.theme = t; app.dataset.theme = t; store.set("airlens.theme", t);
+    const bg = getComputedStyle(app).getPropertyValue("--page").trim();
+    document.body.style.background = bg;
+    try { if (tg && tg.setHeaderColor) { tg.setHeaderColor(bg); tg.setBackgroundColor(bg); tg.setBottomBarColor && tg.setBottomBarColor(bg); } } catch { /* старий клієнт */ }
+  }
+
+  // ───── події ─────
+  $("#tabs").addEventListener("click", (e) => { const t = e.target.closest(".tab"); if (t) { haptic(); go(t.id.slice(4)); } });
+  app.addEventListener("click", (e) => { const g = e.target.closest("[data-go]"); if (g) go(g.dataset.go); });
+  $("#per").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b || b.dataset.v === S.period) return; haptic(); S.period = b.dataset.v; S.sel = null; select($("#per"), S.period); loadRep(); });
+  $("#who").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b || b.dataset.v === S.who) return; haptic(); S.who = b.dataset.v; select($("#who"), S.who); b.scrollIntoView({ inline: "nearest", block: "nearest", behavior: "smooth" }); renderRep(); });
+  $("#rep-body").addEventListener("click", (e) => {
+    if (e.target.closest("[data-hours]")) { haptic(); openSheet(true); return; }
+    const mo = e.target.closest("[data-mon]"); if (mo && !mo.disabled) { haptic(); S.month = mo.dataset.mon; S.sel = null; loadRep(); return; }
+    const dy = e.target.closest("[data-day]"); if (dy && !dy.disabled) { haptic(); const d = dy.dataset.day; S.sel = S.sel === d ? null : d; renderRep();
+      if (S.sel !== null) requestAnimationFrame(() => { const c = $(".dcard") || $(".lst"); if (c) c.scrollIntoView({ block: "nearest", behavior: "smooth" }); }); return; }
+    const w = e.target.closest("[data-who]"); if (w) { haptic(); S.who = String(w.dataset.who); renderRep(); const t = $(`#who [data-v="${S.who}"]`); if (t) t.scrollIntoView({ inline: "center", block: "nearest" }); $("#scr-rep").scrollTo({ top: 0, behavior: "smooth" }); }
+  });
+  // Excel — особистий чат з ботом: День / Тиждень / Місяць → файл (Р-22); Mini App при цьому закривається
+  $("#dl").addEventListener("click", () => { const c = cur(); if (!c || !c.data || !c.data.excel) return; haptic();
+    if (LIVE) tg.openTelegramLink(c.data.excel); else toast("У Telegram відкриє чат з ботом — там файли за день, тиждень, місяць"); });
+  $("#thm").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b) return; haptic(); select($("#thm"), b.dataset.v); theme(b.dataset.v); });
+  const openSheet = (on) => { $("#sheet").classList.toggle("on", on); $("#scrim").classList.toggle("on", on); if (on) requestAnimationFrame(() => placeAll(true)); };
+  $("#scrim").addEventListener("click", () => openSheet(false));
+  let pressed = null; const release = () => { if (pressed) { pressed.classList.remove("pressing"); pressed = null; } };
+  app.addEventListener("pointerdown", (e) => { const el = e.target.closest(".tab,.pill:not(.done),.btn,.pin button,.cal-pill"); if (el) { pressed = el; el.classList.add("pressing"); } });
+  ["pointerup", "pointercancel", "pointerleave"].forEach((ev) => app.addEventListener(ev, release));
+  addEventListener("resize", () => requestAnimationFrame(() => placeAll(true)));
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { loadNow(); if (S.tab === "rep") loadRep(); } });
+  setInterval(() => { if (document.visibilityState === "visible") loadNow(); }, REFRESH_MS);
+  setInterval(() => { renderNow(); renderPins(); }, 20_000); // тривалість «16 хв» і застарілість — без запиту
+
+  // ───── Telegram: SettingsButton → тема; прев'ю поза Telegram — кнопка ⋯ і стан синтетики ─────
+  if (tg) { try { tg.ready(); tg.expand(); tg.SettingsButton.show(); tg.SettingsButton.onClick(() => openSheet(true)); } catch { /* старий клієнт */ } }
+  if (!LIVE && DEMO) {
+    $("#tgbar").hidden = false; $("#dstate").hidden = false;
+    $("#tgback").addEventListener("click", () => { if (S.tab === "set" && G.obl) backObl(); });
+    $("#menu").addEventListener("click", () => openSheet(true));
+    $("#dst").addEventListener("click", (e) => { const b = e.target.closest(".tray-i"); if (!b) return; S.demo = b.dataset.v; select($("#dst"), S.demo); loadNow(); });
+  }
+  const qs = new URLSearchParams(location.search);
+  if (!LIVE && DEMO) { ["period", "who", "sel", "month"].forEach((k) => { if (qs.get(k)) S[k] = qs.get(k); }); if (qs.get("state")) S.demo = qs.get("state"); if (qs.get("theme")) S.theme = qs.get("theme"); if (qs.get("edit")) G.editing = true; }
+  $$("#per .tray-i").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.v === S.period)));
+  $$("#thm .tray-i").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.v === S.theme)));
+  $$("#dst .tray-i").forEach((x) => x.setAttribute("aria-selected", String(x.dataset.v === S.demo)));
+  theme(S.theme);
+  renderNow(); renderSet();
+  loadNow();
+  go(qs.get("tab") || "now", true);
+  if (qs.get("sheet")) openSheet(true);
+  (document.fonts ? document.fonts.ready : Promise.resolve()).then(() => placeAll(true));
+})();
+</script>
+</body>
+</html>
