@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Підсумок дня v2</title>
+<!-- живе доки: вирок Konst по формі «Підсумку дня» (AirLens, сесія 11). Синтетика: назви громад як у демо Mini App, часи вигадані. -->
+<style>
+:root{--bg:#c9d9e6;--bub:#fff;--tx:#0f1419;--mut:#5f6e7d;--ln:#d5dde5;--btn:#2a74b8;--acc:#1f6aad}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e1621;--bub:#182533;--tx:#e9eef4;--mut:#8b9bab;--ln:#2b3b4d;--btn:#2f6ea5;--acc:#64b5ef}}
+:root[data-theme="dark"]{--bg:#0e1621;--bub:#182533;--tx:#e9eef4;--mut:#8b9bab;--ln:#2b3b4d;--btn:#2f6ea5;--acc:#64b5ef}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,"SF Pro Text",Roboto,"Segoe UI",sans-serif}
+main{max-width:375px;margin:0 auto;padding:16px}
+h1{font-size:18px;margin:4px 0 2px}.lead{color:var(--mut);font-size:13px;margin:0 0 14px}
+.lab{font-size:13px;font-weight:600;color:var(--acc);margin:22px 0 6px}
+.note{font-size:13px;color:var(--mut);margin:6px 2px 0}
+.bub{background:var(--bub);border-radius:16px 16px 16px 4px;padding:8px 10px 6px;max-width:330px}
+.bub h3{font-size:16px;margin:2px 0 8px}
+.bub table{border-collapse:collapse;width:100%;font-size:15px}
+.bub td{border:1px solid var(--ln);padding:5px 7px;vertical-align:top}
+.bub td small{color:var(--mut);font-size:13px}
+.bub footer{color:var(--mut);font-style:italic;font-size:13px;margin-top:8px}
+.bub pre{font:inherit;white-space:pre-wrap;margin:0}
+.time{text-align:right;font-size:12px;color:var(--mut)}
+.al-btn{display:block;background:var(--btn);color:#fff;text-align:center;border-radius:10px;padding:8px;margin-top:4px;max-width:350px;font-weight:600}
+</style></head><body><main>
+<h1>AirLens · «Підсумок дня» — вигляд v2</h1>
+<p class="lead">Прев'ю для вибору. Синтетика (часи вигадані). Таблиця — та сама Rich Message Telegram, що й табло «rich». Повідомлення без звуку, «Чистий чат» прибирає його за 30 хв.</p>
+<div id="v"></div>
+</main>
+<script>
+const V={"A": "<h3>📋 Підсумок дня · пт 02.10 · 09:00–18:00</h3><table bordered compact><tr><td><b>Полтава</b><br>5 тривог · дрони</td><td><b>4 год 25 хв</b><br>Найдовша — 1 год 35 хв</td></tr><tr><td><b>Павлоград</b><br>4 тривоги · дрони</td><td><b>2 год 10 хв</b><br>Найдовша — 45 хв</td></tr><tr><td><b>Самар</b><br>4 тривоги · дрони</td><td><b>1 год 50 хв</b><br>Найдовша — 35 хв</td></tr><tr><td><b>Кропивницький</b><br>2 тривоги · ракети, дрони</td><td><b>1 год 30 хв</b><br>Найдовша — 1 год 20 хв</td></tr><tr><td><b>Дніпро</b><br>3 тривоги · ракети, дрони</td><td><b>1 год 25 хв</b><br>Найдовша — 40 хв</td></tr><tr><td><b>Кам’янське</b><br>2 тривоги · ракети, дрони</td><td><b>55 хв</b><br>Найдовша — 35 хв</td></tr><tr><td colspan=\"2\">🟢 <b>Жовті Води</b><br>Сьогодні без тривог</td></tr><tr><td colspan=\"2\">🟢 <b>Вільногірськ</b><br>Сьогодні без тривог</td></tr></table><footer>Детальніше — в AirLens<br>Підсумок автоматично зникне о 18:35</footer>", "C": "<h3>📋 Підсумок дня · пт 02.10 · 09:00–18:00</h3><table bordered compact><tr><td><b>Полтава</b><br>5 тривог · дрони</td><td><b>4 год 25 хв</b><br>Найдовша — 1 год 35 хв</td></tr><tr><td><b>Павлоград</b><br>4 тривоги · дрони</td><td><b>2 год 10 хв</b><br>Найдовша — 45 хв</td></tr><tr><td><b>Самар</b><br>4 тривоги · дрони</td><td><b>1 год 50 хв</b><br>Найдовша — 35 хв</td></tr><tr><td><b>Кропивницький</b><br>2 тривоги · ракети, дрони</td><td><b>1 год 30 хв</b><br>Найдовша — 1 год 20 хв</td></tr><tr><td><b>Дніпро</b><br>3 тривоги · ракети, дрони</td><td><b>1 год 25 хв</b><br>Найдовша — 40 хв</td></tr><tr><td><b>Кам’янське</b><br>2 тривоги · ракети, дрони</td><td><b>55 хв</b><br>Найдовша — 35 хв</td></tr><tr><td colspan=\"2\">🟢 <b>Жовті Води</b><br>Сьогодні без тривог</td></tr><tr><td colspan=\"2\">🟢 <b>Вільногірськ</b><br>Сьогодні без тривог</td></tr></table><h3>🗓️ Тиждень 28.09–02.10 · робочий час</h3><table bordered compact><tr><td><b>Полтава</b><br>16 тривог</td><td><b>26 год 03 хв</b></td></tr><tr><td><b>Павлоград</b><br>14 тривог</td><td><b>20 год 10 хв</b></td></tr><tr><td><b>Самар</b><br>12 тривог</td><td><b>18 год 49 хв</b></td></tr><tr><td><b>Дніпро</b><br>10 тривог</td><td><b>14 год 15 хв</b></td></tr><tr><td><b>Кропивницький</b><br>7 тривог</td><td><b>13 год 47 хв</b></td></tr><tr><td><b>Вільногірськ</b><br>8 тривог</td><td><b>13 год 02 хв</b></td></tr><tr><td><b>Жовті Води</b><br>8 тривог</td><td><b>13 год 02 хв</b></td></tr><tr><td><b>Кам’янське</b><br>8 тривог</td><td><b>12 год 03 хв</b></td></tr></table><footer>Детальніше — в AirLens<br>Підсумок автоматично зникне о 18:35</footer>"};
+const S=[["A","Пн–чт · підсумок дня","Громади — від найдовшої тривоги. Під повідомленням — та сама кнопка AirLens, що під табло."],
+ ["C","П'ятниця · день + тиждень","Одне повідомлення, одне прибирання. Тиждень — сума в робочий час по кожній громаді."]];
+document.getElementById("v").innerHTML=S.map(([k,t,n])=>`<div class="lab">${t}</div><div class="bub">${V[k]}<div class="time">18:05</div></div><div class="al-btn">📡 AirLens</div><p class="note">${n}</p>`).join("");
+</script></body></html>
