@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Адмін-чат v1</title>
+<!-- живе доки: вирок Konst по адмін-чату v2 (AirLens, сесія 12). Синтетика: East team і числа — зі скріншотів Konst 03.10; «тривог за тиждень» вигадано. -->
+<style>
+:root{--bg:#c9d9e6;--bub:#fff;--my:#e1ffc7;--tx:#0f1419;--mut:#5f6e7d;--kb:rgba(0,0,0,.18);--kbtx:#fff;--acc:#1f6aad;--new:#1c8a4a;--old:#b3402e}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#0e1621;--bub:#182533;--my:#2b5278;--tx:#e9eef4;--mut:#8b9bab;--kb:rgba(255,255,255,.10);--kbtx:#e9eef4;--acc:#64b5ef;--new:#5fd38d;--old:#ff8a75}}
+:root[data-theme="dark"]{--bg:#0e1621;--bub:#182533;--my:#2b5278;--tx:#e9eef4;--mut:#8b9bab;--kb:rgba(255,255,255,.10);--kbtx:#e9eef4;--acc:#64b5ef;--new:#5fd38d;--old:#ff8a75}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.35 -apple-system,"SF Pro Text",Roboto,"Segoe UI",sans-serif}
+main{max-width:375px;margin:0 auto;padding:12px 16px 40px}
+h1{font-size:18px;margin:4px 0 2px}.lead{color:var(--mut);font-size:13px;margin:0 0 10px}
+.seg{position:sticky;top:0;z-index:2;display:flex;gap:6px;padding:8px 0;background:var(--bg)}
+.seg button{flex:1;border:0;border-radius:10px;padding:9px 4px;font:600 14px/1.2 inherit;background:var(--kb);color:var(--kbtx)}
+.seg button[aria-pressed="true"]{background:var(--acc);color:#fff}
+.lab{font-size:13px;font-weight:600;color:var(--acc);margin:22px 0 6px}
+.why{font-size:13px;color:var(--mut);margin:6px 2px 0}
+.why b{color:var(--new)}
+.bub{background:var(--bub);border-radius:16px 16px 16px 4px;padding:7px 10px 5px;margin:4px 0;max-width:330px;white-space:pre-wrap;overflow-wrap:anywhere}
+.bub.me{background:var(--my);margin-left:auto;border-radius:16px 16px 4px 16px;width:max-content}
+.t{display:block;text-align:right;font-size:11px;color:var(--mut);margin-top:2px}
+.lnk{color:var(--acc)}
+.kb{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:4px 0 6px;max-width:343px}
+.kb span{background:var(--kb);color:var(--kbtx);border-radius:8px;padding:10px 8px;text-align:center;font-size:16.5px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kb span.w{grid-column:1/-1}
+.cmd{background:var(--bub);border-radius:12px;padding:4px 0;max-width:343px}
+.cmd div{padding:7px 12px;font-size:15px}.cmd div+div{border-top:1px solid var(--kb)}
+.cmd b{color:var(--acc);font-weight:600}.cmd small{color:var(--mut)}
+.tag{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:1px 5px;margin-left:4px;vertical-align:1px;border:1px solid currentColor}
+.tag.v{color:var(--old)}
+[data-v="old"] .new,[data-v="new"] .old{display:none}
+</style></head><body><main data-v="new">
+<h1>AirLens · адмін-чат — зараз і нове</h1>
+<p class="lead">Прев'ю для вибору: перемикач зверху показує однаковий екран до і після. Обрізання кнопок тут приблизне — остаточно видно лише в Telegram. Синтетика.</p>
+<div class="seg" role="group"><button data-s="old" aria-pressed="false">Зараз</button><button data-s="new" aria-pressed="true">Нове (А + Б)</button></div>
+
+<div class="lab">1 · /admin</div>
+<div class="bub me">/admin<span class="t">20:54</span></div>
+<div class="old"><div class="bub">Адмін-панель AirLens: групи, здоров'я бота, вимкнення чужих груп.<span class="t">20:54</span></div>
+<div class="kb"><span class="w">Відкрити адмін-панель</span><span class="w">🧪 Перегляди — як побачить група</span></div></div>
+<div class="new"><div class="bub">Адмін-панель AirLens: групи, стан бота, вимкнення груп.<span class="t">20:54</span></div>
+<div class="kb"><span class="w">Відкрити адмін-панель</span><span class="w">🧪 Перегляди — як побачить група</span></div>
+<p class="why"><b>А:</b> «чужих» і «здоров'я» → простіші слова.</p></div>
+
+<div class="lab">2 · Меню «🧪 Перегляди»</div>
+<div class="bub">Перегляди в адмін-чаті: покажу тут, як це виглядатиме. У групу нічого не надсилаю.<span class="t">20:54</span></div>
+<div class="old kb"><span>📋 Підсумок дня</span><span>🗓️ П'ятниця</span><span>🔴 Тривога і відбій</span><span>📌 Табло під тривогою</span><span>👋 Привітання групи</span><span>🌅 Ранковий звіт</span><span class="w">🌅 Понеділок — з тижнем</span></div>
+<div class="new"><div class="kb"><span>📋 Підсумок</span><span>🗓️ П'ятниця</span><span>🔴 Тривога</span><span>📌 Табло</span><span>👋 Привітання</span><span>🌅 Ранок</span><span class="w">🌅 Понеділок — з тижнем</span></div>
+<p class="why"><b>А:</b> підписи вміщаються на 375 px — без «Табло під три…». Що саме показує кнопка — пише шапка перегляду.</p></div>
+
+<div class="lab">3 · Після перегляду (приклад — «🔴 Тривога»)</div>
+<div class="bub">Перегляд · тривога (у групі — зі звуком, режими «Усі» й «Лише тривоги») і відбій (тихо, лише «Усі»). Громада й загроза — для прикладу.<span class="t">20:55</span></div>
+<div class="bub">🔴 Тривога: Дніпро — дрони
+Пройдіть в укриття.<span class="t">20:55</span></div>
+<div class="bub">🟢 Відбій: Дніпро · тривала 47 хв<span class="t">20:55</span></div>
+<p class="why old">Щоб відкрити наступний перегляд — гортати вгору до меню.</p>
+<div class="new"><div class="kb"><span>🧪 Ще перегляд</span><span>🧹 Прибрати</span></div>
+<p class="why"><b>Б:</b> під останнім повідомленням перегляду — дві кнопки. «Ще перегляд» — меню тут, гортати не треба. «Прибрати» — бот видаляє все, що надіслав для цього перегляду, і чат лишається чистим.</p></div>
+
+<div class="lab">4 · «🌅 Ранок» — звіт, що щодня приходить о 09:00</div>
+<div class="old"><div class="bub">AirLens · 03.10 · ✓ працює
+Груп: 1
+• East team — громад: 8
+Подробиці — <span class="lnk">/admin</span><span class="t">20:55</span></div>
+<p class="why">Без шапки — не відрізнити перегляд від справжнього звіту.</p></div>
+<div class="new"><div class="bub">Перегляд · ранковий звіт — так він прийде о 09:00.<span class="t">20:55</span></div>
+<div class="bub">AirLens · сб 03.10 · ✓ працює
+• East team — 8 громад
+Подробиці — <span class="lnk">/admin</span><span class="t">20:55</span></div>
+<p class="why"><b>А:</b> шапка «Перегляд»; день тижня; «Груп: 1» прибрано — групи видно списком (рядок «Груп: N» з'явиться, коли груп більше однієї).</p></div>
+
+<div class="lab">5 · «🌅 Понеділок — з тижнем»</div>
+<div class="old"><div class="bub">AirLens · 03.10 · ✓ працює
+Груп: 1
+• East team — громад: 8 · AirLens за тиждень: 32
+
+За тиждень 26.09–02.10:
+• нових груп: 1
+• помилок даних: 0
+• пік швидкодії: 38 мс (ліміт 10) · база — до 20 % ліміту
+Подробиці — <span class="lnk">/admin</span><span class="t">20:55</span></div>
+<p class="why">«38 мс (ліміт 10)» звучить як порушення, хоча обривів 0. «32» — чого? «20 % ліміту» — якого? Тиждень починається до 28.09, але про облік з 28.09 не сказано.</p></div>
+<div class="new"><div class="bub">Перегляд · понеділковий звіт — так він прийде в пн о 09:00.<span class="t">20:55</span></div>
+<div class="bub">AirLens · пн 05.10 · ✓ працює
+• East team — 8 громад · AirLens відкрили 32 рази
+
+Тиждень 28.09–04.10:
+• тривог у громадах груп: 14<span class="tag v">В</span>
+• нових груп: 1 · помилок даних: 0
+• навантаження: норма — обривів 0
+• база: до 20 % добового ліміту запису
+Подробиці — <span class="lnk">/admin</span><span class="t">20:55</span></div>
+<p class="why"><b>А:</b> одиниці й слова замість голих цифр; «облік з …» — лише коли тиждень починається раніше за облік. <b>В</b> (окремий хід): рядок «тривог за тиждень» — з таблиці тривог у базі (дані є). «Затримку доставки» база не зберігає — для неї потрібен новий облік, тому її тут нема.</p></div>
+
+<div class="lab">6 · Меню «/» в особистому чаті власника</div>
+<div class="old cmd"><div><b>/start</b> <small>— Що я вмію і як почати</small></div><div><b>/help</b> <small>— Коротка довідка</small></div></div>
+<div class="new"><div class="cmd"><div><b>/admin</b> <small>— адмін-панель і перегляди</small></div><div><b>/preview</b> <small>— перегляди: як побачить група</small></div><div><b>/start</b> <small>— Що я вмію і як почати</small></div><div><b>/help</b> <small>— Коротка довідка</small></div></div>
+<p class="why"><b>А:</b> обидві команди видно, коли набираєш «/» — пам'ятати не треба. Лише у вашому чаті, учасники груп їх не бачать.</p></div>
+</main>
+<script>
+const m=document.querySelector("main"),bs=document.querySelectorAll(".seg button");
+bs.forEach(b=>b.onclick=()=>{m.dataset.v=b.dataset.s;bs.forEach(x=>x.setAttribute("aria-pressed",String(x===b)))});
+</script>
+</body></html>
