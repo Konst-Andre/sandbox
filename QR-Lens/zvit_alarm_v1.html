@@ -1,0 +1,67 @@
+<!doctype html><html lang="uk"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>QR Lens · звіт даних</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>:root{--bg:#eef3f2;--card:#fff;--card-2:#f4f8f7;--border:#d3dedb;--ink:#1a1b1e;--ink-2:#3e4a46;--muted:#74827d;
+--ok:#2e9e5c;--warn:#c8841c;--crit:#c8331c;--ok-soft:rgba(46,158,92,.12);--warn-soft:rgba(200,132,28,.12);--crit-soft:rgba(200,51,28,.12);
+--accent:#2A8C84;--accent-text:#237770;--accent-soft:#E8F4F2;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0a0e14;--card:#232a35;--card-2:#2b3340;--border:#333b46;--ink:#e6edf3;
+--ink-2:#b7c0c8;--muted:#8b949e;--ok:#3bc572;--warn:#e5a24a;--crit:#e85d2c;--ok-soft:rgba(59,197,114,.15);--warn-soft:rgba(229,162,74,.15);
+--crit-soft:rgba(232,93,44,.15);--accent-text:#34A097;--accent-soft:#1A4540;color-scheme:dark}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 'Manrope',system-ui,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:640px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:20px;margin:4px 0 2px;font-weight:800}h2{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:24px 0 8px;font-weight:700}
+.sub{color:var(--muted);font-size:13px}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:14px 16px;margin:8px 0}
+.hero{border-width:2px;margin-top:14px}.hero.ok{border-color:var(--ok);background:var(--ok-soft)}.hero.warn{border-color:var(--warn);background:var(--warn-soft)}
+.hero b{display:block;font-size:22px;font-weight:800}.hero.ok b{color:var(--ok)}.hero.warn b{color:var(--warn)}
+.btn{display:block;text-align:center;background:var(--accent);color:#fff;text-decoration:none;font-weight:700;font-size:17px;padding:15px;border-radius:14px;margin:12px 0;border:0;width:100%;font-family:inherit;cursor:pointer}
+.btn.ghost{background:var(--card);color:var(--accent-text);border:1px solid var(--border);font-size:15px;padding:12px}
+.q{border-left:4px solid var(--warn)}.q .n{display:inline-block;min-width:26px;font-weight:800;color:var(--warn)}
+pre{white-space:pre-wrap;word-break:break-word;background:var(--card-2);border:1px solid var(--border);border-radius:12px;padding:12px;margin:8px 0 0;font:13px/1.45 ui-monospace,Menlo,monospace}
+.row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--border)}.row:first-child{border-top:0}
+.who{flex:1;min-width:0}.who div{font-weight:700;overflow-wrap:anywhere}.who span{font-size:12px;color:var(--muted)}
+.nums{display:grid;grid-template-columns:repeat(3,44px);text-align:right;font-variant-numeric:tabular-nums;font-size:14px}.nums i{font-style:normal;color:var(--muted);font-size:11px}
+.mk{width:34px;text-align:center;font-weight:800;font-size:13px}.mk.ok{color:var(--ok)}.mk.warn{color:var(--warn)}
+.leg{display:flex;justify-content:flex-end;gap:0;font-size:11px;color:var(--muted);padding-right:44px}.leg span{width:44px;text-align:right}
+.pos .k{font-size:13px;color:var(--ink-2);overflow-wrap:anywhere}.pos .s{margin-top:6px;font-weight:600;overflow-wrap:anywhere}.pos .s.bad{color:var(--crit)}
+ul{margin:0;padding-left:18px}li{margin:3px 0}footer{margin-top:28px;font-size:12px;color:var(--muted)}</style></head><body><main>
+<div class="sub">QR Lens · ворота даних</div><h1>Дані з KPI від 26.09.2026</h1>
+<div class="sub">на сайті зараз — дані від 03.10.2026</div>
+<div class="card hero warn"><b>⚠ 4 питань</b>Подивись нижче, потім вирішуй у PR: Merge — оновити сайт, Close — лишити як є.</div>
+<a class="btn" href="https://github.com/Konst-Andre/QR-Lens/pulls?q=is%3Apr+is%3Aopen+head%3Aqr-data">Відкрити PR → Merge</a>
+<h2>Питання</h2>
+<div class="card q"><span class="n">(0)</span>PSR Лднхбв Тгмубсжбв: у KPI 932 активних, на новому сайті 470 — скрипт витягнув не те</div>
+<div class="card q"><span class="n">(5)</span>PSR Лднхбв Тгмубсжбв: було 932, стало 470 (−50 %)</div>
+<div class="card q"><span class="n">(1)</span>PSR Оовзвт Тгмубсжбв є у whitelist, а в KPI нема — зник? прибрати з whitelist?</div>
+<div class="card q"><span class="n">(4)</span>дата KPI 26.09.2026 старіша за дату на сайті 03.10.2026 — це старий файл?</div>
+<h2>Для Claude</h2><div class="card">Скопіюй і встав у чат — агент сам розбере, що сталось.
+<pre id="cl">QR-Lens: тривога воріт даних — розбери й виправ (QRL-9).
+гілка qr-data · KPI 26.09.2026 (blob abc1234) · прогін https://github.com/Konst-Andre/QR-Lens/actions/runs/0
+⚠ (0) ×1 · (1) ×1 · (4) ×1 · (5) ×1
+Звіт — опис PR «Дані з KPI»; деталі — tools/qr_report.py report.</pre><button class="btn ghost" id="cp" type="button">Скопіювати для Claude</button></div>
+<h2>Люди</h2><div class="card"><div class="leg"><span>KPI</span><span>новий</span><span>зараз</span></div>
+<div class="row"><div class="who"><div>Лднхбв Тгмубсжбв</div><span>Київська</span></div><div class="nums"><span>932</span><span>470</span><span>932</span></div><div class="mk warn">⚠ 0 ⚠ 5</div></div>
+<div class="row"><div class="who"><div>Оовзвт Тгмубсжбв</div><span>Київська</span></div><div class="nums"><span>0</span><span>1069</span><span>1069</span></div><div class="mk warn">⚠ 1</div></div>
+<div class="row"><div class="who"><div>Обугзхху Буунбз</div><span>Київська</span></div><div class="nums"><span>662</span><span>662</span><span>662</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Бтдкодт Гуктце</div><span>Київська</span></div><div class="nums"><span>991</span><span>991</span><span>991</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Гуухжмгт Чвуб</div><span>Київська</span></div><div class="nums"><span>643</span><span>643</span><span>643</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Фжрцтолпуп Мкзеч</div><span>Київська</span></div><div class="nums"><span>885</span><span>885</span><span>885</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Звуксрлш Пкфвгсо</div><span>Київська</span></div><div class="nums"><span>682</span><span>682</span><span>682</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Елдробцв Туллчмфруп</div><span>Дніпропетровська</span></div><div class="nums"><span>975</span><span>975</span><span>975</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Ввирчцвбшчкх Уцпкчн</div><span>Дніпропетровська</span></div><div class="nums"><span>1139</span><span>1139</span><span>1139</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Цмапмефг Рбжкд</div><span>Дніпропетровська</span></div><div class="nums"><span>847</span><span>847</span><span>847</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Шзннрвепнт Идотич</div><span>Житомирська</span></div><div class="nums"><span>1115</span><span>1115</span><span>1115</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Омцнздвед Зцзаруе</div><span>Житомирська</span></div><div class="nums"><span>990</span><span>990</span><span>990</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Икадотм Пкфвгсо</div><span>Полтавська</span></div><div class="nums"><span>1119</span><span>1119</span><span>1119</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Фулд Чсфхцшбпц</div><span>Полтавська</span></div><div class="nums"><span>918</span><span>918</span><span>918</span></div><div class="mk ok">✓</div></div>
+<div class="row"><div class="who"><div>Тннннг Рхнбжвжп</div><span>Кіровоградська</span></div><div class="nums"><span>857</span><span>857</span><span>857</span></div><div class="mk ok">✓</div></div>
+</div><h2>3 випадкові позиції — KPI → картка</h2>
+<div class="card pos"><div class="k"><b>Икадотм Пкфвгсо</b> · KPI: Україна, Еглфбгаудтг р-н., м.Мфавжфн, вул.Дхимфм Рггрп, 77. квдг. 5 · ШирчесаЖсМдчтаскХвчис5 · QR {2МЗТ885Х-3933-633С-7500-4743ЧФМ7ШМ51} · 1–30</div>
+<div class="s">→ м.Мфавжфн, вул.Дхимфм Рггрп, 77. квдг. 5 · ШирчесаЖсМдчтаскХвчис5 · 1–30</div></div>
+<div class="card pos"><div class="k"><b>Фулд Чсфхцшбпц</b> · KPI: Україна, Згзржлжрфф обл., Архмхвцгнчжре р-н., сел.Охлвшнпнш, вул.Вшеедадупхдф, 97Ц · МдттдааШхгсш · QR {2О330И3К-8З9Л-4ТОД-0ШМП-ЦУС6С2ТД8С07} · 1–30</div>
+<div class="s">→ сел.Охлвшнпнш, вул.Вшеедадупхдф, 97Ц · МдттдааШхгсш · 1–30</div></div>
+<div class="card pos"><div class="k"><b>Гуухжмгт Чвуб</b> · KPI: Україна, м.Ефад, вул.Едрфшгтблцсст, 71 · ТбзжибгСптАвплфсфсЖчип8 · QR {87СЗЧСИ8-ЖП26-167Л-1Ц3О-1ЖЦ41ДЧХ5Д42} · 31–60</div>
+<div class="s">→ м.Ефад, вул.Едрфшгтблцсст, 71 · ТбзжибгСптАвплфсфсЖчип8 · 31–60</div></div>
+<h2>Довідка</h2><div class="card"><ul><li>адрес без міста: 0 (на сайті зараз 0)</li><li>дублів QR: 0 (на сайті зараз 0)</li><li>кандидатів (є в KPI, нема на сайті): 28 — імена й підказки областей у PR</li></ul></div>
+<footer>Справжні дані команди — посилання нікому не пересилай. Кожен прогін показує інші випадкові позиції. · <a href="https://github.com/Konst-Andre/QR-Lens/actions/runs/0">прогін Action</a></footer></main>
+<script>document.getElementById("cp").onclick=function(){var t=document.getElementById("cl").textContent,b=this;function ok(){b.textContent="Скопійовано ✓"}if(navigator.clipboard)navigator.clipboard.writeText(t).then(ok,function(){sel()});else sel();function sel(){var r=document.createRange();r.selectNodeContents(document.getElementById("cl"));var s=getSelection();s.removeAllRanges();s.addRange(r);try{document.execCommand("copy");ok()}catch(x){b.textContent="Виділено — скопіюй вручну"}}}</script>
+</body></html>
