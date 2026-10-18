@@ -49,12 +49,17 @@ h1{font-size:1.25rem;margin:0 0 10px}
 <script>
 // Версію закріплено (4.4.0 вийшла менш ніж 2 тижні тому, тому беремо 4.3.1).
 const MV_URL = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@4.3.1/dist/model-viewer.min.js';
+// Декодер meshopt у model-viewer не ввімкнений за замовчуванням: без цього GLB зі стисненням не відкриється.
+// Версію закріплено на 0.25.0: у 1.x файлу meshopt_decoder.js уже немає.
+const MESHOPT_URL = 'https://cdn.jsdelivr.net/npm/meshoptimizer@0.25.0/meshopt_decoder.js';
 const $ = id => document.getElementById(id);
 let items = [], brand = 'Усі', mvPromise = null, current = null;
 
 // Бібліотеку (≈1 МБ) вантажимо лише при першому відкритті моделі, не при вході в каталог.
 function loadMV(){
-  return mvPromise ||= import(MV_URL).then(() => customElements.whenDefined('model-viewer'));
+  return mvPromise ||= import(MV_URL)
+    .then(() => customElements.whenDefined('model-viewer'))
+    .then(() => { customElements.get('model-viewer').meshoptDecoderLocation = MESHOPT_URL; });
 }
 
 function render(){
@@ -98,11 +103,18 @@ async function openViewer(i){
   mv.setAttribute('touch-action', 'pan-y');
   mv.setAttribute('shadow-intensity', '0.8');
   mv.setAttribute('environment-image', 'neutral');
+  let failed = false;
   mv.addEventListener('progress', e => {
+    if (failed) return;
     const p = Math.round(e.detail.totalProgress * 100);
-    $('status').innerHTML = p < 100 ? 'Завантаження ' + p + '%<div class="bar-track"><div class="bar-fill" style="width:' + p + '%"></div></div>' : '';
+    $('status').innerHTML = p < 100 ? 'Завантаження ' + p + '%<div class="bar-track"><div class="bar-fill" style="width:' + p + '%"></div></div>' : $('status').innerHTML;
   });
-  mv.addEventListener('error', () => { $('status').textContent = 'Помилка завантаження моделі'; });
+  mv.addEventListener('load', () => { if (!failed) $('status').textContent = ''; });
+  mv.addEventListener('error', e => {
+    failed = true;
+    const er = e.detail && e.detail.sourceError;
+    $('status').textContent = 'Помилка моделі: ' + (er && er.message ? er.message : 'невідома');
+  });
   $('stage').prepend(mv);
   current = mv;
 }
