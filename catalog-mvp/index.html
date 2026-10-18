@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Каталог обладнання</title>
+<style>
+:root{--bg:#eef0ee;--card:#fff;--ink:#1c2420;--mute:#66726b;--acc:#1f7a54;--line:#d9dfdb}
+@media (prefers-color-scheme:dark){:root{--bg:#141917;--card:#1e2522;--ink:#e8eeea;--mute:#98a59d;--acc:#4cc08a;--line:#2d3732}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{padding:16px 16px 8px}
+h1{font-size:1.25rem;margin:0 0 10px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.chip{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 14px;font:inherit;white-space:nowrap;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--acc);border-color:var(--acc);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;padding:12px 16px 24px}
+@media (min-width:700px){.grid{grid-template-columns:repeat(4,1fr)}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden;padding:0;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.card img{display:block;width:100%;aspect-ratio:4/5;object-fit:contain;background:var(--bg)}
+.card span{display:block;padding:8px 10px}
+.card small{color:var(--mute)}
+.empty{padding:24px 16px;color:var(--mute)}
+#viewer{position:fixed;inset:0;background:var(--bg);display:none;flex-direction:column;z-index:10;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+#viewer.open{display:flex}
+#bar{display:flex;align-items:center;gap:12px;padding:12px 16px}
+#bar b{flex:1}
+#close{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:8px 14px;font:inherit;cursor:pointer}
+#stage{flex:1;position:relative;min-height:0}
+#stage model-viewer{width:100%;height:100%;--poster-color:transparent;background:transparent}
+#status{position:absolute;left:0;right:0;bottom:16px;text-align:center;color:var(--mute);pointer-events:none}
+.bar-track{height:4px;background:var(--line);border-radius:2px;margin:8px auto 0;width:60%;overflow:hidden}
+.bar-fill{height:100%;width:0;background:var(--acc)}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Каталог обладнання</h1>
+  <div class="chips" id="chips"></div>
+</header>
+<main class="grid" id="grid"></main>
+
+<div id="viewer" role="dialog" aria-modal="true" aria-label="3D-перегляд">
+  <div id="bar"><b id="title"></b><button id="close">Закрити</button></div>
+  <div id="stage"><div id="status"></div></div>
+</div>
+
+<script>
+// Версію закріплено (4.4.0 вийшла менш ніж 2 тижні тому, тому беремо 4.3.1).
+const MV_URL = 'https://cdn.jsdelivr.net/npm/@google/model-viewer@4.3.1/dist/model-viewer.min.js';
+const $ = id => document.getElementById(id);
+let items = [], brand = 'Усі', mvPromise = null, current = null;
+
+// Бібліотеку (≈1 МБ) вантажимо лише при першому відкритті моделі, не при вході в каталог.
+function loadMV(){
+  return mvPromise ||= import(MV_URL).then(() => customElements.whenDefined('model-viewer'));
+}
+
+function render(){
+  const brands = ['Усі', ...new Set(items.map(i => i.brand))];
+  $('chips').innerHTML = '';
+  brands.forEach(b => {
+    const c = document.createElement('button');
+    c.className = 'chip'; c.textContent = b; c.setAttribute('aria-pressed', b === brand);
+    c.onclick = () => { brand = b; render(); };
+    $('chips').append(c);
+  });
+  const list = items.filter(i => brand === 'Усі' || i.brand === brand);
+  $('grid').innerHTML = '';
+  if (!list.length) { $('grid').innerHTML = '<p class="empty">Нічого не знайдено</p>'; return; }
+  list.forEach(i => {
+    const c = document.createElement('button');
+    c.className = 'card';
+    c.innerHTML = '<img loading="lazy" alt=""><span></span>';
+    c.querySelector('img').src = i.poster;
+    c.querySelector('img').alt = i.name;
+    c.querySelector('span').innerHTML = '<b></b><br><small></small>';
+    c.querySelector('b').textContent = i.name;
+    c.querySelector('small').textContent = i.brand + ' · 3D ' + i.sizeMB + ' МБ';
+    c.onclick = () => openViewer(i);
+    $('grid').append(c);
+  });
+}
+
+async function openViewer(i){
+  $('title').textContent = i.name;
+  $('viewer').classList.add('open');
+  $('status').textContent = 'Завантаження 3D…';
+  try { await loadMV(); } catch(e){ $('status').textContent = 'Не вдалося завантажити перегляд (перевір інтернет)'; return; }
+  closeModel();
+  const mv = document.createElement('model-viewer');
+  mv.setAttribute('src', i.glb);
+  mv.setAttribute('poster', i.poster);
+  mv.setAttribute('alt', i.name);
+  mv.setAttribute('camera-controls', '');
+  mv.setAttribute('auto-rotate', '');
+  mv.setAttribute('touch-action', 'pan-y');
+  mv.setAttribute('shadow-intensity', '0.8');
+  mv.setAttribute('environment-image', 'neutral');
+  mv.addEventListener('progress', e => {
+    const p = Math.round(e.detail.totalProgress * 100);
+    $('status').innerHTML = p < 100 ? 'Завантаження ' + p + '%<div class="bar-track"><div class="bar-fill" style="width:' + p + '%"></div></div>' : '';
+  });
+  mv.addEventListener('error', () => { $('status').textContent = 'Помилка завантаження моделі'; });
+  $('stage').prepend(mv);
+  current = mv;
+}
+
+function closeModel(){ if (current){ current.remove(); current = null; } }
+function closeViewer(){ closeModel(); $('viewer').classList.remove('open'); $('status').textContent = ''; }
+$('close').onclick = closeViewer;
+addEventListener('keydown', e => { if (e.key === 'Escape') closeViewer(); });
+
+fetch('catalog.json').then(r => r.json()).then(d => { items = d; render(); })
+  .catch(() => { $('grid').innerHTML = '<p class="empty">Не вдалося прочитати catalog.json. Відкрий сторінку через http(s), а не як файл.</p>'; });
+</script>
+</body>
+</html>

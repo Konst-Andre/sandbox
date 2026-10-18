@@ -1,0 +1,10 @@
+[
+  {
+    "id": "nurofen-stand",
+    "brand": "Nurofen",
+    "name": "Підлогова вітрина Nurofen",
+    "glb": "models/nurofen-stand.glb",
+    "poster": "posters/nurofen-stand.webp",
+    "sizeMB": 1.5
+  }
+]
