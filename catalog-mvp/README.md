@@ -95,6 +95,8 @@
 
 **Як користуватись:** покласти сирий GLB у `catalog-mvp/inbox/` (правила імен в `inbox/README.md`). Workflow `.github/workflows/catalog-inbox.yml` запускається на push у цю папку, обробляє файли, комітить результат у `models/`, `posters/`, `catalog.json` і видаляє сирі файли з inbox.
 
+**Встановлення:** файл workflow лежить у `scripts/catalog-inbox.workflow.yml` і поки **не працює**: токен GitHub-конектора не має права писати в `.github/workflows/` (GitHub повернув 403). Щоб увімкнути: відкрити файл на github.com, «Edit», у полі імені замінити шлях на `.github/workflows/catalog-inbox.yml` і закомітити (GitHub переміщує файл). Далі він спрацює на кожен push у `catalog-mvp/inbox/`; вручну його можна запустити у вкладці Actions (кнопка Run workflow).
+
 **Що перевірено:** `scripts/process_inbox.py` запускали локально на сирому GLB Nurofen (34,2 МБ): 429 334 → 99 988 трикутників (адаптивний ratio до цілі 100 тис.), GLB 1,5 МБ, постер 48 КБ, запис у `catalog.json`, сирі файли видалено.
 
 **Що НЕ перевірено:** сам запуск workflow на GitHub (версії дій `checkout@v6`, `setup-node@v6`, `setup-python@v6` обрані за станом на жовтень 2026, бо Node 20 для дій замінюється на Node 24); крок запиту збірки Pages через API (`continue-on-error`); поведінка при великих сирих файлах.
