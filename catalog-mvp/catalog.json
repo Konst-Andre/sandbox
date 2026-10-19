@@ -6,5 +6,13 @@
     "glb": "models/nurofen-stand.glb",
     "poster": "posters/nurofen-stand.webp",
     "sizeMB": 1.5
+  },
+  {
+    "id": "nurofen-test-copy",
+    "brand": "Nurofen",
+    "name": "Test copy",
+    "glb": "models/nurofen-test-copy.glb",
+    "poster": "posters/nurofen-test-copy.webp",
+    "sizeMB": 1.4
   }
 ]
