@@ -1,0 +1,70 @@
+name: Catalog inbox
+
+# Кладеш сирий GLB у catalog-mvp/inbox/ -> бот оптимізує, робить постер, додає запис у catalog.json.
+# Деталі: catalog-mvp/README.md (розділ 9) і catalog-mvp/inbox/README.md.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'catalog-mvp/inbox/**'
+  workflow_dispatch:
+
+concurrency:
+  group: catalog-inbox
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pages: write
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Install tools
+        working-directory: catalog-mvp
+        run: |
+          npm install --no-save --no-package-lock @gltf-transform/cli meshoptimizer sharp
+          pip install numpy trimesh pillow
+
+      - name: Process inbox
+        id: proc
+        working-directory: catalog-mvp
+        run: python3 scripts/process_inbox.py
+
+      - name: Commit results
+        id: commit
+        if: always()
+        run: |
+          git config user.name "catalog-bot"
+          git config user.email "catalog-bot@users.noreply.github.com"
+          git add -A catalog-mvp/models catalog-mvp/posters catalog-mvp/catalog.json catalog-mvp/inbox
+          if git diff --cached --quiet; then
+            echo "Нічого комітити"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "catalog-bot: оброблено ${{ steps.proc.outputs.done }}"
+          git pull --rebase origin main
+          git push
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # Коміт від GITHUB_TOKEN може не запустити збірку Pages сам, тому просимо її явно.
+      - name: Request Pages build
+        if: steps.commit.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds"
