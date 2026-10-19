@@ -1,10 +1,28 @@
-import numpy as np, trimesh, math, sys, time
+import numpy as np, trimesh, math, sys, time, struct, json, io
 from PIL import Image
+
+
+def base_color_image(path):
+    """Читає базову кольорову текстуру напряму з glTF (враховує EXT_texture_webp,
+    де номер текстури не збігається з номером зображення)."""
+    d = open(path, 'rb').read()
+    clen, _ = struct.unpack('<II', d[12:20])
+    j = json.loads(d[20:20 + clen])
+    off = 20 + clen
+    blen, _ = struct.unpack('<II', d[off:off + 8])
+    binary = d[off + 8:off + 8 + blen]
+    mi = j['meshes'][0]['primitives'][0].get('material', 0)
+    ti = j['materials'][mi]['pbrMetallicRoughness']['baseColorTexture']['index']
+    t = j['textures'][ti]
+    src = t.get('source', t.get('extensions', {}).get('EXT_texture_webp', {}).get('source'))
+    bv = j['bufferViews'][j['images'][src]['bufferView']]
+    start = bv.get('byteOffset', 0)
+    return Image.open(io.BytesIO(binary[start:start + bv['byteLength']]))
+
 t0=time.time()
 sc=trimesh.load(sys.argv[1])
 m=trimesh.util.concatenate(list(sc.geometry.values())) if hasattr(sc,'geometry') else sc
-tex=m.visual.material.baseColorTexture
-tex=np.asarray(tex.convert('RGB'))
+tex=np.asarray(base_color_image(sys.argv[1]).convert('RGB'))
 TH,TW=tex.shape[:2]
 uv=m.visual.uv
 V=m.vertices.copy(); F=m.faces

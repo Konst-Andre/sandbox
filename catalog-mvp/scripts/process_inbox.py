@@ -54,7 +54,9 @@ def process(glb):
 
     with tempfile.TemporaryDirectory() as t:
         t = Path(t)
-        run(GT, 'resize', glb, t / 'a.glb', '--width', 2048, '--height', 2048)
+        run(GT, 'resize', glb, t / 'r.glb', '--width', 2048, '--height', 2048)
+        # trimesh (постер) не читає квантовані атрибути (KHR_mesh_quantization): без цього UV зіпсовані
+        run(GT, 'dequantize', t / 'r.glb', t / 'a.glb')
         tris = count_tris(t / 'a.glb')
         ratio = min(1.0, TARGET_TRIS / tris) if tris else 1.0
         print(f'   трикутників: {tris}, ratio: {ratio:.3f}')
