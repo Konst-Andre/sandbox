@@ -8,14 +8,6 @@
     "sizeMB": 1.5
   },
   {
-    "id": "nurofen-test-copy",
-    "brand": "Nurofen",
-    "name": "Test copy",
-    "glb": "models/nurofen-test-copy.glb",
-    "poster": "posters/nurofen-test-copy.webp",
-    "sizeMB": 1.4
-  },
-  {
     "id": "durex-dur-tower",
     "brand": "Durex",
     "name": " DUR Tower",
