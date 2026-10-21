@@ -46,8 +46,9 @@ def process(glb):
     side = glb.with_suffix('.json')
     if side.exists():
         meta = json.loads(side.read_text(encoding='utf-8'))
-    brand = meta.get('brand', brand.replace('_', ' '))
-    name = meta.get('name', name.replace('_', ' '))
+    # прибираємо пробіли на початку/в кінці й подвійні пробіли всередині
+    brand = ' '.join(str(meta.get('brand', brand.replace('_', ' '))).split())
+    name = ' '.join(str(meta.get('name', name.replace('_', ' '))).split())
     yaw = float(meta.get('yaw', DEFAULT_YAW))
     mid = slug(stem) or 'model-' + str(abs(hash(stem)) % 10000)
     print(f'== {glb.name}: id={mid} brand={brand!r} name={name!r} yaw={yaw}')
